@@ -1788,8 +1788,11 @@ Strictly adhere to this format:
     // --- 6. PONTO DE ENTRADA DA APLICAÇÃO ---
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOM Content Loaded. Initializing app."); 
-        initializeFirebase();
-        setupButtonListeners(); // Agora é seguro chamar
+        
+	// Comentando para desativar, já que não estamos usando Firebase
+	// initializeFirebase();
+        
+	setupButtonListeners(); // Agora é seguro chamar
         updateButtonStates(); // Define o estado inicial dos botões
     });
     </script>
