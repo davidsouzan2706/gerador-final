@@ -955,20 +955,29 @@ The final output MUST be only the JSON code, like this example:
         return { prompt, maxTokens };
     };
 
+    // Arquivo: index.html - removeMetaComments VERSÃO 2 (APRIMORADA)
     const removeMetaComments = (text) => {
         const metaKeywords = [
             "Here's the script", "This section aims to", "The script for the",
             "This part of the script", "The goal of this section", "This introduction script",
-            "This development section", "The tone is", "This climax part", "The conclusion summarizes"
+            "This development section", "The tone is", "This climax part", "The conclusion summarizes",
+            "Here is a compelling YouTube video description" // <-- ADICIONAMOS A NOVA FRASE
         ];
+        
+        let cleanedText = text;
 
-        const paragraphs = text.split(/\n\s*\n/);
-        const cleanedParagraphs = paragraphs.filter(paragraph => {
-            if (!paragraph.trim()) { return false; }
-            const isMeta = metaKeywords.some(keyword => paragraph.toLowerCase().includes(keyword.toLowerCase()));
-            return !isMeta;
+        // Remove frases introdutórias completas
+        metaKeywords.forEach(phrase => {
+            // Cria uma expressão regular para encontrar a frase, ignorando maiúsculas/minúsculas,
+            // e lidando com variações de pontuação e espaços.
+            const regex = new RegExp(phrase + ".*?\\n", "gi");
+            cleanedText = cleanedText.replace(regex, '');
         });
-        return cleanedParagraphs.join('\n\n');
+
+        // Remove possíveis marcadores de seção que sobraram
+        cleanedText = cleanedText.replace(/^\*\*[\w\s]+\*\*$/gm, '');
+        
+        return cleanedText.trim();
     };
 
     // VERSÃO 2 SEGURA da callGroqAPI
