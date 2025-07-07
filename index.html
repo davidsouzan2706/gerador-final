@@ -1420,6 +1420,7 @@ Strictly adhere to this format:
             const { prompt, maxTokens } = constructScriptPrompt('description');
             let result = await callGroqAPI(prompt, maxTokens);
             result = cleanGeneratedText(result, false);
+            result = removeMetaComments(result); // <-- ADICIONADO AQUI!
             const targetSectionElement = document.getElementById('videoDescriptionOutputSection');
             if (targetSectionElement) {
                 targetSectionElement.innerHTML = generateSectionHtmlContent('videoDescriptionOutput', 'Descrição do Vídeo e Hashtags', result);
