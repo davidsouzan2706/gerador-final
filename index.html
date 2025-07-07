@@ -504,8 +504,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 3: Salvar e Exportar</h3>
              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <button id="saveScriptBtn" class="btn btn-secondary">Salvar Roteiro</button>
-                <button id="loadLatestScriptBtn" class="btn btn-secondary">Carregar Último</button>
+                
                 <button id="downloadPdfBtn" class="btn btn-secondary">Download PDF</button>
                 <button id="resetScriptBtn" class="btn btn-secondary">Novo Roteiro</button> <!-- NEW: Reset button -->
             </div>
@@ -745,14 +744,14 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated;
         
         const hasAnyContent = anyMainScriptGenerated || allImagePrompts.length > 0 || !!generatedTitlesAndThumbnails;
-        buttons.saveScriptBtn.disabled = !hasAnyContent;
+        buttons.saveScriptBtn.disabled = !hasAnyContent; // Keep this disabled if Firebase is not used
         buttons.downloadPdfBtn.disabled = !hasAnyContent;
 
         if (isAuthReady) {
-            buttons.loadLatestScriptBtn.disabled = false;
+            buttons.loadLatestScriptBtn.disabled = false; // Keep this disabled if Firebase is not used
             buttons.resetScriptBtn.disabled = false;
         } else {
-            buttons.loadLatestScriptBtn.disabled = true;
+            buttons.loadLatestScriptBtn.disabled = true; // Keep this disabled if Firebase is not used
             buttons.resetScriptBtn.disabled = true;
         }
     };
@@ -1791,7 +1790,11 @@ Strictly adhere to this format:
         if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
         if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
         if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
-        if (buttons.loadLatestScriptBtn) elements.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
+        
+        // As linhas abaixo foram removidas conforme sua solicitação
+        // if (buttons.saveScriptBtn) buttons.saveScriptBtn.addEventListener('click', saveScript);
+        // if (buttons.loadLatestScriptBtn) elements.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
+        
         if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
         if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
     };
