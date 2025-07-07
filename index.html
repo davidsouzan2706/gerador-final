@@ -2509,6 +2509,7 @@ ${scriptContent}
     };
 
     // --- 6. PONTO DE ENTRADA DA APLICAÇÃO ---
+    // O bloco de inicialização agora vem por último, garantindo que todas as funções sejam definidas.
     document.addEventListener('DOMContentLoaded', () => {
         console.log("DOM Content Loaded. Initializing app."); 
         
