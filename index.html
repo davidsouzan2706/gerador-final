@@ -475,6 +475,67 @@
             animation: spin 1s linear infinite;
             margin: 1rem auto;
         }
+        /* ========================================================== */
+        /* ============== ESTILOS PARA OS TOOLTIPS ============== */
+        /* ========================================================== */
+        .tooltip {
+            position: relative; /* Essencial para o posicionamento do balão */
+            cursor: help; /* Muda o cursor para indicar que há ajuda */
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background-color: #e0e7ff; /* Cor de fundo do ícone */
+            color: #4f46e5; /* Cor do texto (?) */
+            font-weight: 700;
+            font-size: 12px;
+            user-select: none; /* Impede que o texto (?) seja selecionado */
+        }
+        .dark .tooltip {
+            background-color: #4b5563;
+            color: #e5e7eb;
+        }
+        /* O balão do tooltip (invisível por padrão) */
+        .tooltip::before, .tooltip::after {
+            position: absolute;
+            left: 50%;
+            transform: translateX(-50%);
+            bottom: 150%; /* Posiciona o balão acima do ícone */
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease, visibility 0.3s ease;
+            pointer-events: none; /* Impede que o balão bloqueie o mouse */
+            z-index: 10;
+        }
+        /* O conteúdo do balão */
+        .tooltip::before {
+            content: attr(data-tooltip); /* Pega o texto do atributo data-tooltip */
+            background-color: #1f2937; /* Fundo do balão */
+            color: #ffffff;
+            padding: 0.75rem;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 400;
+            width: 280px; /* Largura do balão */
+            line-height: 1.5;
+            text-align: left;
+            white-space: pre-wrap; /* <-- A MÁGICA ACONTECE AQUI */
+        }
+        /* A pequena seta para baixo */
+        .tooltip::after {
+            content: '';
+            bottom: calc(150% - 10px); /* Posiciona a seta abaixo do balão */
+            border-width: 5px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent;
+        }
+        /* Mostra o balão e a seta quando o mouse está sobre o ícone */
+        .tooltip:hover::before, .tooltip:hover::after {
+            opacity: 1;
+            visibility: visible;
+        }
     </style>
 </head>
 <body>
@@ -560,7 +621,23 @@
             </div>
             <!-- NEW: Narrative Style Select -->
             <div class="input-group md:col-span-2">
-                <label for="narrativeStyle">Estilo da Narrativa:</label>
+                <div class="flex items-center gap-2"> <!-- Usamos flexbox para alinhar o label e o ícone -->
+                    <label for="narrativeStyle">Estilo da Narrativa:</label>
+                    <span class="tooltip"
+      data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para documentários.
+      
+Jornada do Herói: Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.
+
+Mistério (Loop Aberto): Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.
+
+Problema-Agitação-Solução (PAS): Foca em um problema que o público tem e apresenta a solução. Perfeito para vídeos de marketing e tutoriais.
+
+Antes-Depois-Ponte (BAB): Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá.
+
+Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revelação surpreendente no final."
+>
+    (?)</span>
+                </div>
                 <select id="narrativeStyle">
                     <option value="direct" selected>Direto e Informativo (Padrão)</option>
                     <option value="heros_journey">Jornada do Herói (Clássico)</option>
