@@ -1346,26 +1346,22 @@ The final output MUST be only the JSON code, like this example:
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            const videoDuration = elements.videoDuration.options[elements.videoDuration.selectedIndex].text; // Pega o texto da duração (ex: "Médio (~4-7 min)")
+            // Removido o uso de videoDuration aqui, pois é irrelevante para o novo prompt
+            let prompt = `Você é um diretor de fotografia e editor de vídeo. Sua tarefa é ler o roteiro a seguir e identificar os **momentos-chave que MAIS precisam de um apelo visual**. Para cada um desses momentos cruciais, crie um prompt de imagem.
 
-            let prompt = `Based on the following script, generate image prompts for every significant moment.
-The video's desired duration is **${videoDuration}**. Generate a suitable number of prompts to cover this entire length, spacing them out naturally every 15-25 seconds of narration to ensure the video is visually engaging from start to finish.
+**Suas prioridades são:**
+1.  **Impacto Narrativo:** Crie prompts para as frases que representam uma virada na história, uma revelação importante, uma pergunta retórica forte ou uma imagem mental poderosa.
+2.  **Ritmo e Cadência:** Não force a criação de prompts. É melhor ter menos prompts, mas que sejam perfeitos e sincronizados com a narração, do que muitos prompts que quebram o fluxo. Deixe um espaço natural entre as cenas.
+3.  **Sincronia Perfeita:** A \`scriptPhrase\` deve ser a frase **exata** do roteiro que o espectador estará ouvindo no momento em que a imagem aparece. Ela deve ser a legenda perfeita para a imagem descrita.
 
-IMPORTANT: Your response must be ONLY a valid JSON array of objects, with no other text, preambles, or explanations. Each object in the array represents a scene and MUST have two string properties:
-1.  "scriptPhrase": The exact, brief, and impactful phrase from the script that this image illustrates.
-2.  "imageDescription": A detailed, vivid description for an image generation AI, written in ENGLISH.
+**Ignore completamente a duração do vídeo ou a criação de prompts a cada X segundos.** Seu único foco é a qualidade e a relevância cinematográfica.
 
-Strictly adhere to this format:
-[
-  {
-    "scriptPhrase": "a mystery that has puzzled humanity for millennia.",
-    "imageDescription": "An ancient, dusty scroll partially unrolled, with glowing, mysterious symbols visible in the center. The background is dark and shadowy, suggesting a hidden library or tomb. Cinematic, dramatic lighting."
-  },
-  {
-    "scriptPhrase": "a sacred chest built to hold the Ten Commandments.",
-    "imageDescription": "Detailed close-up of stone tablets with ancient Hebrew commandments being carefully placed inside a magnificent golden chest by robed figures. The scene is bathed in a divine, ethereal light. Hyper-realistic."
-  }
-]
+Responda **APENAS** com um array JSON válido, com cada objeto tendo as chaves "scriptPhrase" e "imageDescription".
+
+O roteiro completo é:
+---
+${scriptContent}
+---
 `;
             
             if (imageDescriptionEngine) {
@@ -1381,7 +1377,8 @@ Strictly adhere to this format:
                 selectedStyleBlock = customImageStyle;
             }
 
-            prompt += `\n\nScript: --- ${scriptContent} ---`;
+            // Removido o scriptContent do prompt aqui, pois já está no prompt principal
+            // prompt += `\n\nScript: --- ${scriptContent} ---`;
 
             console.log("Prompt para IA (Image Prompts):", prompt);
             let rawResult = await callGroqAPI(prompt, 4000);
@@ -1406,15 +1403,10 @@ Strictly adhere to this format:
                 window.showToast("Erro: IA não retornou prompts ou o formato está incorreto.");
             }
            
-            let accumulatedTimeSeconds = 1;
+            // Removida a lógica de accumulatedTimeSeconds e cálculo de tempo fixo
             allImagePrompts = processedResult.map((p, i) => {
-                const time = accumulatedTimeSeconds;
-                accumulatedTimeSeconds += 17; // Esta é apenas uma estimativa para exibição
-                const mins = Math.floor(time / 60);
-                const secs = Math.floor(time % 60);
                 return { 
                     ...p, 
-                    time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, 
                     sequence: String(i + 1).padStart(2, '0'),
                     styleBlock: selectedStyleBlock
                 };
@@ -1460,7 +1452,7 @@ Strictly adhere to this format:
             const promptHtml = `
                 <div class="individual-prompt-block">
                     <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                        <p class="prompt-time">Cena ${promptData.sequence}</p>
                         <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
                     </div>
                     <p class="prompt-phrase">${promptData.scriptPhrase}</p>
@@ -1499,7 +1491,7 @@ Strictly adhere to this format:
             const promptHtml = `
                 <div class="individual-prompt-block">
                     <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                        <p class="prompt-time">Cena ${promptData.sequence}</p>
                         <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
                     </div>
                     <p class="prompt-phrase">${promptData.scriptPhrase}</p>
@@ -1762,7 +1754,7 @@ Strictly adhere to this format:
             doc.setFontSize(10);
 
             allImagePrompts.forEach(promptData => {
-                const promptText = `${promptData.time} - Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
+                const promptText = `Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
                 const splitPrompt = doc.splitTextToSize(promptText, 180);
                 doc.text(splitPrompt, 10, y);
                 y += (splitPrompt.length * 5) + 3;
