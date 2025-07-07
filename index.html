@@ -679,43 +679,26 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const generateSectionHtmlContent = (sectionId, title, content) => { return `<div class="whitespace-normal"><h3>${title}</h3><button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button><p class="mt-4 whitespace-pre-wrap">${content}</p></div>`; };
 
     // ================================================================
-    // ================ FUNÇÃO DE LIMPEZA FINAL (v5) ==================
+    // ================ FUNÇÃO DE LIMPEZA FINAL (v6) ==================
     // ================================================================
-    // Arquivo: index.html - cleanGeneratedText VERSÃO 5 (DEFINITIVA)
+    // Arquivo: index.html - cleanGeneratedText VERSÃO 6 (SUPER SIMPLES)
     const cleanGeneratedText = (text, expectJson = false) => {
         if (!text) return null;
 
         if (expectJson) {
             console.log("Recebido para limpeza de JSON:", text);
 
-            let jsonString = '';
-            // Procura o primeiro '{' ou '[' para determinar o início.
-            const firstBrace = text.indexOf('{');
-            const firstBracket = text.indexOf('[');
-            
-            let startIndex = -1;
+            // Encontra o primeiro '{' e o último '}'
+            const startIndex = text.indexOf('{');
+            const endIndex = text.lastIndexOf('}');
 
-            if (firstBrace !== -1 && (firstBrace < firstBracket || firstBracket === -1)) {
-                // Se um '{' aparece primeiro (ou se não há '['), o JSON é um objeto.
-                startIndex = firstBrace;
-                const endIndex = text.lastIndexOf('}');
-                if (endIndex > startIndex) {
-                    jsonString = text.substring(startIndex, endIndex + 1);
-                }
-            } else if (firstBracket !== -1) {
-                // Se um '[' aparece primeiro, o JSON é um array.
-                startIndex = firstBracket;
-                const endIndex = text.lastIndexOf(']');
-                if (endIndex > startIndex) {
-                    jsonString = text.substring(startIndex, endIndex + 1);
-                }
-            }
-
-            if (!jsonString) {
-                console.error("cleanGeneratedText: Não foi possível extrair um bloco JSON válido.", text);
+            if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
+                console.error("cleanGeneratedText: Não foi possível encontrar um objeto JSON válido '{}' na resposta.", text);
                 return null;
             }
 
+            // Extrai o bloco de objeto
+            const jsonString = text.substring(startIndex, endIndex + 1);
             console.log("Bloco JSON extraído:", jsonString);
 
             try {
@@ -1792,7 +1775,7 @@ Strictly adhere to this format:
         if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
         if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
         if (buttons.saveScriptBtn) buttons.saveScriptBtn.addEventListener('click', saveScript);
-        if (buttons.loadLatestScriptBtn) buttons.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
+        if (buttons.loadLatestScriptBtn) elements.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
         if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
         if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
     };
