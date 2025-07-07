@@ -324,12 +324,129 @@
             padding-top: 1.5rem;   /* Equivalente ao pt-6 do Tailwind */
             border-top: 1px solid #e5e7eb; /* Equivalente ao border-t border-gray-200 */
         }
+
+        /* Adicione no final do seu CSS */
+        .script-section p[contenteditable="true"]:focus {
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            background-color: #eef2ff; /* Um fundo levemente azulado */
+        }
+
+        /* Adicione no final do seu CSS */
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+        .section-header h3 {
+            margin-bottom: 0; /* Remove a margem do h3 para alinhar */
+        }
+        .header-buttons {
+            display: flex;
+            gap: 0.5rem;
+            position: static; /* Remove o position:absolute dos botões */
+        }
+        .copy-btn, .regenerate-btn {
+            position: static; /* Remove o position:absolute */
+            padding: 0.4rem 0.8rem;
+            font-size: 0.8rem;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+        }
+        .regenerate-btn {
+            background-color: #e0e7ff;
+            color: #4338ca;
+        }
+        .regenerate-btn:hover {
+            background-color: #c7d2fe;
+        }
+        .copy-btn {
+            /* Estilos do copy-btn já existem, apenas confirmando */
+            background-color: #4f46e5;
+            color: #ffffff;
+        }
+        .copy-btn:hover {
+            background-color: #3730a3;
+        }
+
+        /* ================== ESTILOS MODO ESCURO ================== */
+        body.dark {
+            background-color: #111827; /* gray-900 */
+            color: #d1d5db; /* gray-300 */
+        }
+        .dark .container {
+            background-color: #1f2937; /* gray-800 */
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
+        .dark .text-gray-800 { color: #f9fafb; } /* gray-50 */
+        .dark .text-gray-500 { color: #9ca3af; } /* gray-400 */
+        .dark .input-group label { color: #d1d5db; } /* gray-300 */
+        .dark .input-group input,
+        .dark .input-group select,
+        .dark .input-group textarea {
+            background-color: #374151; /* gray-700 */
+            border-color: #4b5563; /* gray-600 */
+            color: #f9fafb; /* gray-50 */
+        }
+        .dark .input-group input:focus,
+        .dark .input-group select:focus,
+        .dark .input-group textarea:focus {
+            border-color: #6366f1; /* indigo-500 */
+            background-color: #4b5563; /* gray-600 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        .dark .bg-gray-50 {
+            background-color: #374151 !important; /* gray-700 */
+        }
+        .dark .border-gray-200 {
+            border-color: #4b5563 !important; /* gray-600 */
+        }
+        .dark .text-gray-700 { color: #e5e7eb; } /* gray-200 */
+        .dark .script-section {
+            background-color: #374151; /* gray-700 */
+            border-color: #4b5563; /* gray-600 */
+        }
+        .dark .script-section h3 { color: #f9fafb; } /* gray-50 */
+        .dark .script-section p[contenteditable="true"]:focus {
+            background-color: #4b5563; /* gray-600 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        .dark .individual-prompt-block {
+            background-color: #1f2937;
+            border-color: #374151;
+        }
+        .dark .prompt-phrase { color: #f3f4f6; }
+        .dark .prompt-description-label { color: #9ca3af; }
+        .dark .prompt-description-content { color: #d1d5db; }
+        .dark pre { background-color: #374151 !important; color: #d1d5db; }
+        #darkModeToggle {
+            color: #4b5563;
+        }
+        .dark #darkModeToggle {
+            color: #9ca3af;
+        }
     </style>
 </head>
 <body>
     <div class="container relative">
         <div id="userIdDisplay" class="hidden"></div> <!-- User ID Display -->
         <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">Gerador de Roteiros Virais</h1>
+        <!-- NOVO BOTÃO DE MODO ESCURO -->
+        <div class="absolute top-4 right-4">
+            <button id="darkModeToggle" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                <!-- Ícone da Lua -->
+                <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" />
+                </svg>
+                <!-- Ícone do Sol -->
+                <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-14.66l-.707.707M4.04 19.96l-.707.707M21 12h-1M4 12H3m16.66-7.96l-.707-.707M4.04 4.04l-.707-.707" />
+                </svg>
+            </button>
+        </div>
         <p class="text-center text-gray-500 mb-8">Crie conteúdo de alto impacto para o seu canal do YouTube.</p>
 
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
@@ -608,6 +725,10 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         fullScreenAlertOverlay: document.getElementById('fullScreenAlertOverlay'),
         fullScreenAlertMessage: document.getElementById('fullScreenAlertMessage'),
         fullScreenAlertCloseBtn: document.getElementById('fullScreenAlertCloseBtn'),
+        // No objeto 'elements'
+        darkModeToggle: document.getElementById('darkModeToggle'),
+        moonIcon: document.getElementById('moonIcon'),
+        sunIcon: document.getElementById('sunIcon'),
     };
     const buttons = {
         generateIntroBtn: document.getElementById('generateIntroBtn'),
@@ -674,7 +795,26 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
     const hideFullScreenAlert = () => { elements.fullScreenAlertOverlay.classList.remove('visible'); };
     const toggleCustomImageStyleVisibility = () => { elements.customImageStyleContainer.style.display = elements.imageStyleSelect.value === 'custom' ? 'block' : 'none'; };
-    const generateSectionHtmlContent = (sectionId, title, content) => { return `<div class="whitespace-normal"><h3>${title}</h3><button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button><p class="mt-4 whitespace-pre-wrap">${content}</p></div>`; };
+    
+    // NOVO HTML com o botão de re-gerar (ícone de "refresh")
+    const generateSectionHtmlContent = (sectionId, title, content) => {
+        const regenerateBtnHtml = `<button class="regenerate-btn" onclick="window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
+                <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
+            </svg></button>`;
+
+        return `<div class="whitespace-normal">
+                    <div class="section-header">
+                        <h3>${title}</h3>
+                        <div class="header-buttons">
+                            ${regenerateBtnHtml}
+                            <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button>
+                        </div>
+                    </div>
+                    <p class="mt-4 whitespace-pre-wrap" contenteditable="true">${content}</p>
+                </div>`;
+    };
 
     // ================================================================
     // ================ FUNÇÃO DE LIMPEZA FINAL (v7) ==================
@@ -1137,6 +1277,22 @@ The final output MUST be only the JSON code, like this example:
             console.error(`Error generating ${sectionTitle}.`, error);
         } finally {
             hideLoading(button);
+        }
+    };
+
+    // NOVA FUNÇÃO para o botão "Re-gerar"
+    window.regenerateSection = (sectionName, sectionTitle, elementId) => {
+        const mainButtonIdMap = {
+            'intro': 'generateIntroBtn',
+            'development': 'generateDevelopmentBtn',
+            'climax': 'generateClimaxBtn',
+            'conclusion': 'conclusionBtn',
+            'cta': 'generateCTABtn'
+        };
+        const buttonId = mainButtonIdMap[sectionName];
+        if (buttonId) {
+            const button = document.getElementById(buttonId);
+            handleGenerateSection(button, sectionName, sectionTitle, elementId);
         }
     };
 
@@ -1798,6 +1954,28 @@ Strictly adhere to this format:
         
         if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
         if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
+
+        // Dentro de setupButtonListeners
+        if (elements.darkModeToggle) {
+            elements.darkModeToggle.addEventListener('click', () => {
+                const isDarkMode = document.body.classList.contains('dark');
+                setDarkMode(!isDarkMode);
+            });
+        }
+    };
+
+    const setDarkMode = (isDark) => {
+        if (isDark) {
+            document.body.classList.add('dark');
+            elements.moonIcon.classList.add('hidden');
+            elements.sunIcon.classList.remove('hidden');
+            localStorage.setItem('darkMode', 'enabled');
+        } else {
+            document.body.classList.remove('dark');
+            elements.moonIcon.classList.remove('hidden');
+            elements.sunIcon.classList.add('hidden');
+            localStorage.setItem('darkMode', 'disabled');
+        }
     };
 
     // --- 6. PONTO DE ENTRADA DA APLICAÇÃO ---
@@ -1809,6 +1987,11 @@ Strictly adhere to this format:
         
 	setupButtonListeners(); // Agora é seguro chamar
         updateButtonStates(); // Define o estado inicial dos botões
+
+        // Dentro de DOMContentLoaded
+        if (localStorage.getItem('darkMode') === 'enabled') {
+            setDarkMode(true);
+        }
     });
     </script>
 </body>
