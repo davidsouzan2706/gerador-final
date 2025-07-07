@@ -1320,6 +1320,9 @@ The final output MUST be only the JSON code, like this example:
         }
     };
 
+    // =========================================================================
+    // NOVA FUNÇÃO generateImagePrompts (VERSÃO HÍBRIDA)
+    // =========================================================================
     const generateImagePrompts = async (button) => {
         if (!validateInputs()) {
             hideLoading(button);
@@ -1346,22 +1349,19 @@ The final output MUST be only the JSON code, like this example:
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            // Removido o uso de videoDuration aqui, pois é irrelevante para o novo prompt
-            let prompt = `Você é um diretor de fotografia e editor de vídeo. Sua tarefa é ler o roteiro a seguir e identificar os **momentos-chave que MAIS precisam de um apelo visual**. Para cada um desses momentos cruciais, crie um prompt de imagem.
+            // NOVO PROMPT HÍBRIDO E DEFINITIVO
+            let prompt = `Você é um diretor de vídeo profissional para o YouTube. Sua tarefa é ler o roteiro a seguir e criar uma sequência de prompts de imagem que seja visualmente dinâmica e perfeitamente sincronizada.
+        
+Siga estas REGRAS CRÍTICAS:
 
-**Suas prioridades são:**
-1.  **Impacto Narrativo:** Crie prompts para as frases que representam uma virada na história, uma revelação importante, uma pergunta retórica forte ou uma imagem mental poderosa.
-2.  **Ritmo e Cadência:** Não force a criação de prompts. É melhor ter menos prompts, mas que sejam perfeitos e sincronizados com a narração, do que muitos prompts que quebram o fluxo. Deixe um espaço natural entre as cenas.
-3.  **Sincronia Perfeita:** A \`scriptPhrase\` deve ser a frase **exata** do roteiro que o espectador estará ouvindo no momento em que a imagem aparece. Ela deve ser a legenda perfeita para a imagem descrita.
-
-**Ignore completamente a duração do vídeo ou a criação de prompts a cada X segundos.** Seu único foco é a qualidade e a relevância cinematográfica.
-
-Responda **APENAS** com um array JSON válido, com cada objeto tendo as chaves "scriptPhrase" e "imageDescription".
+IMAGEM INICIAL OBRIGATÓRIA: Você DEVE criar um prompt de imagem para a primeira ou segunda frase do roteiro, sem exceção. O vídeo precisa começar com um forte impacto visual no segundo 1.
+RITMO DINÂMICO: Após a imagem inicial, seu objetivo é manter um ritmo envolvente. Crie um novo prompt de imagem a cada 15 a 25 segundos de narração, aproximadamente. Use seu julgamento de diretor para encontrar os melhores momentos DENTRO desses intervalos. Não quebre frases no meio, encontre o ponto de virada ou a imagem mental mais forte dentro daquele trecho do roteiro.
+QUALIDADE CINEMATOGRÁFICA: Cada \`imageDescription\` deve ser vívida e detalhada. A \`scriptPhrase\` deve ser a frase exata do roteiro que o espectador estará ouvindo, servindo como a legenda perfeita para a imagem.
+Sua missão é balancear o ritmo constante com a relevância narrativa, garantindo que o vídeo seja dinâmico do início ao fim.
+Responda APENAS com um array JSON válido, onde cada objeto tem as chaves "scriptPhrase" e "imageDescription".
 
 O roteiro completo é:
----
 ${scriptContent}
----
 `;
             
             if (imageDescriptionEngine) {
@@ -1376,9 +1376,6 @@ ${scriptContent}
                 prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
                 selectedStyleBlock = customImageStyle;
             }
-
-            // Removido o scriptContent do prompt aqui, pois já está no prompt principal
-            // prompt += `\n\nScript: --- ${scriptContent} ---`;
 
             console.log("Prompt para IA (Image Prompts):", prompt);
             let rawResult = await callGroqAPI(prompt, 4000);
@@ -1403,10 +1400,16 @@ ${scriptContent}
                 window.showToast("Erro: IA não retornou prompts ou o formato está incorreto.");
             }
            
-            // Removida a lógica de accumulatedTimeSeconds e cálculo de tempo fixo
+            // LÓGICA DE TEMPO RESTAURADA
+            let accumulatedTimeSeconds = 1;
             allImagePrompts = processedResult.map((p, i) => {
+                const time = accumulatedTimeSeconds;
+                accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
+                const mins = Math.floor(time / 60);
+                const secs = Math.floor(time % 60);
                 return { 
                     ...p, 
+                    time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, 
                     sequence: String(i + 1).padStart(2, '0'),
                     styleBlock: selectedStyleBlock
                 };
@@ -1434,6 +1437,9 @@ ${scriptContent}
         displayImagePromptsBatch();
     };
 
+    // =========================================================================
+    // NOVAS FUNÇÕES DE EXIBIÇÃO (COM TEMPO RESTAURADO)
+    // =========================================================================
     const displayImagePromptsBatch = () => {
         console.log("displayImagePromptsBatch called.");
         const lang = elements.languageSelect.value;
@@ -1452,7 +1458,7 @@ ${scriptContent}
             const promptHtml = `
                 <div class="individual-prompt-block">
                     <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">Cena ${promptData.sequence}</p>
+                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                         <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
                     </div>
                     <p class="prompt-phrase">${promptData.scriptPhrase}</p>
@@ -1480,7 +1486,6 @@ ${scriptContent}
         }
     };
 
-    // NEW FUNCTION: displayAllImagePrompts
     const displayAllImagePrompts = () => {
         elements.imagePromptsList.innerHTML = ''; // Clear existing prompts
         const lang = elements.languageSelect.value;
@@ -1491,7 +1496,7 @@ ${scriptContent}
             const promptHtml = `
                 <div class="individual-prompt-block">
                     <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">Cena ${promptData.sequence}</p>
+                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                         <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
                     </div>
                     <p class="prompt-phrase">${promptData.scriptPhrase}</p>
@@ -1754,7 +1759,7 @@ ${scriptContent}
             doc.setFontSize(10);
 
             allImagePrompts.forEach(promptData => {
-                const promptText = `Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
+                const promptText = `${promptData.time} - Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
                 const splitPrompt = doc.splitTextToSize(promptText, 180);
                 doc.text(splitPrompt, 10, y);
                 y += (splitPrompt.length * 5) + 3;
