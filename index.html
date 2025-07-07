@@ -574,7 +574,19 @@
                 <label for="videoDescription">Descrição do Vídeo (para inspiração):</label>
                 <textarea id="videoDescription" rows="4" placeholder="Cole uma breve descrição do vídeo aqui para que a IA possa usar como inspiração para o roteiro."></textarea>
             </div>
-            <!-- NEW: Central Question Input -->
+            <!-- ========================================================== -->
+            <!-- ======== NOVO BOTÃO DE ESTRATÉGIA AUTOMÁTICA ========= -->
+            <!-- ========================================================== -->
+            <div class="md:col-span-2 my-4 flex justify-center">
+                <button id="analyzeStrategyBtn" class="btn btn-primary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" class="bi bi-magic" viewBox="0 0 16 16">
+                        <path d="M9.5 2.672a.5.5 0 1 0 1 0V.843a.5.5 0 0 0-1 0v1.829Zm4.5.035A.5.5 0 0 0 13.293 2L12 3.293a.5.5 0 1 0 .707.707L14 2.707a.5.5 0 0 0 0-.707ZM7.293 4A.5.5 0 1 0 8 3.293L6.707 2A.5.5 0 0 0 6 2.707L7.293 4Zm-.621 2.5a.5.5 0 0 0 0 .707l1.293 1.293a.5.5 0 0 0 .707-.707L7.38 6.207a.5.5 0 0 0-.707 0ZM5.5 7a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1Zm-1.829-1.5a.5.5 0 0 0-.707 0L2 6.793a.5.5 0 0 0 0 .707l1.293 1.293a.5.5 0 0 0 .707-.707L3.707 7.5H3.5a.5.5 0 0 0 0-1h.207L2.707 5.5Zm-1 .707a.5.5 0 0 0-.707-.707L.707 6.5a.5.5 0 0 0 0 .707l1.293 1.293a.5.5 0 0 0 .707-.707L1.293 7.5H1.5a.5.5 0 0 0 0-1h-.207L2.293 6.207Z"/>
+                        <path d="M12.026 8.5H11a.5.5 0 0 0 0 1h1.026a.5.5 0 0 0 0-1Zm-1.633.293a.5.5 0 1 1 .707.707l-1.293 1.293a.5.5 0 0 1-.707-.707l1.293-1.293Zm-3.134 3.367a.5.5 0 1 0-.707.707l1.293 1.293a.5.5 0 0 0 .707-.707l-1.293-1.293Zm1.633-.293a.5.5 0 1 1 .707.707l-1.293 1.293a.5.5 0 0 1-.707-.707l1.293-1.293A.5.5 0 0 1 8.89 11.86Z"/>
+                    </svg>
+                    <span class="button-text">Definir Estratégia com IA</span>
+                    <div class="loading-spinner hidden"></div>
+                </button>
+            </div><!-- ========================================================== -->
             <div class="input-group md:col-span-2">
                 <label for="centralQuestion">Pergunta Central (Opcional):</label>
                 <textarea id="centralQuestion" rows="2" placeholder="Ex: A Arca da Aliança era uma arma ou um meio de comunicação?"></textarea>
@@ -776,6 +788,8 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         
         downloadPdfBtn: document.getElementById('downloadPdfBtn'),
         resetScriptBtn: document.getElementById('resetScriptBtn'),
+        // No objeto 'buttons'
+        analyzeStrategyBtn: document.getElementById('analyzeStrategyBtn'),
     };
     const buttonCheckmarkMap = {
         'generateIntroBtn': 'introCheck',
@@ -2029,6 +2043,66 @@ Trecho do roteiro:
                 const isDarkMode = document.body.classList.contains('dark');
                 setDarkMode(!isDarkMode);
             });
+        }
+        // Conectar o novo botão à função
+        if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
+    };
+
+    // NOVA FUNÇÃO para análise estratégica
+    const analyzeAndSetStrategy = async () => {
+        const theme = elements.videoTheme.value.trim();
+        const description = elements.videoDescription.value.trim();
+
+        if (!theme || !description) {
+            window.showToast("Por favor, preencha o Tema e a Descrição do Vídeo.");
+            return;
+        }
+
+        const button = buttons.analyzeStrategyBtn;
+        showLoading(button);
+
+        // Opções válidas para cada campo (precisamos disso para a IA)
+        const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
+        const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
+        const narrativeStyleOptions = Array.from(elements.narrativeStyle.options).map(o => o.value).join(', ');
+
+        const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Sua tarefa é analisar o tema e a descrição de um vídeo e definir a melhor estratégia de conteúdo para ele.
+
+        Tema do Vídeo: "${theme}"
+        Descrição do Vídeo: "${description}"
+
+        Com base nisso, preencha os seguintes campos. Responda APENAS com um objeto JSON válido.
+
+        O objeto JSON deve ter as seguintes chaves:
+        1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
+        2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
+        3.  "video_objective": (string) Escolha o objetivo principal do vídeo da seguinte lista: [${videoObjectiveOptions}].
+        4.  "narrative_style": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStyleOptions}].
+        5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
+        6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
+
+        Analise profundamente o tema e a descrição para fazer as escolhas mais coesas e eficazes.`;
+
+        try {
+            const rawResult = await callGroqAPI(prompt, 1000);
+            const cleanedResult = cleanGeneratedText(rawResult, true);
+            const strategy = JSON.parse(cleanedResult);
+
+            // Preenche os campos da interface com a resposta da IA
+            if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
+            if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
+            if(strategy.video_objective) elements.videoObjective.value = strategy.video_objective;
+            if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style;
+            if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
+            if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
+
+            window.showToast("Estratégia definida com sucesso!");
+
+        } catch (error) {
+            window.showToast(`Falha ao definir estratégia: ${error.message}`);
+            console.error("Erro na análise estratégica:", error);
+        } finally {
+            hideLoading(button);
         }
     };
 
