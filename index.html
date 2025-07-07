@@ -452,6 +452,29 @@
         .dark .p-3.border.border-gray-200 .font-semibold {
             color: #f9fafb; /* gray-50 */
         }
+
+        /* NOVOS ESTILOS PARA PROMPTS POR SEÇÃO */
+        .section-prompts {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed #d1d5db;
+        }
+        .dark .section-prompts {
+            border-top-color: #4b5563;
+        }
+        .btn-small {
+            padding: 0.25rem 0.75rem;
+            font-size: 0.875rem;
+        }
+        .loading-spinner-small {
+            border: 3px solid rgba(67, 56, 202, 0.2);
+            border-left-color: #4338ca;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 1rem auto;
+        }
     </style>
 </head>
 <body>
@@ -634,11 +657,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                     <span id="titlesThumbnailsCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="titlesThumbnailsSpinner"></div>
                 </button>
-                <button id="generateImagePromptsBtn" class="btn btn-secondary">
-                    <span class="button-text">Prompts de Imagem</span>
-                    <span id="imagePromptsCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
-                    <div class="loading-spinner hidden" id="imagePromptsSpinner"></div>
-                </button>
+                <!-- O botão "Prompts de Imagem" global foi removido daqui -->
             </div>
         </div>
        
@@ -662,18 +681,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
             <div id="titlesThumbnailsSection" class="script-section hidden"></div>
         </div>
 
-        <div id="imagePromptsOutput" class="mt-8 hidden">
-            <div class="script-section">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-2xl font-bold text-gray-800">Prompts de Imagem</h3>
-                    <!-- The "Copiar Todos" button was removed as requested -->
-                </div>
-                <div id="imagePromptsList">
-                    <!-- Image prompts will be inserted here -->
-                </div>
-                <button id="loadMoreImagePromptsBtn" class="btn btn-secondary mt-4 w-full" style="display: none;">Gerar Mais</button> <!-- Alterado o texto do botão -->
-            </div>
-        </div>
+        <!-- A div #imagePromptsOutput foi removida daqui -->
     </div>
 
     <!-- Custom Toast Notification for Alerts -->
@@ -707,9 +715,10 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     let isAuthReady = false;
     let generatedTitlesAndThumbnails = null;
     let apiKeys = [];
-    let allImagePrompts = [];
-    let currentImagePromptIndex = 0;
-    const IMAGE_PROMPT_BATCH_SIZE = 2;
+    // allImagePrompts agora é um objeto para armazenar prompts por seção
+    let allImagePrompts = {}; 
+    // currentImagePromptIndex e IMAGE_PROMPT_BATCH_SIZE não são mais necessários para a nova lógica
+    // const IMAGE_PROMPT_BATCH_SIZE = 2; 
     const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
 **Style:** Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling.
@@ -742,9 +751,8 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         apiKeyInput: document.getElementById('apiKeyInput'),
         userIdDisplay: document.getElementById('userIdDisplay'),
         scriptOutput: document.getElementById('scriptOutput'),
-        imagePromptsOutput: document.getElementById('imagePromptsOutput'),
-        imagePromptsList: document.getElementById('imagePromptsList'),
-        loadMoreImagePromptsBtn: document.getElementById('loadMoreImagePromptsBtn'),
+        // imagePromptsOutput e imagePromptsList foram removidos do HTML
+        // loadMoreImagePromptsBtn também foi removido
         toastNotification: document.getElementById('toastNotification'),
         fullScreenAlertOverlay: document.getElementById('fullScreenAlertOverlay'),
         fullScreenAlertMessage: document.getElementById('fullScreenAlertMessage'),
@@ -761,7 +769,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         conclusionBtn: document.getElementById('conclusionBtn'),
         generateCTABtn: document.getElementById('generateCTABtn'),
         generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
-        generateImagePromptsBtn: document.getElementById('generateImagePromptsBtn'),
+        // generateImagePromptsBtn foi removido
         generateDescriptionBtn: document.getElementById('generateDescriptionBtn'),
         
         downloadPdfBtn: document.getElementById('downloadPdfBtn'),
@@ -774,7 +782,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         'conclusionBtn': 'conclusionCheck',
         'generateCTABtn': 'ctaCheck',
         'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck',
-        'generateImagePromptsBtn': 'imagePromptsCheck',
+        // 'generateImagePromptsBtn': 'imagePromptsCheck' foi removido
         'generateDescriptionBtn': 'descriptionCheck'
     };
 
@@ -820,7 +828,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const hideFullScreenAlert = () => { elements.fullScreenAlertOverlay.classList.remove('visible'); };
     const toggleCustomImageStyleVisibility = () => { elements.customImageStyleContainer.style.display = elements.imageStyleSelect.value === 'custom' ? 'block' : 'none'; };
     
-    // NOVO HTML com o botão de re-gerar (ícone de "refresh")
+    // VERSÃO FINAL do generateSectionHtmlContent
     const generateSectionHtmlContent = (sectionId, title, content) => {
         const regenerateBtnHtml = `<button class="regenerate-btn" onclick="window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
@@ -837,6 +845,14 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                         </div>
                     </div>
                     <p class="mt-4 whitespace-pre-wrap" contenteditable="true">${content}</p>
+                    
+                    <!-- NOVO BLOCO PARA PROMPTS -->
+                    <div class="section-prompts">
+                        <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">
+                            Gerar Prompts para esta Seção
+                        </button>
+                        <div class="prompt-container mt-4"></div>
+                    </div>
                 </div>`;
     };
 
@@ -904,9 +920,11 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         
         buttons.generateDescriptionBtn.disabled = !allMainScriptGenerated;
         buttons.generateTitlesAndThumbnailsBtn.disabled = !allMainScriptGenerated;
-        buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated;
-        
-        const hasAnyContent = anyMainScriptGenerated || allImagePrompts.length > 0 || !!generatedTitlesAndThumbnails;
+        // buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated; // Removido
+
+        // Verifica se há conteúdo gerado (script, títulos/thumbnails, ou prompts de imagem em qualquer seção)
+        const hasAnyImagePrompts = Object.keys(allImagePrompts).length > 0 && Object.values(allImagePrompts).some(arr => arr.length > 0);
+        const hasAnyContent = anyMainScriptGenerated || hasAnyImagePrompts || !!generatedTitlesAndThumbnails;
         buttons.downloadPdfBtn.disabled = !hasAnyContent;
         
         // O botão de reset agora pode ser sempre habilitado
@@ -1321,37 +1339,31 @@ The final output MUST be only the JSON code, like this example:
     };
 
     // =========================================================================
-    // NOVA FUNÇÃO generateImagePrompts (VERSÃO HÍBRIDA)
+    // NOVA FUNÇÃO generatePromptsForSection (Substitui a antiga generateImagePrompts)
     // =========================================================================
-    const generateImagePrompts = async (button) => {
-        if (!validateInputs()) {
-            hideLoading(button);
-            return;
-        }
-
-        if (!isScriptComplete()) {
-            showFullScreenAlert("Sua transcrição não está completa. Por favor, gere todas as seções do roteiro principal.");
-            hideLoading(button);
-            return;
-        }
-
-        showLoading(button);
-        let scriptContent = Array.from(elements.scriptOutput.querySelectorAll('.script-section p')).map(p => p.textContent).join('\n\n');
-       
-        try {
-            allImagePrompts = [];
-            elements.imagePromptsList.innerHTML = '';
-            currentImagePromptIndex = 0;
-            elements.loadMoreImagePromptsBtn.style.display = 'none';
-
-            const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
-            const imageStyleSelect = elements.imageStyleSelect.value;
-            const customImageStyle = elements.customImageStyle.value.trim();
-            let selectedStyleBlock = '';
-
-            // NOVO PROMPT HÍBRIDO E DEFINITIVO
-            let prompt = `Você é um diretor de vídeo profissional para o YouTube. Sua tarefa é ler o roteiro a seguir e criar uma sequência de prompts de imagem que seja visualmente dinâmica e perfeitamente sincronizada.
+    window.generatePromptsForSection = async (sectionElementId) => {
+        const sectionElement = document.getElementById(sectionElementId);
+        const scriptContentElement = sectionElement.querySelector('p[contenteditable="true"]');
+        const promptContainer = sectionElement.querySelector('.prompt-container');
         
+        if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
+            window.showToast("Por favor, gere o conteúdo do roteiro desta seção primeiro.");
+            return;
+        }
+
+        const scriptContent = scriptContentElement.textContent;
+        
+        // Mostra um spinner
+        promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`; 
+
+        const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
+        const imageStyleSelect = elements.imageStyleSelect.value;
+        const customImageStyle = elements.customImageStyle.value.trim();
+        let selectedStyleBlock = '';
+
+        // Usamos uma versão adaptada do nosso prompt mestre
+        let prompt = `Você é um diretor de vídeo profissional para o YouTube. Sua tarefa é ler o roteiro a seguir e criar uma sequência de prompts de imagem que seja visualmente dinâmica e perfeitamente sincronizada.
+    
 Siga estas REGRAS CRÍTICAS:
 
 IMAGEM INICIAL OBRIGATÓRIA: Você DEVE criar um prompt de imagem para a primeira ou segunda frase do roteiro, sem exceção. O vídeo precisa começar com um forte impacto visual no segundo 1.
@@ -1363,46 +1375,43 @@ Responda APENAS com um array JSON válido, onde cada objeto tem as chaves "scrip
 O roteiro completo é:
 ${scriptContent}
 `;
-            
-            if (imageDescriptionEngine) {
-                prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
-            }
+        
+        if (imageDescriptionEngine) {
+            prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
+        }
 
-            if (imageStyleSelect === 'cinematic') {
-                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: hyper-realistic, masterful cinematography, Arri Alexa 65, vintage anamorphic lenses, deliberate composition, dramatic naturalistic lighting, strong chiaroscuro, extreme attention to micro-details, hyper-realistic textures (skin pores, fabric weaves, material imperfections), rich cinematic color grading, immersive and evocative mood. Avoid cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon.`;
-                prompt += `\n\n${cinematicPromptPart}`;
-                selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
-            } else if (imageStyleSelect === 'custom' && customImageStyle) {
-                prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
-                selectedStyleBlock = customImageStyle;
-            }
+        if (imageStyleSelect === 'cinematic') {
+            const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: hyper-realistic, masterful cinematography, Arri Alexa 65, vintage anamorphic lenses, deliberate composition, dramatic naturalistic lighting, strong chiaroscuro, extreme attention to micro-details, hyper-realistic textures (skin pores, fabric weaves, material imperfections), rich cinematic color grading, immersive and evocative mood. Avoid cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon.`;
+            prompt += `\n\n${cinematicPromptPart}`;
+            selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
+        } else if (imageStyleSelect === 'custom' && customImageStyle) {
+            prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
+            selectedStyleBlock = customImageStyle;
+        }
 
-            console.log("Prompt para IA (Image Prompts):", prompt);
-            let rawResult = await callGroqAPI(prompt, 4000);
-            let cleanedText = cleanGeneratedText(rawResult, true);
-            console.log("Cleaned Text (Image Prompts):", cleanedText);
-
-            let processedResult = [];
+        try {
+            const rawResult = await callGroqAPI(prompt, 4000); // Aumentado para 4000 tokens para prompts de imagem
+            const cleanedText = cleanGeneratedText(rawResult, true);
+            let prompts = [];
             if (cleanedText) {
                 try {
-                    processedResult = JSON.parse(cleanedText);
-                    if (!Array.isArray(processedResult)) {
+                    prompts = JSON.parse(cleanedText);
+                    if (!Array.isArray(prompts)) {
                         console.warn("AI returned non-array JSON, attempting to convert.");
-                        processedResult = [processedResult];
+                        prompts = [prompts];
                     }
-                }
-                catch (e) {
-                    window.showToast("Erro ao analisar JSON. Verifique o console.");
+                } catch (e) {
+                    window.showToast("Erro ao analisar JSON de prompts de imagem. Verifique o console.");
                     console.error("Erro ao analisar JSON de prompts de imagem:", e);
-                    processedResult = [];
+                    prompts = [];
                 }
             } else {
-                window.showToast("Erro: IA não retornou prompts ou o formato está incorreto.");
+                window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
             }
-           
-            // LÓGICA DE TEMPO RESTAURADA
-            let accumulatedTimeSeconds = 1;
-            allImagePrompts = processedResult.map((p, i) => {
+
+            // Armazena os prompts gerados na estrutura global
+            let accumulatedTimeSeconds = 1; // Reinicia para cada seção para cálculo de tempo
+            allImagePrompts[sectionElementId] = prompts.map((p, i) => {
                 const time = accumulatedTimeSeconds;
                 accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
                 const mins = Math.floor(time / 60);
@@ -1415,108 +1424,33 @@ ${scriptContent}
                 };
             });
 
-            console.log("Total Image Prompts generated:", allImagePrompts.length);
-
-            if (allImagePrompts.length > 0) {
-                elements.imagePromptsOutput.classList.remove('hidden');
-                displayImagePromptsInitialBatch();
+            promptContainer.innerHTML = ''; // Limpa o spinner
+            if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
+                allImagePrompts[sectionElementId].forEach(promptData => {
+                    const styleBlockContent = promptData.styleBlock || '';
+                    const promptHtml = `
+                        <div class="individual-prompt-block">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent)">Copiar</button>
+                            </div>
+                            <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                            <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
+                            <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                            <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                        </div>
+                    `;
+                    promptContainer.innerHTML += promptHtml;
+                });
+            } else {
+                promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
             }
-            markButtonAsCompleted(button.id);
-
+            updateButtonStates(); // Atualiza o estado dos botões após gerar prompts
         } catch (error) {
-            window.showToast(`Falha ao gerar Prompts: ${error.message}`);
-            console.error(`Error generating Image Prompts.`, error);
-        } finally {
-            hideLoading(button);
+            promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
+            console.error(`Error generating prompts for section ${sectionElementId}.`, error);
         }
     };
-   
-    const displayImagePromptsInitialBatch = () => {
-        elements.imagePromptsList.innerHTML = '';
-        currentImagePromptIndex = 0;
-        displayImagePromptsBatch();
-    };
-
-    // =========================================================================
-    // NOVAS FUNÇÕES DE EXIBIÇÃO (COM TEMPO RESTAURADO)
-    // =========================================================================
-    const displayImagePromptsBatch = () => {
-        console.log("displayImagePromptsBatch called.");
-        const lang = elements.languageSelect.value;
-        const label = imageDescriptionLabels[lang] || 'Image Description:';
-        
-        const existingCompletionMessage = elements.imagePromptsList.querySelector('.completion-message');
-        if (existingCompletionMessage) {
-            existingCompletionMessage.remove();
-        }
-
-        const batch = allImagePrompts.slice(currentImagePromptIndex, currentImagePromptIndex + IMAGE_PROMPT_BATCH_SIZE);
-        console.log("Displaying batch. Current Index:", currentImagePromptIndex, "Batch size:", batch.length, "Total prompts:", allImagePrompts.length);
-
-        batch.forEach(promptData => {
-            const styleBlockContent = promptData.styleBlock || '';
-            const promptHtml = `
-                <div class="individual-prompt-block">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
-                    </div>
-                    <p class="prompt-phrase">${promptData.scriptPhrase}</p>
-                    <p class="prompt-description-label">${label}</p>
-                    <p id="prompt-content-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                    <pre id="style-block-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
-                </div>
-            `;
-            elements.imagePromptsList.insertAdjacentHTML('beforeend', promptHtml);
-        });
-        currentImagePromptIndex += batch.length;
-
-        if (currentImagePromptIndex >= allImagePrompts.length) {
-            elements.loadMoreImagePromptsBtn.style.display = 'none';
-            elements.loadMoreImagePromptsBtn.disabled = true;
-            
-            const scriptSectionTitles = Array.from(elements.scriptOutput.querySelectorAll('.script-section h3')).map(h3 => h3.textContent);
-            const lastGeneratedSectionTitle = scriptSectionTitles.length > 0 ? scriptSectionTitles[scriptSectionTitles.length - 1] : "o roteiro";
-            const completionMessageHtml = `<div class="completion-message">Não há mais prompts a serem apresentados, pois a transcrição do "${lastGeneratedSectionTitle}" foi finalizada.</div>`;
-            elements.imagePromptsList.insertAdjacentHTML('beforeend', completionMessageHtml);
-
-        } else {
-            elements.loadMoreImagePromptsBtn.style.display = 'block';
-            elements.loadMoreImagePromptsBtn.disabled = false;
-        }
-    };
-
-    const displayAllImagePrompts = () => {
-        elements.imagePromptsList.innerHTML = ''; // Clear existing prompts
-        const lang = elements.languageSelect.value;
-        const label = imageDescriptionLabels[lang] || 'Image Description:';
-
-        allImagePrompts.forEach(promptData => {
-            const styleBlockContent = promptData.styleBlock || '';
-            const promptHtml = `
-                <div class="individual-prompt-block">
-                    <div class="flex items-center justify-between mb-2">
-                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
-                    </div>
-                    <p class="prompt-phrase">${promptData.scriptPhrase}</p>
-                    <p class="prompt-description-label">${label}</p>
-                    <p id="prompt-content-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                    <pre id="style-block-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
-                </div>
-            `;
-            elements.imagePromptsList.insertAdjacentHTML('beforeend', promptHtml);
-        });
-
-        elements.loadMoreImagePromptsBtn.style.display = 'none'; // Hide "Gerar Mais" button
-        elements.loadMoreImagePromptsBtn.disabled = true;
-        
-        const scriptSectionTitles = Array.from(elements.scriptOutput.querySelectorAll('.script-section h3')).map(h3 => h3.textContent);
-        const lastGeneratedSectionTitle = scriptSectionTitles.length > 0 ? scriptSectionTitles[scriptSectionTitles.length - 1] : "o roteiro";
-        const completionMessageHtml = `<div class="completion-message">Não há mais prompts a serem apresentados, pois a transcrição do "${lastGeneratedSectionTitle}" foi finalizada.</div>`;
-        elements.imagePromptsList.insertAdjacentHTML('beforeend', completionMessageHtml);
-    };
-
 
     const generateTitlesAndThumbnails = async () => {
         if (!validateInputs()) return;
@@ -1627,7 +1561,7 @@ ${scriptContent}
             return;
         }
 
-        showLoading(buttons.saveScriptBtn);
+        // showLoading(buttons.saveScriptBtn); // Este botão não existe mais, foi um erro.
         try {
             const scriptContentSections = [];
             const sectionIds = ['intro', 'development', 'climax', 'conclusion', 'cta'];
@@ -1675,7 +1609,7 @@ ${scriptContent}
                 imageStyleSelect: elements.imageStyleSelect.value,
                 customImageStyle: elements.customImageStyle.value,
                 scriptContent: scriptContentSections,
-                imagePrompts: allImagePrompts,
+                imagePrompts: allImagePrompts, // Agora é um objeto
                 timestamp: serverTimestamp()
             };
 
@@ -1686,7 +1620,7 @@ ${scriptContent}
             console.error("Erro ao salvar roteiro:", error);
             window.showToast(`Falha ao salvar roteiro: ${error.message}`);
         } finally {
-            hideLoading(buttons.saveScriptBtn);
+            // hideLoading(buttons.saveScriptBtn); // Este botão não existe mais.
         }
     };
 
@@ -1748,27 +1682,33 @@ ${scriptContent}
             }
         });
 
-        if (allImagePrompts.length > 0) {
-            if (y > 250) {
-                doc.addPage();
-                y = 10;
-            }
-            doc.setFontSize(18);
-            doc.text("Prompts de Imagem", 10, y);
-            y += 10;
-            doc.setFontSize(10);
-
-            allImagePrompts.forEach(promptData => {
-                const promptText = `${promptData.time} - Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
-                const splitPrompt = doc.splitTextToSize(promptText, 180);
-                doc.text(splitPrompt, 10, y);
-                y += (splitPrompt.length * 5) + 3;
-
-                if (y > 280) {
+        // Loop através das seções para adicionar os prompts de imagem
+        for (const sectionId in allImagePrompts) {
+            if (allImagePrompts.hasOwnProperty(sectionId) && allImagePrompts[sectionId].length > 0) {
+                if (y > 250) {
                     doc.addPage();
                     y = 10;
                 }
-            });
+                const sectionTitleElement = document.getElementById(sectionId)?.querySelector('h3');
+                const sectionTitle = sectionTitleElement ? sectionTitleElement.textContent : sectionId.replace('Section', '');
+
+                doc.setFontSize(18);
+                doc.text(`Prompts de Imagem para ${sectionTitle}`, 10, y);
+                y += 10;
+                doc.setFontSize(10);
+
+                allImagePrompts[sectionId].forEach(promptData => {
+                    const promptText = `${promptData.time} - Cena ${promptData.sequence}\nScript Phrase: ${promptData.scriptPhrase}\nImage Description: ${promptData.imageDescription}\n\n`;
+                    const splitPrompt = doc.splitTextToSize(promptText, 180);
+                    doc.text(splitPrompt, 10, y);
+                    y += (splitPrompt.length * 5) + 3;
+
+                    if (y > 280) {
+                        doc.addPage();
+                        y = 10;
+                    }
+                });
+            }
         }
 
         doc.save(`${elements.videoTheme.value.replace(/[^a-zA-Z0-9]/g, '_')}_roteiro.pdf`);
@@ -1785,7 +1725,7 @@ ${scriptContent}
             return;
         }
 
-        showLoading(buttons.loadLatestScriptBtn);
+        // showLoading(buttons.loadLatestScriptBtn); // Este botão não existe mais.
         try {
             const docRef = doc(db, `artifacts/${appId}/users/${userId}/scripts`, 'latest');
             const docSnap = await getDoc(docRef);
@@ -1895,15 +1835,37 @@ ${scriptContent}
                     });
                 }
                 
-                allImagePrompts = latestScript.imagePrompts || [];
-                if (allImagePrompts.length > 0) {
-                    elements.imagePromptsOutput.classList.remove('hidden');
-                    // Chama a função para exibir TODOS os prompts salvos de uma vez.
-                    displayAllImagePrompts(); 
-                    markButtonAsCompleted('generateImagePromptsBtn');
-                } else {
-                    elements.imagePromptsOutput.classList.add('hidden');
+                // Carrega os prompts de imagem salvos
+                allImagePrompts = latestScript.imagePrompts || {};
+                for (const sectionId in allImagePrompts) {
+                    if (allImagePrompts.hasOwnProperty(sectionId) && allImagePrompts[sectionId].length > 0) {
+                        const sectionElement = document.getElementById(sectionId);
+                        if (sectionElement) {
+                            const promptContainer = sectionElement.querySelector('.prompt-container');
+                            if (promptContainer) {
+                                promptContainer.innerHTML = ''; // Limpa o container antes de popular
+                                allImagePrompts[sectionId].forEach(promptData => {
+                                    const styleBlockContent = promptData.styleBlock || '';
+                                    const promptHtml = `
+                                        <div class="individual-prompt-block">
+                                            <div class="flex items-center justify-between mb-2">
+                                                <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionId}-${promptData.sequence}').textContent)">Copiar</button>
+                                            </div>
+                                            <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                                            <p class="prompt-description-label">${imageDescriptionLabels[latestScript.language] || 'Image Description:'}</p>
+                                            <p id="prompt-content-${sectionId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                                            <pre id="style-block-${sectionId}-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                                        </div>
+                                    `;
+                                    promptContainer.innerHTML += promptHtml;
+                                });
+                            }
+                        }
+                    }
                 }
+                // Não há mais um botão global de prompts de imagem para marcar como completo
+                // markButtonAsCompleted('generateImagePromptsBtn'); 
                 
                 updateButtonStates(); // Habilita/desabilita botões de suporte após carregar o script
 
@@ -1917,7 +1879,7 @@ ${scriptContent}
             console.error("Erro ao carregar roteiro:", error);
             window.showToast(`Falha ao carregar roteiro: ${error.message}`);
         } finally {
-            hideLoading(buttons.loadLatestScriptBtn);
+            // hideLoading(buttons.loadLatestScriptBtn); // Este botão não existe mais.
         }
     };
     
@@ -1938,12 +1900,13 @@ ${scriptContent}
             sec.innerHTML = '';
             sec.classList.add('hidden');
         });
-        elements.imagePromptsList.innerHTML = '';
-        elements.imagePromptsOutput.classList.add('hidden');
+        // elements.imagePromptsList.innerHTML = ''; // Removido
+        // elements.imagePromptsOutput.classList.add('hidden'); // Removido
 
-        allImagePrompts = [];
-        currentImagePromptIndex = 0;
-        elements.loadMoreImagePromptsBtn.style.display = 'none';
+        // Limpa os prompts de imagem de todas as seções
+        allImagePrompts = {}; 
+        // currentImagePromptIndex e loadMoreImagePromptsBtn não são mais relevantes
+        // elements.loadMoreImagePromptsBtn.style.display = 'none'; 
         generatedTitlesAndThumbnails = null;
         
         apiKeys.forEach(keyObj => keyObj.usageCount = 0);
@@ -1963,8 +1926,8 @@ ${scriptContent}
         if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
         if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
         if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
-        if (buttons.generateImagePromptsBtn) buttons.generateImagePromptsBtn.addEventListener('click', () => generateImagePrompts(buttons.generateImagePromptsBtn));
-        if (elements.loadMoreImagePromptsBtn) elements.loadMoreImagePromptsBtn.addEventListener('click', displayImagePromptsBatch); // Still using batch for "Gerar Mais"
+        // if (buttons.generateImagePromptsBtn) buttons.generateImagePromptsBtn.addEventListener('click', () => generateImagePrompts(buttons.generateImagePromptsBtn)); // Removido
+        // if (elements.loadMoreImagePromptsBtn) elements.loadMoreImagePromptsBtn.addEventListener('click', displayImagePromptsBatch); // Removido
         if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
         if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
         if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
