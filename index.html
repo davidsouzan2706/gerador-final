@@ -678,9 +678,15 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
             <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 3: Salvar e Exportar</h3>
              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                
+                <!-- ========================================================== -->
+                <!-- ======== NOVOS BOTÕES DE EXPORTAR E IMPORTAR ========= -->
+                <!-- ========================================================== -->
+                <button id="exportProjectBtn" class="btn btn-secondary">Exportar Projeto</button>
+                <button id="importProjectBtn" class="btn btn-secondary">Importar Projeto</button>
+                <input type="file" id="importFileInput" class="hidden" accept=".json">
                 <button id="downloadPdfBtn" class="btn btn-secondary">Download PDF</button>
-                <button id="resetScriptBtn" class="btn btn-secondary">Novo Roteiro</button> <!-- NEW: Reset button -->
+                <button id="resetScriptBtn" class="btn btn-secondary">Novo Roteiro</button>
+                <!-- ========================================================== -->
             </div>
         </div>
 
@@ -775,6 +781,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         darkModeToggle: document.getElementById('darkModeToggle'),
         moonIcon: document.getElementById('moonIcon'),
         sunIcon: document.getElementById('sunIcon'),
+        importFileInput: document.getElementById('importFileInput'),
     };
     const buttons = {
         generateIntroBtn: document.getElementById('generateIntroBtn'),
@@ -790,6 +797,8 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         resetScriptBtn: document.getElementById('resetScriptBtn'),
         // No objeto 'buttons'
         analyzeStrategyBtn: document.getElementById('analyzeStrategyBtn'),
+        exportProjectBtn: document.getElementById('exportProjectBtn'),
+        importProjectBtn: document.getElementById('importProjectBtn'),
     };
     const buttonCheckmarkMap = {
         'generateIntroBtn': 'introCheck',
@@ -2016,6 +2025,142 @@ Trecho do roteiro:
         window.scrollTo({ top: 0, behavior: 'smooth' });
     };
 
+    // ==========================================================
+    // ======== NOVAS FUNÇÕES DE EXPORTAR E IMPORTAR ========
+    // ==========================================================
+    const exportProject = () => {
+        const projectData = {
+            // Salva o estado dos inputs
+            inputs: {},
+            // Salva o conteúdo gerado
+            outputs: {
+                introSection: document.getElementById('introSection').innerHTML,
+                developmentSection: document.getElementById('developmentSection').innerHTML,
+                climaxSection: document.getElementById('climaxSection').innerHTML,
+                conclusionSection: document.getElementById('conclusionSection').innerHTML,
+                ctaSection: document.getElementById('ctaSection').innerHTML,
+                videoDescriptionOutputSection: document.getElementById('videoDescriptionOutputSection').innerHTML,
+                titlesThumbnailsSection: document.getElementById('titlesThumbnailsSection').innerHTML,
+            },
+            // Salva as variáveis de memória
+            memory: {
+                allImagePrompts: allImagePrompts,
+                generatedTitlesAndThumbnails: generatedTitlesAndThumbnails
+            }
+        };
+
+        // Preenche o objeto de inputs
+        for (const key in elements) {
+            if (elements[key] && typeof elements[key].value !== 'undefined') {
+                projectData.inputs[key] = elements[key].value;
+            }
+        }
+        
+        // Converte para JSON e cria o arquivo para download
+        const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
+        const downloadAnchorNode = document.createElement('a');
+        downloadAnchorNode.setAttribute("href", dataStr);
+        const fileName = elements.videoTheme.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'roteiro_viral';
+        downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
+        document.body.appendChild(downloadAnchorNode);
+        downloadAnchorNode.click();
+        downloadAnchorNode.remove();
+        window.showToast("Projeto exportado com sucesso!");
+    };
+
+    const renderImagePromptsForSection = (sectionElementId) => {
+        const promptContainer = document.getElementById(sectionElementId)?.querySelector('.prompt-container');
+        if (!promptContainer) return;
+
+        promptContainer.innerHTML = ''; // Clear existing prompts
+
+        const promptsData = allImagePrompts[sectionElementId];
+        if (promptsData && promptsData.length > 0) {
+            promptsData.forEach(promptData => {
+                const styleBlockContent = promptData.styleBlock || '';
+                const promptHtml = `
+                    <div class="individual-prompt-block">
+                        <div class="flex items-center justify-between mb-2">
+                            <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                            <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent)">Copiar</button>
+                        </div>
+                        <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                        <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
+                        <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                        <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                    </div>
+                `;
+                promptContainer.innerHTML += promptHtml;
+            });
+        } else {
+            promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
+        }
+    };
+
+    const importProject = (event) => {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const projectData = JSON.parse(e.target.result);
+                
+                resetApplicationState(); // Limpa o estado atual antes de importar
+
+                // Restaura os inputs
+                for (const key in projectData.inputs) {
+                    if (elements[key] && typeof elements[key].value !== 'undefined') {
+                        elements[key].value = projectData.inputs[key];
+                    }
+                }
+
+                // Restaura o conteúdo gerado
+                for (const key in projectData.outputs) {
+                    const element = document.getElementById(key);
+                    if (element && projectData.outputs[key]) {
+                        element.innerHTML = projectData.outputs[key];
+                        element.classList.remove('hidden');
+                    }
+                }
+
+                // Restaura as variáveis de memória
+                allImagePrompts = projectData.memory.allImagePrompts || {}; // Ensure it's an object
+                generatedTitlesAndThumbnails = projectData.memory.generatedTitlesAndThumbnails || null;
+
+                // Atualiza a interface para refletir o estado carregado
+                updateButtonStates();
+                
+                // Marca os botões como concluídos se o conteúdo existir
+                if (document.getElementById('introSection').innerHTML.includes('<h3>Introdução</h3>')) markButtonAsCompleted('generateIntroBtn');
+                if (document.getElementById('developmentSection').innerHTML.includes('<h3>Desenvolvimento</h3>')) markButtonAsCompleted('generateDevelopmentBtn');
+                if (document.getElementById('climaxSection').innerHTML.includes('<h3>Clímax</h3>')) markButtonAsCompleted('generateClimaxBtn');
+                if (document.getElementById('conclusionSection').innerHTML.includes('<h3>Conclusão</h3>')) markButtonAsCompleted('conclusionBtn');
+                if (document.getElementById('ctaSection').innerHTML.includes('<h3>Chamada para Ação</h3>')) markButtonAsCompleted('generateCTABtn');
+                if (document.getElementById('videoDescriptionOutputSection').innerHTML.includes('<h3>Descrição do Vídeo e Hashtags</h3>')) markButtonAsCompleted('generateDescriptionBtn');
+                if (document.getElementById('titlesThumbnailsSection').innerHTML.includes('<h3>Títulos e Thumbnails</h3>')) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+
+                // Re-renderiza os prompts de imagem para todas as seções
+                for (const sectionId in allImagePrompts) {
+                    if (allImagePrompts.hasOwnProperty(sectionId)) {
+                        renderImagePromptsForSection(sectionId);
+                    }
+                }
+
+                window.showToast("Projeto importado com sucesso!");
+
+            } catch (err) {
+                window.showToast("Erro: Arquivo de projeto inválido ou corrompido.");
+                console.error("Erro ao importar projeto:", err);
+            }
+        };
+        reader.readAsText(file);
+        event.target.value = ''; // Limpa o input para permitir importar o mesmo arquivo novamente
+    };
+    // ==========================================================
+
     // --- 5. SETUP DE EVENT LISTENERS (Definidos por último) ---
     const setupButtonListeners = () => {
         if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
@@ -2046,6 +2191,11 @@ Trecho do roteiro:
         }
         // Conectar o novo botão à função
         if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
+
+        // Conectar os novos botões de exportar/importar
+        if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject);
+        if (buttons.importProjectBtn) buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
+        if (elements.importFileInput) elements.importFileInput.addEventListener('change', importProject);
     };
 
     // NOVA FUNÇÃO para análise estratégica
