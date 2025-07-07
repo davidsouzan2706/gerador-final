@@ -1,0 +1,8 @@
+# Configuração geral para todas as funções
+[functions]
+  directory = "netlify/functions"
+
+# Configuração específica para a função "groq"
+[functions.groq]
+  # Aumenta o tempo limite de execução para 25 segundos (o máximo seguro é 26)
+  timeout = 25
