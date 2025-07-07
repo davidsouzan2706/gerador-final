@@ -554,11 +554,11 @@
             font-size: 0.9rem;
             color: #374151; /* Cor do texto no modo claro */
         }
-        .dark .soundtrack-list {
-            color: #d1d5db; /* Cor do texto no modo escuro */
-        }
         .soundtrack-list li {
             margin-bottom: 0.5rem; /* Espaçamento entre os itens da lista */
+        }
+        .dark .soundtrack-list {
+            color: #d1d5db; /* Cor do texto no modo escuro */
         }
     </style>
 </head>
@@ -1623,16 +1623,23 @@ Trecho do roteiro:
 
         soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
 
-        const prompt = `Você é um diretor musical e sound designer. Analise o tom, o ritmo e a emoção do seguinte trecho de roteiro de vídeo.
-        
-        Sua tarefa é sugerir 3 tipos de trilha sonora de fundo (background music) que se encaixariam perfeitamente com a narração. Seja descritivo e evocativo (ex: 'Música de mistério, lenta e com tensão crescente', 'Trilha sonora orquestral, épica e inspiradora', 'Piano suave e melancólico').
+        const prompt = `Você é um produtor musical e compositor de trilhas sonoras para filmes. Analise o tom, o ritmo e a emoção do seguinte trecho de roteiro.
 
-        Responda APENAS com um array JSON de strings. Exemplo: ["sugestão 1", "sugestão 2", "sugestão 3"].
+Sua tarefa é criar 3 prompts de texto detalhados e prontos para serem usados em uma IA de geração de música (como Suno ou Udio). Cada prompt deve gerar uma trilha sonora instrumental única e de alta qualidade que combine com o roteiro.
 
-        Trecho do roteiro:
-        ---
-        ${scriptContent}
-        ---`;
+Para cada um dos 3 prompts, inclua:
+- O gênero/estilo (ex: cinematic, orchestral, ambient, electronic).
+- O humor/emoção (ex: inspirational, tense, mysterious, melancholic, epic).
+- Instrumentos chave (ex: solo piano, string section, taiko drums, synth pads).
+- Influências de estilo (ex: Hans Zimmer style, Lo-fi chillhop, Two Steps from Hell).
+- Instruções negativas (ex: no vocals, no saxophone).
+
+Responda APENAS com um array JSON de strings, onde cada string é um prompt musical completo e detalhado.
+
+Trecho do roteiro para analisar:
+---
+${scriptContent}
+---`;
         
         try {
             const rawResult = await callGroqAPI(prompt, 500); // 500 tokens são suficientes
