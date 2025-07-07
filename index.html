@@ -536,6 +536,30 @@
             opacity: 1;
             visibility: visible;
         }
+        /* ========================================================== */
+        /* ======== ESTILOS PARA SUGESTÕES DE TRILHA SONORA ======== */
+        /* ========================================================== */
+        .section-soundtrack {
+            margin-top: 1.5rem;
+            padding-top: 1.5rem;
+            border-top: 1px dashed #d1d5db;
+        }
+        .dark .section-soundtrack {
+            border-top-color: #4b5563;
+        }
+        /* Estiliza a lista de sugestões */
+        .soundtrack-list {
+            list-style-type: disc; /* Adiciona bolinhas na lista */
+            padding-left: 20px; /* Adiciona um recuo à lista */
+            font-size: 0.9rem;
+            color: #374151; /* Cor do texto no modo claro */
+        }
+        .dark .soundtrack-list {
+            color: #d1d5db; /* Cor do texto no modo escuro */
+        }
+        .soundtrack-list li {
+            margin-bottom: 0.5rem; /* Espaçamento entre os itens da lista */
+        }
     </style>
 </head>
 <body>
@@ -621,7 +645,7 @@
             </div>
             <!-- NEW: Narrative Style Select -->
             <div class="input-group md:col-span-2">
-                <div class="flex items-center gap-2"> <!-- Usamos flexbox para alinhar o label e o ícone -->
+                <div class="flex items-center gap-2"> <!-- Usamos flexbox para alinhamento do label e do ícone -->
                     <label for="narrativeStyle">Estilo da Narrativa:</label>
                     <span class="tooltip"
       data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para documentários.
@@ -948,13 +972,24 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                     </div>
                     <p class="mt-4 whitespace-pre-wrap" contenteditable="true">${content}</p>
                     
-                    <!-- NOVO BLOCO PARA PROMPTS -->
+                    <!-- BLOCO EXISTENTE PARA PROMPTS -->
                     <div class="section-prompts">
                         <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">
                             Gerar Prompts para esta Seção
                         </button>
                         <div class="prompt-container mt-4"></div>
                     </div>
+
+                    <!-- ============================================= -->
+                    <!-- NOVO BLOCO PARA SUGESTÃO DE TRILHA SONORA -->
+                    <!-- ============================================= -->
+                    <div class="section-soundtrack">
+                        <button class="btn btn-secondary btn-small" onclick="window.suggestSoundtrack('${sectionId}Section')">
+                            Sugerir Trilha Sonora
+                        </button>
+                        <div class="soundtrack-container mt-4"></div>
+                    </div>
+                    <!-- ============================================= -->
                 </div>`;
     };
 
@@ -1574,6 +1609,54 @@ Trecho do roteiro:
     };
 
     // ==========================================================
+    // NOVA FUNÇÃO PARA SUGERIR TRILHA SONORA
+    // ==========================================================
+    window.suggestSoundtrack = async (sectionId) => {
+        const sectionElement = document.getElementById(sectionId);
+        const scriptContent = sectionElement.querySelector('p[contenteditable="true"]').textContent;
+        const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
+        
+        if (!scriptContent) {
+            window.showToast("Gere o roteiro para esta seção primeiro.");
+            return;
+        }
+
+        soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+
+        const prompt = `Você é um diretor musical e sound designer. Analise o tom, o ritmo e a emoção do seguinte trecho de roteiro de vídeo.
+        
+        Sua tarefa é sugerir 3 tipos de trilha sonora de fundo (background music) que se encaixariam perfeitamente com a narração. Seja descritivo e evocativo (ex: 'Música de mistério, lenta e com tensão crescente', 'Trilha sonora orquestral, épica e inspiradora', 'Piano suave e melancólico').
+
+        Responda APENAS com um array JSON de strings. Exemplo: ["sugestão 1", "sugestão 2", "sugestão 3"].
+
+        Trecho do roteiro:
+        ---
+        ${scriptContent}
+        ---`;
+        
+        try {
+            const rawResult = await callGroqAPI(prompt, 500); // 500 tokens são suficientes
+            const cleanedResult = cleanGeneratedText(rawResult, true);
+            const suggestions = JSON.parse(cleanedResult);
+
+            soundtrackContainer.innerHTML = ''; // Limpa o spinner
+            if (suggestions && suggestions.length > 0) {
+                let suggestionsHtml = '<ul class="soundtrack-list">';
+                suggestions.forEach(suggestion => {
+                    suggestionsHtml += `<li>${suggestion}</li>`;
+                });
+                suggestionsHtml += '</ul>';
+                soundtrackContainer.innerHTML = suggestionsHtml;
+            } else {
+                soundtrackContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma sugestão de trilha sonora foi gerada.</p>';
+            }
+        } catch (error) {
+            soundtrackContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar sugestões: ${error.message}</p>`;
+        }
+    };
+    // ==========================================================
+
+    // ==========================================================
     // RESTAURANDO A FUNÇÃO PERDIDA
     // ==========================================================
     const generateTitlesAndThumbnails = async () => {
@@ -2188,7 +2271,7 @@ Trecho do roteiro:
                 resetApplicationState(); // Limpa o estado atual antes de importar
 
                 // Restaura os inputs
-                for (const key in projectData.inputs) {
+                for (const key in elements) {
                     if (elements[key] && typeof elements[key].value !== 'undefined') {
                         elements[key].value = projectData.inputs[key];
                     }
