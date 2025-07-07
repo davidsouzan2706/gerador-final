@@ -679,47 +679,53 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const generateSectionHtmlContent = (sectionId, title, content) => { return `<div class="whitespace-normal"><h3>${title}</h3><button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button><p class="mt-4 whitespace-pre-wrap">${content}</p></div>`; };
 
     // ================================================================
-    // ================ FUNÇÃO DE LIMPEZA FINAL (v4) ==================
+    // ================ FUNÇÃO DE LIMPEZA FINAL (v5) ==================
     // ================================================================
-    // Arquivo: index.html - cleanGeneratedText VERSÃO 4 (MAIS ROBUSTA)
+    // Arquivo: index.html - cleanGeneratedText VERSÃO 5 (DEFINITIVA)
     const cleanGeneratedText = (text, expectJson = false) => {
         if (!text) return null;
 
         if (expectJson) {
             console.log("Recebido para limpeza de JSON:", text);
 
-            // Tenta encontrar o maior e mais completo bloco JSON na string
             let jsonString = '';
-            const startIndex = text.indexOf('[');
-            const endIndex = text.lastIndexOf(']');
-            const startObjIndex = text.indexOf('{');
-            const endObjIndex = text.lastIndexOf('}');
-
-            if (startIndex !== -1 && endIndex > startIndex) {
-                // Prioriza um array completo [ ... ]
-                jsonString = text.substring(startIndex, endIndex + 1);
-            } else if (startObjIndex !== -1 && endObjIndex > startObjIndex) {
-                // Se não houver array, pega o maior objeto { ... }
-                jsonString = text.substring(startObjIndex, endObjIndex + 1);
-            } else {
-                 console.error("cleanGeneratedText: Não foi possível encontrar um delimitador JSON inicial ('[' ou '{') válido.");
-                 return null;
-            }
+            // Procura o primeiro '{' ou '[' para determinar o início.
+            const firstBrace = text.indexOf('{');
+            const firstBracket = text.indexOf('[');
             
+            let startIndex = -1;
+
+            if (firstBrace !== -1 && (firstBrace < firstBracket || firstBracket === -1)) {
+                // Se um '{' aparece primeiro (ou se não há '['), o JSON é um objeto.
+                startIndex = firstBrace;
+                const endIndex = text.lastIndexOf('}');
+                if (endIndex > startIndex) {
+                    jsonString = text.substring(startIndex, endIndex + 1);
+                }
+            } else if (firstBracket !== -1) {
+                // Se um '[' aparece primeiro, o JSON é um array.
+                startIndex = firstBracket;
+                const endIndex = text.lastIndexOf(']');
+                if (endIndex > startIndex) {
+                    jsonString = text.substring(startIndex, endIndex + 1);
+                }
+            }
+
+            if (!jsonString) {
+                console.error("cleanGeneratedText: Não foi possível extrair um bloco JSON válido.", text);
+                return null;
+            }
+
             console.log("Bloco JSON extraído:", jsonString);
 
             try {
-                // Tenta analisar o JSON extraído diretamente
+                // Tenta analisar o JSON extraído
                 JSON.parse(jsonString);
-                console.log("JSON é válido como está.");
+                console.log("JSON extraído é válido.");
                 return jsonString;
             } catch (e) {
-                console.warn("Análise inicial do JSON falhou, tentando corrigir:", e.message);
-                // Se a análise falhar, pode ser um JSON malformado.
-                // Aqui podemos adicionar lógicas de correção mais complexas no futuro se necessário.
-                // Por enquanto, o erro no console já é informativo.
-                console.error("cleanGeneratedText: A IA retornou um JSON malformado que não pôde ser corrigido automaticamente.", jsonString);
-                return null; // Retorna nulo se não conseguir analisar, para que a função que chamou possa lidar com o erro.
+                console.error("cleanGeneratedText: A IA retornou um JSON malformado que não pôde ser analisado.", e.message, jsonString);
+                return null; 
             }
         }
         
@@ -1631,7 +1637,7 @@ Strictly adhere to this format:
                 elements.narrativeStyle.value = latestScript.narrativeStyle || 'direct';
                 elements.videoDescription.value = latestScript.videoDescription || '';
                 elements.centralQuestion.value = latestScript.centralQuestion || '';
-                elements.emotionalArc.value = latestScript.emotionalArc || '';
+                elements.emotionalArc.value = latestScript.emotionalArc.value || '';
                 elements.viralElements.value = latestScript.viralElements.value || '';
                 elements.imageDescriptionEngine.value = latestScript.imageDescriptionEngine || '';
                 elements.imageStyleSelect.value = latestScript.imageStyleSelect || 'cinematic';
