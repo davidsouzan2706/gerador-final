@@ -858,46 +858,46 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                 </div>`;
     };
 
-    // ================================================================
-    // ================ FUNÇÃO DE LIMPEZA FINAL (v7) ==================
-    // ================================================================
-    // Arquivo: index.html - cleanGeneratedText VERSÃO 7 (FINAL BOSS)
+    // Arquivo: index.html - cleanGeneratedText VERSÃO 8 (CAÇADORA DE JSON)
     const cleanGeneratedText = (text, expectJson = false) => {
         if (!text) return null;
 
         if (expectJson) {
             console.log("Recebido para limpeza de JSON:", text);
             
-            let jsonString = '';
-            // Procura o primeiro '{' ou '[' para determinar o início do JSON.
-            const firstBrace = text.indexOf('{');
-            const firstBracket = text.indexOf('[');
+            // Procura o início do JSON, seja ele um objeto '{' ou um array '['
+            const startIndex = text.indexOf('{');
+            const startBracket = text.indexOf('[');
             
-            if (firstBrace === -1 && firstBracket === -1) {
-                console.error("Nenhum delimitador JSON ('{' ou '[') encontrado.");
+            let jsonStartIndex = -1;
+
+            if (startIndex > -1 && startBracket > -1) {
+                // Se ambos existem, pega o que aparecer primeiro
+                jsonStartIndex = Math.min(startIndex, startBracket);
+            } else if (startIndex > -1) {
+                jsonStartIndex = startIndex;
+            } else {
+                jsonStartIndex = startBracket;
+            }
+
+            if (jsonStartIndex === -1) {
+                console.error("cleanGeneratedText: Não foi possível encontrar um início de JSON ('{' ou '[') na resposta.", text);
                 return null;
             }
 
-            // Determina se o JSON é um objeto ou um array, baseado em qual aparece primeiro.
-            if (firstBracket !== -1 && (firstBracket < firstBrace || firstBrace === -1)) {
-                // Se um colchete '[' aparece primeiro, o JSON é um array.
-                const lastBracket = text.lastIndexOf(']');
-                if (lastBracket > firstBracket) {
-                    jsonString = text.substring(firstBracket, lastBracket + 1);
-                }
-            } else if (firstBrace !== -1) {
-                // Se uma chave '{' aparece primeiro, o JSON é um objeto.
-                const lastBrace = text.lastIndexOf('}');
-                if (lastBrace > firstBrace) {
-                    jsonString = text.substring(firstBrace, lastBrace + 1);
-                }
+            // Pega o substring a partir do início do JSON encontrado
+            const potentialJson = text.substring(jsonStartIndex);
+            
+            // Tenta encontrar o fechamento correspondente
+            let jsonString = '';
+            if (potentialJson.startsWith('{')) {
+                const endIndex = potentialJson.lastIndexOf('}');
+                jsonString = potentialJson.substring(0, endIndex + 1);
+            } else {
+                const endIndex = potentialJson.lastIndexOf(']');
+                jsonString = potentialJson.substring(0, endIndex + 1);
             }
-
-            if (!jsonString) {
-                console.error("Não foi possível extrair um bloco JSON válido.", text);
-                return null;
-            }
-
+            
             console.log("Bloco JSON extraído:", jsonString);
 
             try {
