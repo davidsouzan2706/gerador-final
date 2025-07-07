@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Gerador de Roteiros Virais v108</title>
     <!-- Tailwind CSS CDN - Not recommended for production, but fine for development/prototyping. -->
-    <!-- For production, install as a PostCSS plugin or use Tailwind CLI: https://tailwindcss.com/docs/installation -->
+    <!-- For production, install as a PostCSS plugin or Tailwind CLI: https://tailwindcss.com/docs/installation -->
     <script src="https://cdn.tailwindcss.com"></script>
 
     <!-- O bloco safelist foi removido, pois a abordagem de CSS puro será usada. -->
@@ -679,40 +679,57 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const generateSectionHtmlContent = (sectionId, title, content) => { return `<div class="whitespace-normal"><h3>${title}</h3><button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button><p class="mt-4 whitespace-pre-wrap">${content}</p></div>`; };
 
     // ================================================================
-    // ================ FUNÇÃO DE LIMPEZA FINAL (v6) ==================
+    // ================ FUNÇÃO DE LIMPEZA FINAL (v7) ==================
     // ================================================================
-    // Arquivo: index.html - cleanGeneratedText VERSÃO 6 (SUPER SIMPLES)
+    // Arquivo: index.html - cleanGeneratedText VERSÃO 7 (FINAL BOSS)
     const cleanGeneratedText = (text, expectJson = false) => {
         if (!text) return null;
 
         if (expectJson) {
             console.log("Recebido para limpeza de JSON:", text);
-
-            // Encontra o primeiro '{' e o último '}'
-            const startIndex = text.indexOf('{');
-            const endIndex = text.lastIndexOf('}');
-
-            if (startIndex === -1 || endIndex === -1 || endIndex < startIndex) {
-                console.error("cleanGeneratedText: Não foi possível encontrar um objeto JSON válido '{}' na resposta.", text);
+            
+            let jsonString = '';
+            // Procura o primeiro '{' ou '[' para determinar o início do JSON.
+            const firstBrace = text.indexOf('{');
+            const firstBracket = text.indexOf('[');
+            
+            if (firstBrace === -1 && firstBracket === -1) {
+                console.error("Nenhum delimitador JSON ('{' ou '[') encontrado.");
                 return null;
             }
 
-            // Extrai o bloco de objeto
-            const jsonString = text.substring(startIndex, endIndex + 1);
+            // Determina se o JSON é um objeto ou um array, baseado em qual aparece primeiro.
+            if (firstBracket !== -1 && (firstBracket < firstBrace || firstBrace === -1)) {
+                // Se um colchete '[' aparece primeiro, o JSON é um array.
+                const lastBracket = text.lastIndexOf(']');
+                if (lastBracket > firstBracket) {
+                    jsonString = text.substring(firstBracket, lastBracket + 1);
+                }
+            } else if (firstBrace !== -1) {
+                // Se uma chave '{' aparece primeiro, o JSON é um objeto.
+                const lastBrace = text.lastIndexOf('}');
+                if (lastBrace > firstBrace) {
+                    jsonString = text.substring(firstBrace, lastBrace + 1);
+                }
+            }
+
+            if (!jsonString) {
+                console.error("Não foi possível extrair um bloco JSON válido.", text);
+                return null;
+            }
+
             console.log("Bloco JSON extraído:", jsonString);
 
             try {
-                // Tenta analisar o JSON extraído
-                JSON.parse(jsonString);
+                JSON.parse(jsonString); // Apenas para validar
                 console.log("JSON extraído é válido.");
                 return jsonString;
             } catch (e) {
-                console.error("cleanGeneratedText: A IA retornou um JSON malformado que não pôde ser analisado.", e.message, jsonString);
-                return null; 
+                console.error("O JSON extraído é inválido.", e.message, jsonString);
+                return null;
             }
         }
         
-        // Limpeza para texto normal
         return text.trim();
     };
     
