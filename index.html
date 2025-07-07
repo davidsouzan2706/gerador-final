@@ -1136,7 +1136,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.resetScriptBtn.disabled = false;
 
         // ADICIONADO: Atualiza os botões na barra flutuante
-        populateActionBar(); 
+        window.populateActionBar(); // Updated call
     };
     
     const getBasePromptContext = () => {
@@ -2508,6 +2508,45 @@ ${scriptContent}
         }
     };
 
+    // ===============================================
+    // AS NOVAS FUNÇÕES QUE ADICIONAMOS
+    // ===============================================
+    window.handleFloatingActionBar = () => { // Changed to window.handleFloatingActionBar
+        const firstStepElement = document.querySelector('.mb-8.p-4'); // Pega o "Passo 1"
+        if (!firstStepElement) return;
+
+        const triggerPoint = firstStepElement.offsetTop - 20; // Ponto de gatilho 20px antes
+
+        if (window.scrollY > triggerPoint) {
+            elements.floatingActionBar.classList.add('visible');
+        } else {
+            elements.floatingActionBar.classList.remove('visible');
+        }
+    };
+
+    window.populateActionBar = () => { // Changed to window.populateActionBar
+        const buttonContainer = elements.floatingActionBar.querySelector('.action-bar-buttons');
+        buttonContainer.innerHTML = ''; // Limpa antes de adicionar
+
+        const buttonIdsToClone = [
+            'generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 
+            'downloadPdfBtn', 'resetScriptBtn'
+        ];
+
+        buttonIdsToClone.forEach(id => {
+            const originalButton = document.getElementById(id);
+            if (originalButton) {
+                const clone = originalButton.cloneNode(true);
+                // Remove o ícone de check do clone para manter a barra limpa
+                const checkIcon = clone.querySelector('.completion-icon');
+                if (checkIcon) checkIcon.style.display = 'none';
+                
+                buttonContainer.appendChild(clone);
+            }
+        });
+    };
+    // ===============================================
+
     // --- 6. PONTO DE ENTRADA DA APLICAÇÃO ---
     // O bloco de inicialização agora vem por último, garantindo que todas as funções sejam definidas.
     document.addEventListener('DOMContentLoaded', () => {
@@ -2517,7 +2556,7 @@ ${scriptContent}
 	// initializeFirebase();
         
 	setupButtonListeners(); // Agora é seguro chamar
-        populateActionBar(); // Popula a barra de ações ao carregar
+        window.populateActionBar(); // Updated call
         updateButtonStates(); // Define o estado inicial dos botões
 
         // Dentro de DOMContentLoaded
@@ -2525,7 +2564,7 @@ ${scriptContent}
             setDarkMode(true);
         }
         // LÓGICA DA BARRA FLUTUANTE
-        window.addEventListener('scroll', handleFloatingActionBar);
+        window.addEventListener('scroll', window.handleFloatingActionBar); // Updated call
     });
     </script>
 </body>
