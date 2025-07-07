@@ -618,8 +618,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
         generateImagePromptsBtn: document.getElementById('generateImagePromptsBtn'),
         generateDescriptionBtn: document.getElementById('generateDescriptionBtn'),
-        saveScriptBtn: document.getElementById('saveScriptBtn'),
-        loadLatestScriptBtn: document.getElementById('loadLatestScriptBtn'),
+        
         downloadPdfBtn: document.getElementById('downloadPdfBtn'),
         resetScriptBtn: document.getElementById('resetScriptBtn'),
     };
@@ -744,16 +743,10 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated;
         
         const hasAnyContent = anyMainScriptGenerated || allImagePrompts.length > 0 || !!generatedTitlesAndThumbnails;
-        buttons.saveScriptBtn.disabled = !hasAnyContent; // Keep this disabled if Firebase is not used
         buttons.downloadPdfBtn.disabled = !hasAnyContent;
-
-        if (isAuthReady) {
-            buttons.loadLatestScriptBtn.disabled = false; // Keep this disabled if Firebase is not used
-            buttons.resetScriptBtn.disabled = false;
-        } else {
-            buttons.loadLatestScriptBtn.disabled = true; // Keep this disabled if Firebase is not used
-            buttons.resetScriptBtn.disabled = true;
-        }
+        
+        // O botão de reset agora pode ser sempre habilitado
+        buttons.resetScriptBtn.disabled = false;
     };
     
     const getBasePromptContext = () => {
