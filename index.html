@@ -1,0 +1,1797 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gerador de Roteiros Virais v108</title>
+    <!-- Tailwind CSS CDN - Not recommended for production, but fine for development/prototyping. -->
+    <!-- For production, install as a PostCSS plugin or use Tailwind CLI: https://tailwindcss.com/docs/installation -->
+    <script src="https://cdn.tailwindcss.com"></script>
+
+    <!-- O bloco safelist foi removido, pois a abordagem de CSS puro será usada. -->
+    
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f5;
+        }
+        .container {
+            max-width: 1024px;
+            margin: 2rem auto;
+            padding: 2rem;
+            background-color: #ffffff;
+            border-radius: 12px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        }
+        .input-group label {
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1.5px solid #d1d5db;
+            border-radius: 8px;
+            font-size: 1rem;
+            transition: border-color 0.2s, box-shadow 0.2s;
+            background-color: #f9fafb;
+        }
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #4f46e5; /* Indigo-600 */
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            background-color: #ffffff;
+        }
+        .btn {
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            border: none;
+        }
+        .btn:disabled {
+            cursor: not-allowed;
+            opacity: 0.6;
+        }
+        .btn-primary {
+            background-color: #4f46e5; /* Indigo-600 */
+            color: #ffffff;
+        }
+        .btn-primary:hover:not(:disabled) {
+            background-color: #4338ca; /* Indigo-700 */
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(79, 70, 229, 0.2);
+        }
+        .btn-secondary {
+            background-color: #e0e7ff; /* Indigo-100 */
+            color: #4338ca; /* Indigo-700 */
+        }
+        .btn-secondary:hover:not(:disabled) {
+            background-color: #c7d2fe; /* Indigo-200 */
+            transform: translateY(-2px);
+            box-shadow: 0 44px 12px rgba(79, 70, 229, 0.15);
+        }
+        .script-section {
+            background-color: #f9fafb;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1.5rem;
+            margin-bottom: 1.5rem;
+            /* white-space: pre-wrap; REMOVED THIS LINE */
+            overflow-wrap: break-word;
+            word-break: break-word;
+            position: relative;
+        }
+        .script-section h3 {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: #1f2937;
+            margin-bottom: 1rem;
+        }
+        /* Updated .copy-btn for general use */
+        .copy-btn {
+            position: absolute;
+            top: 1rem; /* Adjusted for consistency */
+            right: 1rem; /* Adjusted for consistency */
+            background-color: #4f46e5; /* Darker background */
+            color: #ffffff; /* White text */
+            border: none;
+            border-radius: 6px;
+            padding: 0.4rem 0.8rem; /* Smaller padding */
+            font-size: 0.8rem; /* Smaller font size */
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+        .copy-btn:hover {
+            background-color: #3730a3; /* Darker hover */
+        }
+        .loading-spinner {
+            border: 4px solid rgba(255, 255, 255, 0.3);
+            border-left-color: #ffffff;
+            border-radius: 50%;
+            width: 20px;
+            height: 20px;
+            animation: spin 1s linear infinite;
+        }
+        .btn-secondary .loading-spinner {
+            border: 4px solid rgba(67, 56, 202, 0.2);
+            border-left-color: #4338ca;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        /* Styles for the new toast notification */
+        #toastNotification {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: rgba(0, 0, 0, 0.7);
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+            z-index: 1001;
+            white-space: nowrap;
+        }
+        #toastNotification.toast-visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        #userIdDisplay {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            font-size: 0.8rem;
+            color: #4338ca;
+            background-color: #e0e7ff;
+            padding: 0.25rem 0.5rem;
+            border-radius: 6px;
+        }
+        .sub-section {
+            margin-top: 1rem;
+            padding-top: 1rem;
+            border-top: 1px solid #e5e7eb;
+        }
+        .sub-section h4 {
+            font-weight: 600;
+            color: #4f46e5;
+            margin-bottom: 0.5rem;
+        }
+        .individual-prompt-block { /* Adicionado estilo para prompts individuais */
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            background-color: #ffffff;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05); /* Subtle shadow */
+        }
+        /* Removed specific .individual-prompt-block .copy-btn as it's now covered by general .copy-btn */
+        .prompt-phrase {
+            font-size: 0.875rem; /* Reduced font size to sm */
+            color: #1f2937;
+            font-weight: 700; /* Kept bold */
+            margin-bottom: 0rem; /* Reduced margin */
+            line-height: 1.4; /* Adjusted line height for better readability */
+            text-align: left; /* Aligned to left */
+        }
+        .prompt-time {
+            font-size: 0.75rem; /* Reduced font size to xs */
+            color: #4f46e5;
+            font-weight: 700;
+            margin-right: 0.5rem;
+            text-align: left; /* Aligned to left */
+        }
+        .prompt-description-label {
+            font-size: 0.875rem;
+            font-weight: 600;
+            color: #4b5563;
+            margin-top: 0.5rem; /* Reduced spacing */
+            border-top: 1px dashed #e5e7eb; /* Dashed line separator */
+            padding-top: 0.5rem; /* Reduced padding */
+        }
+        .prompt-description-content {
+            font-size: 0.9rem;
+            color: #374151;
+            line-height: 1.5;
+            padding-right: 4rem; /* Para não sobrepor o botão de copiar */
+            margin-bottom: 0.25rem; /* Reduced margin to make it closer to style block */
+        }
+        .completion-message {
+            text-align: center;
+            font-weight: 600;
+            color: #4f46e5;
+            margin-top: 1.5rem;
+            padding: 1rem;
+            border: 1px dashed #c7d2fe;
+            border-radius: 8px;
+            background-color: #eef2ff;
+        }
+
+        /* NEW: Styles for the full-screen alert */
+        #fullScreenAlertOverlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Dark overlay */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        #fullScreenAlertOverlay.visible {
+            visibility: visible;
+            opacity: 1;
+        }
+
+        #fullScreenAlertBox {
+            background-color: #ffffff;
+            padding: 2.5rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            max-width: 500px;
+            width: 90%;
+            position: relative;
+            transform: translateY(-20px); /* Slight animation on appear */
+            transition: transform 0.3s ease-out;
+        }
+
+        #fullScreenAlertOverlay.visible #fullScreenAlertBox {
+            transform: translateY(0);
+        }
+
+        #fullScreenAlertBox p {
+            font-size: 1.1rem;
+            color: #1f2937;
+            margin-bottom: 1.5rem;
+            line-height: 1.6;
+        }
+
+        #fullScreenAlertBox button {
+            background-color: #4f46e5;
+            color: #ffffff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background-color 0.2s;
+            border: none;
+        }
+
+        #fullScreenAlertBox button:hover {
+            background-color: #4338ca;
+        }
+        /* Style for the completion icon */
+        .completion-icon {
+            margin-left: 0.5rem; /* Space between text and icon */
+            color: #10B981; /* Green-500 */
+            font-size: 2.2em; /* Doubled from 1.1em to 2.2em, now controls SVG size */
+            line-height: 1; /* Align vertically */
+            display: inline-flex; /* Use flex to center SVG if needed */
+            align-items: center;
+            justify-content: center;
+            /* Ensure the SVG scales with font-size */
+            width: 1em; /* Make SVG width scale with font-size */
+            height: 1em; /* Make SVG height scale with font-size */
+        }
+        .completion-icon.hidden {
+            display: none;
+        }
+        /* Styles for button text and spinner */
+        .button-text.hidden {
+            display: none;
+        }
+        .loading-spinner.hidden {
+            display: none;
+        }
+
+        /* ============== ADICIONE ESTA NOVA CLASSE AQUI ============== */
+        .thumbnail-item-separator {
+            margin-top: 1.5rem;    /* Equivalente ao mt-6 do Tailwind */
+            padding-top: 1.5rem;   /* Equivalente ao pt-6 do Tailwind */
+            border-top: 1px solid #e5e7eb; /* Equivalente ao border-t border-gray-200 */
+        }
+    </style>
+</head>
+<body>
+    <div class="container relative">
+        <div id="userIdDisplay" class="hidden"></div> <!-- User ID Display -->
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">Gerador de Roteiros Virais</h1>
+        <p class="text-center text-gray-500 mb-8">Crie conteúdo de alto impacto para o seu canal do YouTube.</p>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="input-group">
+                <label for="channelName">Nome do Canal:</label>
+                <input type="text" id="channelName" placeholder="Ex: The Biblical Unveiling" value="The Biblical Unveiling">
+            </div>
+            <div class="input-group">
+                <label for="videoTheme">Tema do Vídeo:</label>
+                <input type="text" id="videoTheme" placeholder="Ex: A Arca da Aliança Foi Encontrada?">
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="targetAudience">Público-Alvo:</label>
+                <input type="text" id="targetAudience" value="Pessoas Interessadas em Arqueologia Bíblica e História Antiga, Cristãos e Pessoas de Fé, Entusiastas de Ciência e Ceticismo (com mente aberta), Curiosos em Geral e Amantes de Mistérios." readonly>
+            </div>
+            <div class="input-group">
+                <label for="languageSelect">Idioma do Roteiro:</label>
+                <select id="languageSelect">
+                    <option value="pt-br">Português (Brasil)</option>
+                    <option value="pt-pt">Português (Portugal)</option>
+                    <option value="en" selected>English</option> <!-- Changed selected to en -->
+                    <option value="es">Españão</option>
+                </select>
+            </div>
+             <div class="input-group">
+                <label for="languageStyle">Estilo de Linguagem:</label>
+                <select id="languageStyle">
+                    <option value="formal">Formal</option>
+                    <option value="informal">Informar</option>
+                    <option value="emocional">Emocional</option>
+                    <option value="tecnico">Técnico</option>
+                    <option value="inspirador" selected>Inspirador</option>
+                    <option value="humoristico">Humorístico</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="videoObjective">Objetivo do Vídeo:</label>
+                <select id="videoObjective">
+                    <option value="informar" selected>Informar</option>
+                    <option value="emocionar">Emocionar</option>
+                    <option value="evangelizar">Evangelizar (criar defensores)</option>
+                    <option value="vender">Vender</option>
+                    <option value="entreter">Entreter</option>
+                </select>
+            </div>
+            <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+                        <div class="input-group">
+                            <label for="videoDuration">Duração Desejada:</label>
+                            <select id="videoDuration">
+                                <option value="">-- Selecione a Duração --</option> <!-- NEW: Placeholder option -->
+                                <option value="short">Curto (~1-3 min)</option>
+                                <option value="medium">Médio (~4-7 min)</option> <!-- REMOVED 'selected' attribute -->
+                                <option value="long">Longo (~8-12 min)</option>
+                            </select>
+                        </div>
+                        <div class="input-group">
+                            <label for="speakingPace">Ritmo de Fala:</label>
+                            <select id="speakingPace">
+                                <option value="slow">Lento</m>
+                                <option value="moderate" selected>Moderado</option>
+                                <option value="fast">Rápido</option>
+                            </select>
+                        </div>
+            </div>
+            <!-- NEW: Narrative Style Select -->
+            <div class="input-group md:col-span-2">
+                <label for="narrativeStyle">Estilo da Narrativa:</label>
+                <select id="narrativeStyle">
+                    <option value="direct" selected>Direto e Informativo (Padrão)</option>
+                    <option value="mystery_loop">Mistério (com Loop Aberto)</option>
+                    <option value="pas">Problema-Agitação-Solução</option>
+                    <option value="twist">Narrativa com Virada (Twist)</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="videoDescription">Descrição do Vídeo (para inspiração):</label>
+                <textarea id="videoDescription" rows="4" placeholder="Cole uma breve descrição do vídeo aqui para que a IA possa usar como inspiração para o roteiro."></textarea>
+            </div>
+            <!-- NEW: Central Question Input -->
+            <div class="input-group md:col-span-2">
+                <label for="centralQuestion">Pergunta Central (Opcional):</label>
+                <textarea id="centralQuestion" rows="2" placeholder="Ex: A Arca da Aliança era uma arma ou um meio de comunicação?"></textarea>
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="emotionalArc">Arco Emocional Desejado (Opcional):</label>
+                <textarea id="emotionalArc" rows="2" placeholder="Ex: Começar com curiosidade, construir para admiração, e terminar com inspiração."></textarea>
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="viralElements">Elementos Virais/Tendências (Opcional):</label>
+                <textarea id="viralElements" rows="2" placeholder="Insira memes, frases, tendências ou palavras-chave em alta. Ex: 'o hype é real', 'chocado', 'plot twist'"></textarea>
+            </div>
+            <!-- RENOMEADO: imageQualityInstructions para imageDescriptionEngine -->
+            <div class="input-group md:col-span-2">
+                <label for="imageDescriptionEngine">Motor de Descrição de Imagem:</label>
+                <textarea id="imageDescriptionEngine" rows="2" placeholder="Ex: 'alta resolução', 'detalhado', 'fotorrealista', 'cores vibrantes'"></textarea>
+            </div>
+            <!-- NOVO: Motor de Qualidade de Imagem com seleção de estilo -->
+            <div class="input-group md:col-span-2">
+                <label for="imageStyleSelect">Motor de Qualidade de Imagem:</label>
+                <select id="imageStyleSelect">
+                    <option value="cinematic" selected>Cinematográfico</option>
+                    <option value="custom">Personalizado</option>
+                    <option value="none">Nenhum</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-2" id="customImageStyleContainer" style="display: none;">
+                <label for="customImageStyle">Estilo Visual Personalizado:</label>
+                <textarea id="customImageStyle" rows="5" placeholder="Cole aqui o seu bloco de estilo personalizado (ex: para cartoon, anime, etc.)."></textarea>
+            </div>
+            <div class="input-group md:col-span-2">
+                <label for="apiKeyInput">Chaves da API (Groq - uma por linha):</label>
+                <textarea id="apiKeyInput" rows="4" placeholder="Cole suas chaves de API do Groq aqui, uma por linha (ex:
+gsk_xxxxxxxxxxxxxxxxxxxxxx
+gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
+                <!-- NOTE: Exposing API keys on the client-side is a security risk. This is for demonstration purposes. In a production environment, handle API calls through a secure backend server. -->
+            </div>
+        </div>
+
+        <div class="mb-8 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+            <h3 class="font-bold text-lg text-indigo-800 mb-3">Passo 1: Gerar o Roteiro Principal</h3>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+                <button id="generateIntroBtn" class="btn btn-primary">
+                    <span class="button-text">Introdução</span>
+                    <span id="introCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="introSpinner"></div>
+                </button>
+                <button id="generateDevelopmentBtn" class="btn btn-primary">
+                    <span class="button-text">Desenvolvimento</span>
+                    <span id="developmentCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="developmentSpinner"></div>
+                </button>
+                <button id="generateClimaxBtn" class="btn btn-primary">
+                    <span class="button-text">Clímax</span>
+                    <span id="climaxCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="climaxSpinner"></div>
+                </button>
+                <button id="conclusionBtn" class="btn btn-primary">
+                    <span class="button-text">Conclusão</span>
+                    <span id="conclusionCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="conclusionSpinner"></div>
+                </button>
+                <button id="generateCTABtn" class="btn btn-primary">
+                    <span class="button-text">CTA</span>
+                    <span id="ctaCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="ctaSpinner"></div>
+                </button>
+            </div>
+        </div>
+
+        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 2: Criar Material de Suporte</h3>
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button id="generateDescriptionBtn" class="btn btn-secondary">
+                    <span class="button-text">Descrição do Vídeo</span>
+                    <span id="descriptionCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="descriptionSpinner"></div>
+                </button>
+                <!-- Swapped positions of these two buttons -->
+                <button id="generateTitlesAndThumbnailsBtn" class="btn btn-secondary">
+                    <span class="button-text">Títulos de Vídeos e Thumbnails</span>
+                    <span id="titlesThumbnailsCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="titlesThumbnailsSpinner"></div>
+                </button>
+                <button id="generateImagePromptsBtn" class="btn btn-secondary">
+                    <span class="button-text">Prompts de Imagem</span>
+                    <span id="imagePromptsCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
+                    <div class="loading-spinner hidden" id="imagePromptsSpinner"></div>
+                </button>
+            </div>
+        </div>
+       
+        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+            <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 3: Salvar e Exportar</h3>
+             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <button id="saveScriptBtn" class="btn btn-secondary">Salvar Roteiro</button>
+                <button id="loadLatestScriptBtn" class="btn btn-secondary">Carregar Último</button>
+                <button id="downloadPdfBtn" class="btn btn-secondary">Download PDF</button>
+                <button id="resetScriptBtn" class="btn btn-secondary">Novo Roteiro</button> <!-- NEW: Reset button -->
+            </div>
+        </div>
+
+        <div id="scriptOutput" class="mt-8">
+            <!-- Fixed script sections will be dynamically updated here -->
+            <div id="introSection" class="script-section hidden"></div>
+            <div id="developmentSection" class="script-section hidden"></div>
+            <div id="climaxSection" class="script-section hidden"></div>
+            <div id="conclusionSection" class="script-section hidden"></div>
+            <div id="ctaSection" class="script-section hidden"></div>
+            <div id="videoDescriptionOutputSection" class="script-section hidden"></div>
+            <div id="titlesThumbnailsSection" class="script-section hidden"></div>
+        </div>
+
+        <div id="imagePromptsOutput" class="mt-8 hidden">
+            <div class="script-section">
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-2xl font-bold text-gray-800">Prompts de Imagem</h3>
+                    <!-- The "Copiar Todos" button was removed as requested -->
+                </div>
+                <div id="imagePromptsList">
+                    <!-- Image prompts will be inserted here -->
+                </div>
+                <button id="loadMoreImagePromptsBtn" class="btn btn-secondary mt-4 w-full" style="display: none;">Gerar Mais</button> <!-- Alterado o texto do botão -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Custom Toast Notification for Alerts -->
+    <div id="toastNotification" class="toast-notification"></div>
+
+    <!-- NEW: Full-screen alert for incomplete script -->
+    <div id="fullScreenAlertOverlay">
+        <div id="fullScreenAlertBox">
+            <p id="fullScreenAlertMessage"></p>
+            <button id="fullScreenAlertCloseBtn">Entendi</button>
+        </div>
+    </div>
+
+    <script type="module">
+    // Import do Firebase
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+    import { getAuth, signInAnonymously, signInWithCustomToken, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+    // ================================================================
+    // =================== ESTRUTURA DE CÓDIGO CORRIGIDA ================
+    // ================================================================
+
+    // --- 1. VARIÁVEIS GLOBAIS E CONSTANTES ---
+    const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+    const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : null;
+    // Correção: Usar __initial_auth_token diretamente
+    const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null; 
+    let app, db, auth;
+    let userId = null;
+    let isAuthReady = false;
+    let generatedTitlesAndThumbnails = null;
+    let apiKeys = [];
+    let allImagePrompts = [];
+    let currentImagePromptIndex = 0;
+    const IMAGE_PROMPT_BATCH_SIZE = 2;
+    const CINEMATIC_STYLE_BLOCK = `
+**[ESTILO CINEMATOGRÁFICO]**
+**Style:** Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real.
+**Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon
+`;
+    const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:', 'es': 'Descripción de la Imagen:' };
+
+    // --- 2. REFERÊNCIAS A ELEMENTOS DO DOM ---
+    const elements = {
+        channelName: document.getElementById('channelName'),
+        videoTheme: document.getElementById('videoTheme'),
+        targetAudience: document.getElementById('targetAudience'),
+        languageSelect: document.getElementById('languageSelect'),
+        languageStyle: document.getElementById('languageStyle'),
+        videoObjective: document.getElementById('videoObjective'),
+        videoDuration: document.getElementById('videoDuration'),
+        speakingPace: document.getElementById('speakingPace'),
+        narrativeStyle: document.getElementById('narrativeStyle'),
+        videoDescription: document.getElementById('videoDescription'),
+        centralQuestion: document.getElementById('centralQuestion'),
+        emotionalArc: document.getElementById('emotionalArc'),
+        viralElements: document.getElementById('viralElements'),
+        imageDescriptionEngine: document.getElementById('imageDescriptionEngine'),
+        imageStyleSelect: document.getElementById('imageStyleSelect'),
+        customImageStyle: document.getElementById('customImageStyle'),
+        customImageStyleContainer: document.getElementById('customImageStyleContainer'),
+        apiKeyInput: document.getElementById('apiKeyInput'),
+        userIdDisplay: document.getElementById('userIdDisplay'),
+        scriptOutput: document.getElementById('scriptOutput'),
+        imagePromptsOutput: document.getElementById('imagePromptsOutput'),
+        imagePromptsList: document.getElementById('imagePromptsList'),
+        loadMoreImagePromptsBtn: document.getElementById('loadMoreImagePromptsBtn'),
+        toastNotification: document.getElementById('toastNotification'),
+        fullScreenAlertOverlay: document.getElementById('fullScreenAlertOverlay'),
+        fullScreenAlertMessage: document.getElementById('fullScreenAlertMessage'),
+        fullScreenAlertCloseBtn: document.getElementById('fullScreenAlertCloseBtn'),
+    };
+    const buttons = {
+        generateIntroBtn: document.getElementById('generateIntroBtn'),
+        generateDevelopmentBtn: document.getElementById('generateDevelopmentBtn'),
+        generateClimaxBtn: document.getElementById('generateClimaxBtn'),
+        conclusionBtn: document.getElementById('conclusionBtn'),
+        generateCTABtn: document.getElementById('generateCTABtn'),
+        generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
+        generateImagePromptsBtn: document.getElementById('generateImagePromptsBtn'),
+        generateDescriptionBtn: document.getElementById('generateDescriptionBtn'),
+        saveScriptBtn: document.getElementById('saveScriptBtn'),
+        loadLatestScriptBtn: document.getElementById('loadLatestScriptBtn'),
+        downloadPdfBtn: document.getElementById('downloadPdfBtn'),
+        resetScriptBtn: document.getElementById('resetScriptBtn'),
+    };
+    const buttonCheckmarkMap = {
+        'generateIntroBtn': 'introCheck',
+        'generateDevelopmentBtn': 'developmentCheck',
+        'generateClimaxBtn': 'climaxCheck',
+        'conclusionBtn': 'conclusionCheck',
+        'generateCTABtn': 'ctaCheck',
+        'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck',
+        'generateImagePromptsBtn': 'imagePromptsCheck',
+        'generateDescriptionBtn': 'descriptionCheck'
+    };
+
+    // --- 3. FUNÇÕES DE UTILIDADE (DEFINIDAS PRIMEIRO) ---
+    window.showToast = (message) => { elements.toastNotification.textContent = message; elements.toastNotification.classList.add('toast-visible'); setTimeout(() => { elements.toastNotification.classList.remove('toast-visible'); setTimeout(() => { elements.toastNotification.textContent = ''; }, 300); }, 2000); };
+    window.copyTextToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); window.showToast('Copiado!'); } catch (err) { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); window.showToast('Copiado!'); } finally { document.body.removeChild(ta); } } };
+    
+    // **VILÃO 2 CORRIGIDO: showLoading com bloqueio total**
+    const showLoading = (button) => {
+        // Desabilitar TODOS os botões de geração para evitar rate limit
+        Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
+    
+        const textSpan = button.querySelector('.button-text');
+        const checkmarkSpan = button.querySelector('.completion-icon');
+        const spinnerDiv = button.querySelector('.loading-spinner');
+
+        if (textSpan) textSpan.classList.add('hidden');
+        if (checkmarkSpan) checkmarkSpan.classList.add('hidden');
+        if (spinnerDiv) spinnerDiv.classList.remove('hidden');
+    };
+
+    // **VILÃO 2 CORRIGIDO: hideLoading com reativação total**
+    const hideLoading = (button) => {
+        // Habilita TODOS os botões de geração novamente
+        Object.values(buttons).forEach(btn => { if(btn) btn.disabled = false; });
+        
+        const spinnerDiv = button.querySelector('.loading-spinner');
+        if (spinnerDiv) spinnerDiv.classList.add('hidden');
+        
+        const textSpan = button.querySelector('.button-text');
+        if (textSpan) textSpan.classList.remove('hidden');
+
+        const checkmarkSpan = button.querySelector('.completion-icon');
+        if (checkmarkSpan && button.dataset.completed === 'true') {
+            checkmarkSpan.classList.remove('hidden');
+        }
+        updateButtonStates(); // Chama a função centralizada para reavaliar o estado
+    };
+    
+    const markButtonAsCompleted = (buttonId) => { const button = document.getElementById(buttonId); if (button) { button.dataset.completed = 'true'; const checkmarkElement = button.querySelector('.completion-icon'); if (checkmarkElement) checkmarkElement.classList.remove('hidden'); } };
+    const resetCompletionIcons = () => { for (const buttonId in buttonCheckmarkMap) { const button = document.getElementById(buttonId); if (button) { button.dataset.completed = 'false'; const checkmarkElement = button.querySelector('.completion-icon'); if (checkmarkElement) checkmarkElement.classList.add('hidden'); const textSpan = button.querySelector('.button-text'); const spinnerDiv = button.querySelector('.loading-spinner'); if (textSpan) textSpan.classList.remove('hidden'); if (spinnerDiv) spinnerDiv.classList.add('hidden'); } } };
+    const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
+    const hideFullScreenAlert = () => { elements.fullScreenAlertOverlay.classList.remove('visible'); };
+    const toggleCustomImageStyleVisibility = () => { elements.customImageStyleContainer.style.display = elements.imageStyleSelect.value === 'custom' ? 'block' : 'none'; };
+    const generateSectionHtmlContent = (sectionId, title, content) => { return `<div class="whitespace-normal"><h3>${title}</h3><button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('${sectionId}Section').querySelector('p').textContent)">Copiar</button><p class="mt-4 whitespace-pre-wrap">${content}</p></div>`; };
+
+    // ================================================================
+    // ================ FUNÇÃO DE LIMPEZA FINAL (v3) ==================
+    // ================================================================
+    const cleanGeneratedText = (text, expectJson = false) => {
+        if (!text) return null;
+
+        if (expectJson) {
+            // Remove qualquer texto explicativo e tokens internos da IA
+            let cleanText = text
+                .replace(/Here is the (?:revised |corrected )?JSON array(?: of image prompts)?:/gi, '')
+                .replace(/I apologize for the mistake\./gi, '')
+                .replace(/assistant<\|end_header_id\|>/g, '')
+                .replace(/```json/g, '')
+                .replace(/```/g, '')
+                .trim();
+
+            // Usa uma expressão regular para encontrar TODOS os objetos JSON válidos
+            const jsonObjects = cleanText.match(/\{[\s\S]*?\}/g);
+
+            if (jsonObjects && jsonObjects.length > 0) {
+                // Junta todos os objetos encontrados em uma única string de array JSON
+                const finalJsonString = `[${jsonObjects.join(',')}]`;
+                
+                // Uma última verificação para garantir que o JSON reconstruído é válido
+                try {
+                    JSON.parse(finalJsonString);
+                    console.log("Reconstructed JSON string:", finalJsonString);
+                    return finalJsonString;
+                } catch (e) {
+                    console.error("Erro final ao analisar o JSON reconstruído:", e, "String problemática:", finalJsonString);
+                    return null;
+                }
+            } else {
+                console.error("cleanGeneratedText: Nenhum objeto JSON válido foi encontrado na resposta.");
+                return null;
+            }
+        }
+        
+        // Limpeza para texto normal
+        return text.trim();
+    };
+    
+    // --- 4. FUNÇÕES DE ESTADO E LÓGICA PRINCIPAL ---
+    const isScriptComplete = () => { return ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].every(id => !document.getElementById(id).classList.contains('hidden')); };
+
+    const updateButtonStates = () => {
+        const anyMainScriptGenerated = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].some(id => !document.getElementById(id).classList.contains('hidden'));
+        const allMainScriptGenerated = isScriptComplete();
+        
+        buttons.generateDescriptionBtn.disabled = !allMainScriptGenerated;
+        buttons.generateTitlesAndThumbnailsBtn.disabled = !allMainScriptGenerated;
+        buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated;
+        
+        const hasAnyContent = anyMainScriptGenerated || allImagePrompts.length > 0 || !!generatedTitlesAndThumbnails;
+        buttons.saveScriptBtn.disabled = !hasAnyContent;
+        buttons.downloadPdfBtn.disabled = !hasAnyContent;
+
+        if (isAuthReady) {
+            buttons.loadLatestScriptBtn.disabled = false;
+            buttons.resetScriptBtn.disabled = false;
+        } else {
+            buttons.loadLatestScriptBtn.disabled = true;
+            buttons.resetScriptBtn.disabled = true;
+        }
+    };
+    
+    const getBasePromptContext = () => {
+        const channelName = elements.channelName.value.trim();
+        const videoTheme = elements.videoTheme.value.trim();
+        const targetAudience = elements.targetAudience.value.trim();
+        const language = elements.languageSelect.value;
+        const languageStyle = elements.languageStyle.value;
+        const videoObjective = elements.videoObjective.value;
+        const videoDuration = elements.videoDuration.value;
+        const speakingPace = elements.speakingPace.value;
+        const narrativeStyle = elements.narrativeStyle.value;
+        const videoDescription = elements.videoDescription.value.trim();
+        const centralQuestion = elements.centralQuestion.value.trim();
+        const emotionalArc = elements.emotionalArc.value.trim();
+        const viralElements = elements.viralElements.value.trim();
+        const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
+        const imageStyleSelect = elements.imageStyleSelect.value;
+        const customImageStyle = elements.customImageStyle.value.trim();
+
+        let context = `
+        You are an expert YouTube scriptwriter for the channel "${channelName}".
+        Your goal is to create highly engaging and viral video content.
+        
+        Video Theme: "${videoTheme}"
+        Target Audience: "${targetAudience}"
+        Language: "${language}"
+        Language Style: "${languageStyle}"
+        Video Objective: "${videoObjective}"
+        Desired Duration: "${videoDuration}"
+        Speaking Pace: "${speakingPace}"
+        Narrative Style: "${narrativeStyle}"
+        `;
+
+        if (videoDescription) {
+            context += `\nInspiration/Context: "${videoDescription}"`;
+        }
+        if (centralQuestion) {
+            context += `\nCentral Question to guide the entire script: "${centralQuestion}"`;
+        }
+        if (emotionalArc) {
+            context += `\nEmotional Arc: "${emotionalArc}"`;
+        }
+        if (viralElements) {
+            context += `\nViral Elements to incorporate: "${viralElements}"`;
+        }
+        if (imageDescriptionEngine) {
+            context += `\nImage Description Instructions: "${imageDescriptionEngine}"`;
+        }
+        
+        if (imageStyleSelect === 'cinematic') {
+            context += `\nImage Style: Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling. Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections. Rich, cinematic color grading. The overall mood is immersive, evocative, and deeply atmospheric.`;
+        } else if (imageStyleSelect === 'custom' && customImageStyle) {
+            context += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
+        }
+
+        return context;
+    };
+
+    const constructScriptPrompt = (sectionName, sectionTitle) => {
+        const baseContext = getBasePromptContext();
+        const videoDuration = elements.videoDuration.value;
+        const selectedLanguage = elements.languageSelect.value;
+        const narrativeStyle = elements.narrativeStyle.value;
+
+        let prompt = `${baseContext}\n\nGenerate the **${sectionTitle}** section of the video script. Focus on making it highly engaging and suitable for a viral video. Ensure the tone and content align with the channel and audience.`;
+        let maxTokens = 2000;
+
+        prompt += `\n\nIMPORTANT: Do NOT include any scene descriptions, visual/audio cues (e.g., [SHOT], (Camera pan), (Music swells)), or speaker labels (e.g., "Narrator:", "Host:") in the generated script content. Provide only the spoken text.`;
+        prompt += `\n\nABSOLUTELY NO META-COMMENTS. Do not add any explanatory text about the script itself. Your entire response must be ONLY the text to be spoken in the video, and nothing else.`;
+
+        if (elements.centralQuestion.value.trim()) {
+            prompt += `\nIf a 'Central Question' is provided, ensure every section of the script (Introduction, Development, Climax) directly contributes to exploring or answering this question. The entire video must revolve around this central theme.`;
+        }
+
+        switch (narrativeStyle) {
+            case 'mystery_loop':
+                prompt += `\n\nNARRATIVE STYLE: Use the 'Mystery/Open Loop' structure.
+                - In the **Introduction**, present a compelling central question or mystery and promise the answer by the end.
+                - In the **Development**, build suspense by exploring clues and theories, occasionally reminding the viewer of the central question.
+                - In the **Climax**, deliver the satisfying answer to the question posed in the introduction.`;
+                break;
+            case 'pas':
+                prompt += `\n\nNARRATIVE STYLE: Use the 'Problem-Agitate-Solution' structure.
+                - Frame the **Introduction** around a clear 'Problem' that the audience can relate to.
+                - Use the first part of the **Development** to 'Agitate' this problem, explaining its importance and complexity.
+                - Frame the rest of the **Development** and the **Climax** as the 'Solution' or the revealing insight that addresses the initial problem.`;
+                break;
+            case 'twist':
+                prompt += `\n\nNARRATIVE STYLE: Use the 'False Climax & Twist' structure.
+                - In the **Development**, build evidence towards a seemingly obvious conclusion (the 'false climax').
+                - In the **Climax**, introduce a surprising new piece of information or a counter-argument that completely changes the expected outcome (the 'twist').
+                - The **Conclusion** should reflect on the implications of this new, unexpected truth.`;
+                break;
+        }
+
+        prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle. Instead of stating facts plainly, use descriptive, evocative language to paint a picture in the viewer's mind. Create a sensory and visual experience through your words.`;
+
+        switch (sectionName) {
+            case 'intro':
+                prompt += `
+                The introduction should hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
+                `;
+                if (narrativeStyle === 'direct') {
+                    prompt += `\nThis is **Act 1** of the story. Your introduction should serve as the 'Inciting Incident', clearly presenting the central question or mystery that will drive the video. Establish the 'Normal World' of the topic before introducing the core conflict.`;
+                }
+                if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
+                    prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
+                }
+                maxTokens = 500;
+                break;
+            case 'development':
+                prompt += `
+                The development section should delve into the core topic, presenting facts, arguments, and historical context. It should maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
+                `;
+                if (narrativeStyle === 'direct') {
+                    prompt += `\nThis is **Act 2** of the story. Your goal is to raise the stakes. Present compelling evidence but also introduce obstacles and counter-arguments. Build towards a major revelation or turning point (the Midpoint).`;
+                }
+                maxTokens = 1500;
+                break;
+            case 'climax':
+                prompt += `
+                The climax should be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
+                `;
+                if (narrativeStyle === 'direct') {
+                    prompt += `\nThis is the peak of **Act 2**, leading into Act 3. Deliver the most impactful revelation or the resolution of the main conflict.`;
+                }
+                maxTokens = 500;
+                break;
+            case 'conclusion':
+                prompt += `
+                The conclusion should summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
+                `;
+                if (narrativeStyle === 'direct') {
+                    prompt += `\nThis is **Act 3** of the story. Provide the final resolution and reflect on the implications of the video's journey.`;
+                }
+                if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
+                    prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
+                }
+                maxTokens = 500;
+                break;
+            case 'cta':
+                prompt += `
+                The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
+                `;
+                if (narrativeStyle === 'direct') {
+                    prompt += `\nThis is the final part of **Act 3**. Ensure a strong and clear call to action that naturally concludes the video's narrative.`;
+                }
+                if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
+                    prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
+                }
+                maxTokens = 200;
+                break;
+            case 'titles_thumbnails':
+                prompt = `${baseContext}
+Generate 5 highly clickable and viral YouTube video titles and 3 compelling thumbnail ideas.
+
+IMPORTANT: Respond ONLY with a valid JSON object. Do not include any other text, preambles, or explanations outside of the JSON structure itself.
+
+The JSON object must have two top-level keys:
+1.  "titles": An array of strings.
+2.  "thumbnails": An array of objects, where each object has a "title" (string) and a "description" (string) key.
+
+The final output MUST be only the JSON code, like this example:
+{
+  "titles": [
+    "The Shocking Truth About the Ark of the Covenant",
+    "Was the Ark of the Covenant Finally Discovered?",
+    "This Ancient Secret Could Change History Forever",
+    "Biblical Mystery: The Ark's Final Location Revealed",
+    "They Found It? The Search for the Lost Ark Ends Here"
+  ],
+  "thumbnails": [
+    {
+      "title": "FOUND?",
+      "description": "A dramatic image of an ancient, glowing chest half-buried in a dark cave, with an astonished archaeologist looking on."
+    },
+    {
+      "title": "TOP SECRET",
+      "description": "A collage showing a faded ancient map, a secret biblical text, and a satellite image pointing to a location in Ethiopia."
+    },
+    {
+      "title": "HISTORY CHANGED",
+      "description": "A visually stunning image of the Ark of the Covenant radiating golden light inside a reconstructed Solomon's Temple."
+    }
+  ]
+}
+`;
+                maxTokens = 800;
+                break;
+            case 'description':
+                prompt = `${baseContext}\n\nGenerate a compelling YouTube video description (around 150-200 words) that summarizes the video, includes relevant keywords for SEO, and encourages engagement. Include a strong hook, a brief overview of the content, and a call to action. Also, suggest 10 relevant hashtags.
+                Output format:
+                Description:
+                [Your description here]
+
+                Hashtags:
+                #hashtag1 #hashtag2 ...
+                `;
+                maxTokens = 700;
+                break;
+            default:
+                maxTokens = 1000;
+                break;
+        }
+        return { prompt, maxTokens };
+    };
+
+    const removeMetaComments = (text) => {
+        const metaKeywords = [
+            "Here's the script", "This section aims to", "The script for the",
+            "This part of the script", "The goal of this section", "This introduction script",
+            "This development section", "The tone is", "This climax part", "The conclusion summarizes"
+        ];
+
+        const paragraphs = text.split(/\n\s*\n/);
+        const cleanedParagraphs = paragraphs.filter(paragraph => {
+            if (!paragraph.trim()) { return false; }
+            const isMeta = metaKeywords.some(keyword => paragraph.toLowerCase().includes(keyword.toLowerCase()));
+            return !isMeta;
+        });
+        return cleanedParagraphs.join('\n\n');
+    };
+
+    // ================================================================
+    // ==================== CORREÇÃO FINAL DE CORS ====================
+    // ================================================================
+const callGroqAPI = async (prompt, maxTokens) => {
+     const apiKey = getNextApiKey();
+     if (!apiKey) { throw new Error("Nenhuma chave de API do Groq foi fornecida."); }
+    
+     // **URL DO SEU NOVO PROXY NO NETLIFY**
+     // Substitua 'SEU-LINK-DO-NETLIFY' pelo link que o Netlify te deu
+     const proxyUrl = "/.netlify/functions/groq";
+
+     const payload = {
+         groqApiKey: apiKey, // Envia a chave no corpo da requisição
+         prompt: prompt,
+         maxTokens: maxTokens
+     };
+
+     const request = {
+         method: 'POST',
+         headers: { 'Content-Type': 'application/json' },
+         body: JSON.stringify(payload)
+     };
+
+     try {
+         const response = await fetch(proxyUrl, request);
+         if (!response.ok) {
+             const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
+             throw new Error(`Erro na API via Proxy: ${errorData.error.message}`);
+         }
+         const result = await response.json();
+         const rawContent = result.choices?.[0]?.message?.content;
+         if (rawContent) { return rawContent; }
+         else { throw new Error("Resposta inesperada da API Groq."); }
+     } catch (error) {
+         console.error("Fetch da API via Netlify Function falhou:", error);
+         window.showToast(`Falha na API: ${error.message}`);
+         throw error;
+    }
+}
+
+    const validateInputs = () => {
+        if (!elements.channelName.value.trim()) {
+            window.showToast("Por favor, insira o nome do canal.");
+            return false;
+        }
+        if (!elements.videoTheme.value.trim()) {
+            window.showToast("Por favor, insira o tema do vídeo.");
+            return false;
+        }
+        if (!elements.videoDescription.value.trim()) {
+            window.showToast("Por favor, insira a descrição do vídeo (para inspiração).");
+            return false;
+        }
+        if (!elements.videoDuration.value || elements.videoDuration.value === "") {
+            window.showToast("Por favor, selecione a Duração Desejada do vídeo.");
+            return false;
+        }
+        const apiKeysFromInput = elements.apiKeyInput.value.trim().split('\n').map(k => k.trim()).filter(Boolean);
+        if (apiKeysFromInput.length === 0) {
+            window.showToast("Por favor, insira pelo menos uma chave de API do Groq.");
+            return false;
+        }
+        return true;
+    };
+
+    const getNextApiKey = () => {
+        if (apiKeys.length === 0) {
+            const keysFromInput = elements.apiKeyInput.value.trim().split('\n').map(k => k.trim()).filter(Boolean);
+            apiKeys = keysFromInput.map(key => ({ key: key, usageCount: 0 }));
+        }
+
+        if (apiKeys.length === 0) {
+            return null;
+        }
+
+        let leastUsedKey = apiKeys[0];
+        for (let i = 1; i < apiKeys.length; i++) {
+            if (apiKeys[i].usageCount < leastUsedKey.usageCount) {
+                leastUsedKey = apiKeys[i];
+            }
+        }
+        leastUsedKey.usageCount++;
+        return leastUsedKey.key;
+    };
+    
+    const initializeFirebase = async () => {
+        if (!firebaseConfig) {
+            console.warn("Firebase config not found.");
+            return;
+        }
+        try {
+            app = initializeApp(firebaseConfig);
+            db = getFirestore(app);
+            auth = getAuth(app);
+
+            onAuthStateChanged(auth, async (user) => {
+                if (user) {
+                    userId = user.uid;
+                    console.log("Firebase: User authenticated with UID:", userId);
+                } else {
+                    try {
+                        if (initialAuthToken) {
+                            await signInWithCustomToken(auth, initialAuthToken);
+                            console.log("Firebase: Signed in with custom token.");
+                        } else {
+                            await signInAnonymously(auth);
+                            console.log("Firebase: Signed in anonymously.");
+                        }
+                        userId = auth.currentUser?.uid || crypto.randomUUID();
+                    } catch (error) {
+                        console.error("Firebase: Anonymous sign-in failed:", error);
+                        userId = `local-${crypto.randomUUID()}`;
+                    }
+                }
+                isAuthReady = true;
+                elements.userIdDisplay.textContent = `User ID: ${userId.substring(0, 12)}...`;
+                elements.userIdDisplay.classList.remove('hidden');
+                
+                updateButtonStates(); // Update button states after auth is ready
+            });
+        } catch (error) {
+            console.error("Firebase init failed:", error);
+            window.showToast("Erro ao inicializar Firebase. Verifique o console.");
+        }
+    };
+
+    const handleGenerateSection = async (button, sectionName, sectionTitle, elementId) => {
+        if (!validateInputs()) return;
+        showLoading(button);
+        try {
+            const { prompt, maxTokens } = constructScriptPrompt(sectionName, sectionTitle);
+            let result = await callGroqAPI(prompt, maxTokens);
+            
+            result = result.replace(/^Here's (?:the|a potential) \*\*[\w\s]+\*\* (?:section of the video script|for the video script):\s*\n*\s*$/gm, '');
+            result = result.replace(/^(?:Host|Narrator)(?:\s*\(.*?\))?:\s*/gm, '');
+            result = result.replace(/^\*\*[\w\s]+\*\*$/gm, '');
+            result = result.replace(/^\s*(?:\*\*?\[.*?\]\*\*?|\(.*?\))\s*$/gm, '');
+            result = result.replace(/^\s*[\r\n]+/gm, '');
+
+            result = cleanGeneratedText(result, false);
+            result = removeMetaComments(result);
+
+            const targetSectionElement = document.getElementById(`${elementId}Section`);
+            if (targetSectionElement) {
+                targetSectionElement.innerHTML = generateSectionHtmlContent(elementId, sectionTitle, result);
+                targetSectionElement.classList.remove('hidden');
+            } else {
+                console.error(`Target section element with ID '${elementId}Section' not found.`);
+                window.showToast("Erro interno: Seção do roteiro não encontrada.");
+                return;
+            }
+            
+            markButtonAsCompleted(button.id);
+            updateButtonStates(); // Update button states after a section is generated
+
+        } catch (error) {
+            window.showToast(`Falha ao gerar ${sectionTitle}: ${error.message}`);
+            console.error(`Error generating ${sectionTitle}.`, error);
+        } finally {
+            hideLoading(button);
+        }
+    };
+
+    const generateImagePrompts = async (button) => {
+        if (!validateInputs()) {
+            hideLoading(button);
+            return;
+        }
+
+        if (!isScriptComplete()) {
+            showFullScreenAlert("Sua transcrição não está completa. Por favor, gere todas as seções do roteiro principal.");
+            hideLoading(button);
+            return;
+        }
+
+        showLoading(button);
+        let scriptContent = Array.from(elements.scriptOutput.querySelectorAll('.script-section p')).map(p => p.textContent).join('\n\n');
+       
+        try {
+            allImagePrompts = [];
+            elements.imagePromptsList.innerHTML = '';
+            currentImagePromptIndex = 0;
+            elements.loadMoreImagePromptsBtn.style.display = 'none';
+
+            const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
+            const imageStyleSelect = elements.imageStyleSelect.value;
+            const customImageStyle = elements.customImageStyle.value.trim();
+            let selectedStyleBlock = '';
+
+            const videoDuration = elements.videoDuration.options[elements.videoDuration.selectedIndex].text; // Pega o texto da duração (ex: "Médio (~4-7 min)")
+
+            let prompt = `Based on the following script, generate image prompts for every significant moment.
+The video's desired duration is **${videoDuration}**. Generate a suitable number of prompts to cover this entire length, spacing them out naturally every 15-25 seconds of narration to ensure the video is visually engaging from start to finish.
+
+IMPORTANT: Your response must be ONLY a valid JSON array of objects, with no other text, preambles, or explanations. Each object in the array represents a scene and MUST have two string properties:
+1.  "scriptPhrase": The exact, brief, and impactful phrase from the script that this image illustrates.
+2.  "imageDescription": A detailed, vivid description for an image generation AI, written in ENGLISH.
+
+Strictly adhere to this format:
+[
+  {
+    "scriptPhrase": "a mystery that has puzzled humanity for millennia.",
+    "imageDescription": "An ancient, dusty scroll partially unrolled, with glowing, mysterious symbols visible in the center. The background is dark and shadowy, suggesting a hidden library or tomb. Cinematic, dramatic lighting."
+  },
+  {
+    "scriptPhrase": "a sacred chest built to hold the Ten Commandments.",
+    "imageDescription": "Detailed close-up of stone tablets with ancient Hebrew commandments being carefully placed inside a magnificent golden chest by robed figures. The scene is bathed in a divine, ethereal light. Hyper-realistic."
+  }
+]
+`;
+            
+            if (imageDescriptionEngine) {
+                prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
+            }
+
+            if (imageStyleSelect === 'cinematic') {
+                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: hyper-realistic, masterful cinematography, Arri Alexa 65, vintage anamorphic lenses, deliberate composition, dramatic naturalistic lighting, strong chiaroscuro, extreme attention to micro-details, hyper-realistic textures (skin pores, fabric weaves, material imperfections), rich cinematic color grading, immersive and evocative mood. Avoid cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon.`;
+                prompt += `\n\n${cinematicPromptPart}`;
+                selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
+            } else if (imageStyleSelect === 'custom' && customImageStyle) {
+                prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
+                selectedStyleBlock = customImageStyle;
+            }
+
+            prompt += `\n\nScript: --- ${scriptContent} ---`;
+
+            console.log("Prompt para IA (Image Prompts):", prompt);
+            let rawResult = await callGroqAPI(prompt, 4000);
+            let cleanedText = cleanGeneratedText(rawResult, true);
+            console.log("Cleaned Text (Image Prompts):", cleanedText);
+
+            let processedResult = [];
+            if (cleanedText) {
+                try {
+                    processedResult = JSON.parse(cleanedText);
+                    if (!Array.isArray(processedResult)) {
+                        console.warn("AI returned non-array JSON, attempting to convert.");
+                        processedResult = [processedResult];
+                    }
+                }
+                catch (e) {
+                    window.showToast("Erro ao analisar JSON. Verifique o console.");
+                    console.error("Erro ao analisar JSON de prompts de imagem:", e);
+                    processedResult = [];
+                }
+            } else {
+                window.showToast("Erro: IA não retornou prompts ou o formato está incorreto.");
+            }
+           
+            let accumulatedTimeSeconds = 1;
+            allImagePrompts = processedResult.map((p, i) => {
+                const time = accumulatedTimeSeconds;
+                accumulatedTimeSeconds += 17; // Esta é apenas uma estimativa para exibição
+                const mins = Math.floor(time / 60);
+                const secs = Math.floor(time % 60);
+                return { 
+                    ...p, 
+                    time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, 
+                    sequence: String(i + 1).padStart(2, '0'),
+                    styleBlock: selectedStyleBlock
+                };
+            });
+
+            console.log("Total Image Prompts generated:", allImagePrompts.length);
+
+            if (allImagePrompts.length > 0) {
+                elements.imagePromptsOutput.classList.remove('hidden');
+                displayImagePromptsInitialBatch();
+            }
+            markButtonAsCompleted(button.id);
+
+        } catch (error) {
+            window.showToast(`Falha ao gerar Prompts: ${error.message}`);
+            console.error(`Error generating Image Prompts.`, error);
+        } finally {
+            hideLoading(button);
+        }
+    };
+   
+    const displayImagePromptsInitialBatch = () => {
+        elements.imagePromptsList.innerHTML = '';
+        currentImagePromptIndex = 0;
+        displayImagePromptsBatch();
+    };
+
+    const displayImagePromptsBatch = () => {
+        console.log("displayImagePromptsBatch called.");
+        const lang = elements.languageSelect.value;
+        const label = imageDescriptionLabels[lang] || 'Image Description:';
+        
+        const existingCompletionMessage = elements.imagePromptsList.querySelector('.completion-message');
+        if (existingCompletionMessage) {
+            existingCompletionMessage.remove();
+        }
+
+        const batch = allImagePrompts.slice(currentImagePromptIndex, currentImagePromptIndex + IMAGE_PROMPT_BATCH_SIZE);
+        console.log("Displaying batch. Current Index:", currentImagePromptIndex, "Batch size:", batch.length, "Total prompts:", allImagePrompts.length);
+
+        batch.forEach(promptData => {
+            const styleBlockContent = promptData.styleBlock || '';
+            const promptHtml = `
+                <div class="individual-prompt-block">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
+                    </div>
+                    <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                    <p class="prompt-description-label">${label}</p>
+                    <p id="prompt-content-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                    <pre id="style-block-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                </div>
+            `;
+            elements.imagePromptsList.insertAdjacentHTML('beforeend', promptHtml);
+        });
+        currentImagePromptIndex += batch.length;
+
+        if (currentImagePromptIndex >= allImagePrompts.length) {
+            elements.loadMoreImagePromptsBtn.style.display = 'none';
+            elements.loadMoreImagePromptsBtn.disabled = true;
+            
+            const scriptSectionTitles = Array.from(elements.scriptOutput.querySelectorAll('.script-section h3')).map(h3 => h3.textContent);
+            const lastGeneratedSectionTitle = scriptSectionTitles.length > 0 ? scriptSectionTitles[scriptSectionTitles.length - 1] : "o roteiro";
+            const completionMessageHtml = `<div class="completion-message">Não há mais prompts a serem apresentados, pois a transcrição do "${lastGeneratedSectionTitle}" foi finalizada.</div>`;
+            elements.imagePromptsList.insertAdjacentHTML('beforeend', completionMessageHtml);
+
+        } else {
+            elements.loadMoreImagePromptsBtn.style.display = 'block';
+            elements.loadMoreImagePromptsBtn.disabled = false;
+        }
+    };
+
+    // NEW FUNCTION: displayAllImagePrompts
+    const displayAllImagePrompts = () => {
+        elements.imagePromptsList.innerHTML = ''; // Clear existing prompts
+        const lang = elements.languageSelect.value;
+        const label = imageDescriptionLabels[lang] || 'Image Description:';
+
+        allImagePrompts.forEach(promptData => {
+            const styleBlockContent = promptData.styleBlock || '';
+            const promptHtml = `
+                <div class="individual-prompt-block">
+                    <div class="flex items-center justify-between mb-2">
+                        <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${promptData.sequence}').textContent)">Copiar</button>
+                    </div>
+                    <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                    <p class="prompt-description-label">${label}</p>
+                    <p id="prompt-content-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                    <pre id="style-block-${promptData.sequence}" class="text-xs text-gray-600 bg-gray-100 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                </div>
+            `;
+            elements.imagePromptsList.insertAdjacentHTML('beforeend', promptHtml);
+        });
+
+        elements.loadMoreImagePromptsBtn.style.display = 'none'; // Hide "Gerar Mais" button
+        elements.loadMoreImagePromptsBtn.disabled = true;
+        
+        const scriptSectionTitles = Array.from(elements.scriptOutput.querySelectorAll('.script-section h3')).map(h3 => h3.textContent);
+        const lastGeneratedSectionTitle = scriptSectionTitles.length > 0 ? scriptSectionTitles[scriptSectionTitles.length - 1] : "o roteiro";
+        const completionMessageHtml = `<div class="completion-message">Não há mais prompts a serem apresentados, pois a transcrição do "${lastGeneratedSectionTitle}" foi finalizada.</div>`;
+        elements.imagePromptsList.insertAdjacentHTML('beforeend', completionMessageHtml);
+    };
+
+
+    const generateTitlesAndThumbnails = async () => {
+        if (!validateInputs()) return;
+        showLoading(buttons.generateTitlesAndThumbnailsBtn);
+        try {
+            const { prompt, maxTokens } = constructScriptPrompt('titles_thumbnails');
+            let result = await callGroqAPI(prompt, maxTokens);
+            let cleanedResult = cleanGeneratedText(result, true);
+            let parsedContent = { titles: [], thumbnails: [] };
+            try {
+                if (cleanedResult) {
+                    parsedContent = JSON.parse(cleanedResult);
+                    generatedTitlesAndThumbnails = parsedContent;
+                }
+            } catch (e) {
+                console.error("Falha ao analisar o JSON da IA:", e);
+                console.error("Texto problemático:", cleanedResult);
+                window.showToast("Erro: A IA retornou um formato de título/thumbnail inválido.");
+                generatedTitlesAndThumbnails = null;
+            }
+            
+            const targetSectionElement = document.getElementById('titlesThumbnailsSection');
+            if (targetSectionElement) {
+                let titlesListHtml = '<p class="text-red-500">Não foi possível extrair os títulos.</p>';
+                if (parsedContent.titles && parsedContent.titles.length > 0) {
+                    titlesListHtml = parsedContent.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                }
+                
+                let thumbnailsListHtml = '<p class="text-red-500">Não foi possível extrair as thumbnails.</p>';
+                if (parsedContent.thumbnails && parsedContent.thumbnails.length > 0) {
+                    thumbnailsListHtml = parsedContent.thumbnails.map((thumb, index) => {
+                        const itemClasses = index === 0 ? '' : 'thumbnail-item-separator';
+                        return `
+                            <div class="${itemClasses}"> 
+                                <p class="font-semibold text-gray-800 mb-0.5">"${thumb.title}"</p>
+                                <p class="text-sm text-gray-600 leading-tight">Descrição: ${thumb.description}</p>
+                            </div>
+                        `;
+                    }).join('\n');
+                }
+                const fullInnerHtml = `
+                    <div class="whitespace-normal">
+                        <h3>Títulos e Thumbnails</h3>
+                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('titlesThumbnailsSection').textContent)">Copiar</button>
+                        
+                        <div class="mt-4 space-y-6">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-700 mb-2">Títulos de Vídeos:</h4>
+                                <div class="p-3 border border-gray-200 rounded-md bg-white shadow-sm space-y-2">
+                                    ${titlesListHtml}
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-700 mb-2">Thumbnails:</h4>
+                                <div class="p-3 border border-gray-200 rounded-md bg-white shadow-sm">${thumbnailsListHtml}</div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                
+                targetSectionElement.innerHTML = fullInnerHtml;
+                targetSectionElement.classList.remove('hidden');
+                markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
+            }
+            updateButtonStates(); // Update button states after titles/thumbnails are generated
+        } catch (error) {
+            window.showToast(`Falha ao gerar Títulos e Thumbnails: ${error.message}`);
+            console.error(`Error generating Titles/Thumbnails.`, error);
+        } finally {
+            hideLoading(buttons.generateTitlesAndThumbnailsBtn);
+        }
+    };
+
+    const generateVideoDescription = async () => {
+        if (!validateInputs()) return;
+        showLoading(buttons.generateDescriptionBtn);
+        try {
+            const { prompt, maxTokens } = constructScriptPrompt('description');
+            let result = await callGroqAPI(prompt, maxTokens);
+            result = cleanGeneratedText(result, false);
+            const targetSectionElement = document.getElementById('videoDescriptionOutputSection');
+            if (targetSectionElement) {
+                targetSectionElement.innerHTML = generateSectionHtmlContent('videoDescriptionOutput', 'Descrição do Vídeo e Hashtags', result);
+                targetSectionElement.classList.remove('hidden');
+            } else {
+                console.error("Target section element with ID 'videoDescriptionOutputSection' not found.");
+                window.showToast("Erro interno: Seção de descrição não encontrada.");
+                return;
+            }
+            markButtonAsCompleted(buttons.generateDescriptionBtn.id);
+            updateButtonStates(); // Update button states after description is generated
+        } catch (error) {
+            window.showToast(`Falha ao gerar Descrição do Vídeo: ${error.message}`);
+            console.error(`Error generating Video Description.`, error);
+        } finally {
+            hideLoading(buttons.generateDescriptionBtn);
+        }
+    };
+
+    const saveScript = async () => {
+        if (!isAuthReady) {
+            window.showToast("Autenticação não pronta. Tente novamente em alguns segundos.");
+            return;
+        }
+        if (!userId) {
+            window.showToast("ID do usuário não disponível. Não é possível salvar.");
+            return;
+        }
+
+        showLoading(buttons.saveScriptBtn);
+        try {
+            const scriptContentSections = [];
+            const sectionIds = ['intro', 'development', 'climax', 'conclusion', 'cta'];
+            sectionIds.forEach(id => {
+                const sectionElement = document.getElementById(`${id}Section`);
+                if (sectionElement && !sectionElement.classList.contains('hidden')) {
+                    scriptContentSections.push({
+                        title: sectionElement.querySelector('h3').textContent,
+                        content: sectionElement.querySelector('p').textContent
+                    });
+                }
+            });
+
+            if (generatedTitlesAndThumbnails) {
+                scriptContentSections.push({
+                    title: "Títulos e Thumbnails",
+                    content: generatedTitlesAndThumbnails
+                });
+            }
+
+            const videoDescriptionSection = document.getElementById('videoDescriptionOutputSection');
+            if (videoDescriptionSection && !videoDescriptionSection.classList.contains('hidden')) {
+                scriptContentSections.push({
+                    title: "Descrição do Vídeo e Hashtags",
+                    content: videoDescriptionSection.querySelector('p').textContent
+                });
+            }
+
+            const scriptData = {
+                userId: userId,
+                channelName: elements.channelName.value,
+                videoTheme: elements.videoTheme.value,
+                targetAudience: elements.targetAudience.value,
+                language: elements.languageSelect.value,
+                languageStyle: elements.languageStyle.value,
+                videoObjective: elements.videoObjective.value,
+                videoDuration: elements.videoDuration.value,
+                speakingPace: elements.speakingPace.value,
+                narrativeStyle: elements.narrativeStyle.value,
+                videoDescription: elements.videoDescription.value,
+                centralQuestion: elements.centralQuestion.value,
+                emotionalArc: elements.emotionalArc.value,
+                viralElements: elements.viralElements.value,
+                imageDescriptionEngine: elements.imageDescriptionEngine.value,
+                imageStyleSelect: elements.imageStyleSelect.value,
+                customImageStyle: elements.customImageStyle.value,
+                scriptContent: scriptContentSections,
+                imagePrompts: allImagePrompts,
+                timestamp: serverTimestamp()
+            };
+
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/scripts`, 'latest');
+            await setDoc(docRef, scriptData);
+            window.showToast("Roteiro salvo com sucesso!");
+        } catch (error) {
+            console.error("Erro ao salvar roteiro:", error);
+            window.showToast(`Falha ao salvar roteiro: ${error.message}`);
+        } finally {
+            hideLoading(buttons.saveScriptBtn);
+        }
+    };
+
+    const downloadPdf = async () => {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        let y = 10;
+        doc.setFontSize(22);
+        doc.text("Roteiro Viral", 105, y, null, null, "center");
+        y += 10;
+        doc.setFontSize(12);
+        doc.text(`Canal: ${elements.channelName.value}`, 10, y);
+        y += 7;
+        doc.text(`Tema: ${elements.videoTheme.value}`, 10, y);
+        y += 10;
+
+        const sectionOrder = ['intro', 'development', 'climax', 'conclusion', 'cta', 'videoDescriptionOutput', 'titlesThumbnails'];
+        sectionOrder.forEach(id => {
+            const sectionElement = document.getElementById(`${id}Section`);
+            if (sectionElement && !sectionElement.classList.contains('hidden')) {
+                const title = sectionElement.querySelector('h3').textContent;
+                doc.setFontSize(16);
+                doc.text(title, 10, y);
+                y += 7;
+                doc.setFontSize(12);
+
+                if (id === 'titlesThumbnails') {
+                    const titlesHtmlDiv = sectionElement.querySelector('.p-3:first-of-type');
+                    if (titlesHtmlDiv) {
+                        const titlesText = Array.from(titlesHtmlDiv.querySelectorAll('p')).map(p => p.textContent).join('\n');
+                        const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
+                        doc.text(splitTitles, 10, y);
+                        y += (splitTitles.length * 7) + 5;
+                    }
+
+                    const thumbnailsHtmlDiv = sectionElement.querySelector('.p-3:last-of-type');
+                    if (thumbnailsHtmlDiv) {
+                        const thumbnailsText = Array.from(thumbnailsHtmlDiv.querySelectorAll('div')).map(div => {
+                            const thumbTitle = div.querySelector('p:first-of-type').textContent;
+                            const thumbDesc = div.querySelector('p:last-of-type').textContent;
+                            return `${thumbTitle}\n${thumbDesc}`;
+                        }).join('\n\n');
+                        const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
+                        doc.text(splitThumbnails, 10, y);
+                        y += (splitThumbnails.length * 7) + 5;
+                    }
+                } else {
+                    const content = sectionElement.querySelector('.whitespace-normal p').textContent; // Target the p inside whitespace-normal
+                    const splitContent = doc.splitTextToSize(content, 180);
+                    doc.text(splitContent, 10, y);
+                    y += (splitContent.length * 7) + 5;
+                }
+
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
+                }
+            }
+        });
+
+        if (allImagePrompts.length > 0) {
+            if (y > 250) {
+                doc.addPage();
+                y = 10;
+            }
+            doc.setFontSize(18);
+            doc.text("Prompts de Imagem", 10, y);
+            y += 10;
+            doc.setFontSize(10);
+
+            allImagePrompts.forEach(promptData => {
+                const promptText = `${promptData.time} - Cena ${promptData.sequence}\n${promptData.scriptPhrase}\nImage: ${promptData.imageDescription}\n\n`;
+                const splitPrompt = doc.splitTextToSize(promptText, 180);
+                doc.text(splitPrompt, 10, y);
+                y += (splitPrompt.length * 5) + 3;
+
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
+                }
+            });
+        }
+
+        doc.save(`${elements.videoTheme.value.replace(/[^a-zA-Z0-9]/g, '_')}_roteiro.pdf`);
+        window.showToast("PDF gerado!");
+    };
+
+    const loadLatestScript = async () => {
+        if (!isAuthReady) {
+            window.showToast("Autenticação não pronta. Tente novamente em alguns segundos.");
+            return;
+        }
+        if (!userId) {
+            window.showToast("ID do usuário não disponível. Não é possível carregar.");
+            return;
+        }
+
+        showLoading(buttons.loadLatestScriptBtn);
+        try {
+            const docRef = doc(db, `artifacts/${appId}/users/${userId}/scripts`, 'latest');
+            const docSnap = await getDoc(docRef);
+
+            if (docSnap.exists()) {
+                const latestScript = docSnap.data();
+                
+                // ========================================================
+                // ================ CORREÇÃO APLICADA AQUI ================
+                // ========================================================
+                // Reseta completamente o estado da aplicação antes de carregar os novos dados.
+                // Isso limpa a UI e, mais importante, reseta variáveis como 'allImagePrompts' e 'currentImagePromptIndex'.
+                resetApplicationState();
+                // ========================================================
+
+                // Agora, preenchemos a UI limpa com os dados carregados.
+                elements.channelName.value = latestScript.channelName || '';
+                elements.videoTheme.value = latestScript.videoTheme || '';
+                // ... (cole o resto do seu preenchimento de inputs aqui, pois já estava correto)
+                elements.targetAudience.value = latestScript.targetAudience || '';
+                elements.languageSelect.value = latestScript.language || 'en';
+                elements.languageStyle.value = latestScript.languageStyle || 'inspirador';
+                elements.videoObjective.value = latestScript.videoObjective || 'informar';
+                elements.videoDuration.value = latestScript.videoDuration || '';
+                elements.speakingPace.value = latestScript.speakingPace || 'moderate';
+                elements.narrativeStyle.value = latestScript.narrativeStyle || 'direct';
+                elements.videoDescription.value = latestScript.videoDescription || '';
+                elements.centralQuestion.value = latestScript.centralQuestion || '';
+                elements.emotionalArc.value = latestScript.emotionalArc || '';
+                elements.viralElements.value = latestScript.viralElements || '';
+                elements.imageDescriptionEngine.value = latestScript.imageDescriptionEngine || '';
+                elements.imageStyleSelect.value = latestScript.imageStyleSelect || 'cinematic';
+                elements.customImageStyle.value = latestScript.customImageStyle || '';
+                toggleCustomImageStyleVisibility();
+
+
+                if (latestScript.scriptContent && Array.isArray(latestScript.scriptContent)) {
+                    latestScript.scriptContent.forEach(section => {
+                        let elementId = '';
+                        let sectionHtmlContent = '';
+
+                        switch (section.title) {
+                            case 'Introdução': elementId = 'intro'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            case 'Desenvolvimento': elementId = 'development'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            case 'Clímax': elementId = 'climax'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            case 'Conclusão': elementId = 'conclusion'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            case 'Chamada para Ação': elementId = 'cta'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            
+                            case 'Títulos e Thumbnails':
+                                elementId = 'titlesThumbnails';
+                                generatedTitlesAndThumbnails = section.content;
+                            
+                                let titlesList = '<p class="text-red-500">Não foi possível carregar os títulos.</p>';
+                                if (section.content.titles && section.content.titles.length > 0) {
+                                    titlesList = section.content.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                                }
+                                
+                                let thumbnailsList = '<p class="text-red-500">Não foi possível carregar as thumbnails.</p>';
+                                if (section.content.thumbnails && section.content.thumbnails.length > 0) {
+                                    thumbnailsList = section.content.thumbnails.map((thumb, index) => {
+                                        const itemClasses = index === 0 ? '' : 'thumbnail-item-separator';
+                                        return `
+                                            <div class="${itemClasses}">
+                                                <p class="font-semibold text-gray-800 mb-0.5">"${thumb.title}"</p>
+                                                <p class="text-sm text-gray-600 leading-tight">Descrição: ${thumb.description}</p>
+                                            </div>
+                                        `;
+                                    }).join('\n');
+                                }
+                                
+                                sectionHtmlContent = `
+                                    <div class="whitespace-normal">
+                                        <h3>${section.title}</h3>
+                                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('titlesThumbnailsSection').textContent)">Copiar</button>
+                                        <div class="mt-4 space-y-6">
+                                            <div>
+                                                <h4 class="font-bold text-lg text-gray-700 mb-2">Títulos de Vídeos:</h4>
+                                                <div class="p-3 border border-gray-200 rounded-md bg-white shadow-sm space-y-2">${titlesList}</div>
+                                            </div>
+                                            <div>
+                                                <h4 class="font-bold text-lg text-gray-700 mb-2">Thumbnails:</h4>
+                                                <div class="p-3 border border-gray-200 rounded-md bg-white shadow-sm">${thumbnailsList}</div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                `;
+                                break;
+
+                            case 'Descrição do Vídeo e Hashtags': elementId = 'videoDescriptionOutput'; sectionHtmlContent = generateSectionHtmlContent(elementId, section.title, section.content); break;
+                            default: console.warn(`Unknown section title loaded: ${section.title}`); return;
+                        }
+
+                        const targetSectionElement = document.getElementById(`${elementId}Section`);
+                        if (targetSectionElement) {
+                            targetSectionElement.innerHTML = sectionHtmlContent;
+                            targetSectionElement.classList.remove('hidden');
+                            switch (elementId) {
+                                case 'intro': markButtonAsCompleted('generateIntroBtn'); break;
+                                case 'development': markButtonAsCompleted('generateDevelopmentBtn'); break;
+                                case 'climax': markButtonAsCompleted('generateClimaxBtn'); break;
+                                case 'conclusion': markButtonAsCompleted('conclusionBtn'); break;
+                                case 'cta': markButtonAsCompleted('generateCTABtn'); break;
+                                case 'titlesThumbnails': markButtonAsCompleted('generateTitlesAndThumbnailsBtn'); break;
+                                case 'videoDescriptionOutput': markButtonAsCompleted('generateDescriptionBtn'); break;
+                            }
+                        }
+                    });
+                }
+                
+                allImagePrompts = latestScript.imagePrompts || [];
+                if (allImagePrompts.length > 0) {
+                    elements.imagePromptsOutput.classList.remove('hidden');
+                    // Chama a função para exibir TODOS os prompts salvos de uma vez.
+                    displayAllImagePrompts(); 
+                    markButtonAsCompleted('generateImagePromptsBtn');
+                } else {
+                    elements.imagePromptsOutput.classList.add('hidden');
+                }
+                
+                updateButtonStates(); // Habilita/desabilita botões de suporte após carregar o script
+
+                window.showToast("Último roteiro carregado!");
+            } else {
+                window.showToast("Nenhum roteiro salvo encontrado.");
+                resetCompletionIcons(); // Atualiza o estado dos botões mesmo que nenhum script seja encontrado
+                updateButtonStates(); // Atualiza o estado dos botões mesmo que nenhum script seja encontrado
+            }
+        } catch (error) {
+            console.error("Erro ao carregar roteiro:", error);
+            window.showToast(`Falha ao carregar roteiro: ${error.message}`);
+        } finally {
+            hideLoading(buttons.loadLatestScriptBtn);
+        }
+    };
+    
+    const resetApplicationState = () => {
+        elements.videoTheme.value = '';
+        elements.videoDescription.value = '';
+        elements.centralQuestion.value = '';
+        elements.emotionalArc.value = '';
+        elements.viralElements.value = '';
+        elements.imageDescriptionEngine.value = '';
+        elements.imageStyleSelect.value = 'cinematic';
+        elements.customImageStyle.value = '';
+        toggleCustomImageStyleVisibility();
+        elements.narrativeStyle.value = 'direct';
+        elements.videoDuration.value = '';
+
+        document.querySelectorAll('#scriptOutput > .script-section').forEach(sec => {
+            sec.innerHTML = '';
+            sec.classList.add('hidden');
+        });
+        elements.imagePromptsList.innerHTML = '';
+        elements.imagePromptsOutput.classList.add('hidden');
+
+        allImagePrompts = [];
+        currentImagePromptIndex = 0;
+        elements.loadMoreImagePromptsBtn.style.display = 'none';
+        generatedTitlesAndThumbnails = null;
+        
+        apiKeys.forEach(keyObj => keyObj.usageCount = 0);
+
+        resetCompletionIcons();
+        updateButtonStates(); // **CORREÇÃO: Chamar updateButtonStates aqui**
+
+        window.showToast("Pronto para um novo roteiro!");
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+
+    // --- 5. SETUP DE EVENT LISTENERS (Definidos por último) ---
+    const setupButtonListeners = () => {
+        if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
+        if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
+        if (buttons.generateClimaxBtn) buttons.generateClimaxBtn.addEventListener('click', () => handleGenerateSection(buttons.generateClimaxBtn, 'climax', 'Clímax', 'climax'));
+        if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
+        if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
+        if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
+        if (buttons.generateImagePromptsBtn) buttons.generateImagePromptsBtn.addEventListener('click', () => generateImagePrompts(buttons.generateImagePromptsBtn));
+        if (elements.loadMoreImagePromptsBtn) elements.loadMoreImagePromptsBtn.addEventListener('click', displayImagePromptsBatch); // Still using batch for "Gerar Mais"
+        if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
+        if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
+        if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
+        if (buttons.saveScriptBtn) buttons.saveScriptBtn.addEventListener('click', saveScript);
+        if (buttons.loadLatestScriptBtn) buttons.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
+        if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
+        if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
+    };
+
+    // --- 6. PONTO DE ENTRADA DA APLICAÇÃO ---
+    document.addEventListener('DOMContentLoaded', () => {
+        console.log("DOM Content Loaded. Initializing app."); 
+        initializeFirebase();
+        setupButtonListeners(); // Agora é seguro chamar
+        updateButtonStates(); // Define o estado inicial dos botões
+    });
+    </script>
+</body>
+</html>
