@@ -439,7 +439,7 @@
                 <label for="customImageStyle">Estilo Visual Personalizado:</label>
                 <textarea id="customImageStyle" rows="5" placeholder="Cole aqui o seu bloco de estilo personalizado (ex: para cartoon, anime, etc.)."></textarea>
             </div>
-            <div class="input-group md:col-span-2">
+            <div class="input-group md:col-span-2" style="display: none;">
                 <label for="apiKeyInput">Chaves da API (Groq - uma por linha):</label>
                 <textarea id="apiKeyInput" rows="4" placeholder="Cole suas chaves de API do Groq aqui, uma por linha (ex:
 gsk_xxxxxxxxxxxxxxxxxxxxxx
@@ -966,45 +966,38 @@ The final output MUST be only the JSON code, like this example:
         return cleanedParagraphs.join('\n\n');
     };
 
-    // ================================================================
-    // ==================== CORREÇÃO FINAL DE CORS ====================
-    // ================================================================
-const callGroqAPI = async (prompt, maxTokens) => {
-     const apiKey = getNextApiKey();
-     if (!apiKey) { throw new Error("Nenhuma chave de API do Groq foi fornecida."); }
-    
-     // **URL DO SEU NOVO PROXY NO NETLIFY**
-     // Substitua 'SEU-LINK-DO-NETLIFY' pelo link que o Netlify te deu
-     const proxyUrl = "/.netlify/functions/groq";
+    // VERSÃO 2 SEGURA da callGroqAPI
+    const callGroqAPI = async (prompt, maxTokens) => {
+        const proxyUrl = "/.netlify/functions/groq";
 
-     const payload = {
-         groqApiKey: apiKey, // Envia a chave no corpo da requisição
-         prompt: prompt,
-         maxTokens: maxTokens
-     };
+        // O payload agora NÃO inclui a chave da API
+        const payload = {
+            prompt: prompt,
+            maxTokens: maxTokens
+        };
 
-     const request = {
-         method: 'POST',
-         headers: { 'Content-Type': 'application/json' },
-         body: JSON.stringify(payload)
-     };
+        const request = {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify(payload)
+        };
 
-     try {
-         const response = await fetch(proxyUrl, request);
-         if (!response.ok) {
-             const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
-             throw new Error(`Erro na API via Proxy: ${errorData.error.message}`);
-         }
-         const result = await response.json();
-         const rawContent = result.choices?.[0]?.message?.content;
-         if (rawContent) { return rawContent; }
-         else { throw new Error("Resposta inesperada da API Groq."); }
-     } catch (error) {
-         console.error("Fetch da API via Netlify Function falhou:", error);
-         window.showToast(`Falha na API: ${error.message}`);
-         throw error;
+        try {
+            const response = await fetch(proxyUrl, request);
+            if (!response.ok) {
+                const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
+                throw new Error(`Erro na API via Proxy: ${errorData.error?.message || 'Erro do servidor'}`);
+            }
+            const result = await response.json();
+            const rawContent = result.choices?.[0]?.message?.content;
+            if (rawContent) { return rawContent; }
+            else { throw new Error("Resposta inesperada da API Groq."); }
+        } catch (error) {
+            console.error("Fetch da API via Netlify Function falhou:", error);
+            window.showToast(`Falha na API: ${error.message}`);
+            throw error;
+       }
     }
-}
 
     const validateInputs = () => {
         if (!elements.channelName.value.trim()) {
@@ -1023,22 +1016,28 @@ const callGroqAPI = async (prompt, maxTokens) => {
             window.showToast("Por favor, selecione a Duração Desejada do vídeo.");
             return false;
         }
-        const apiKeysFromInput = elements.apiKeyInput.value.trim().split('\n').map(k => k.trim()).filter(Boolean);
-        if (apiKeysFromInput.length === 0) {
-            window.showToast("Por favor, insira pelo menos uma chave de API do Groq.");
-            return false;
-        }
+        // A validação de chaves da API é movida para getNextApiKey, mas ainda é importante ter um check
+        // para garantir que o campo não está vazio se ele for visível.
+        // Como o campo agora está oculto, esta validação pode ser removida ou adaptada se a lógica de chave for alterada.
+        // Por enquanto, vamos manter a lógica de que getNextApiKey vai lançar um erro se não houver chaves.
         return true;
     };
 
     const getNextApiKey = () => {
+        // Agora que o campo está oculto, as chaves podem vir de uma variável global ou ser gerenciadas pelo backend.
+        // Para fins de demonstração, se o campo estiver vazio, ainda precisaremos de uma chave.
+        // Se a intenção é que o proxy gerencie a chave, esta função pode se tornar mais simples ou ser removida.
+        // Por enquanto, vamos simular que a chave é "disponível" para que o proxy possa ser chamado.
+        // Em um cenário real, o proxy não precisaria de uma chave enviada do frontend.
+        
+        // Se a API key não é mais inserida pelo usuário, esta função pode ser simplificada
+        // para retornar uma chave dummy ou ser removida se o proxy não precisar dela do frontend.
+        // Para manter a compatibilidade com a estrutura existente, vamos retornar uma string não vazia.
         if (apiKeys.length === 0) {
-            const keysFromInput = elements.apiKeyInput.value.trim().split('\n').map(k => k.trim()).filter(Boolean);
-            apiKeys = keysFromInput.map(key => ({ key: key, usageCount: 0 }));
-        }
-
-        if (apiKeys.length === 0) {
-            return null;
+            // Se o campo de input está oculto, as chaves não virão de lá.
+            // Para que a chamada ao proxy funcione, precisamos de uma "chave" para que o `if (!apiKey)` não falhe.
+            // Em produção, o proxy teria a chave real. Aqui, é um placeholder.
+            apiKeys = [{ key: "dummy_key_for_proxy_validation", usageCount: 0 }];
         }
 
         let leastUsedKey = apiKeys[0];
@@ -1626,7 +1625,7 @@ Strictly adhere to this format:
                 elements.videoDescription.value = latestScript.videoDescription || '';
                 elements.centralQuestion.value = latestScript.centralQuestion || '';
                 elements.emotionalArc.value = latestScript.emotionalArc || '';
-                elements.viralElements.value = latestScript.viralElements || '';
+                elements.viralElements.value = latestScript.viralElements.value || '';
                 elements.imageDescriptionEngine.value = latestScript.imageDescriptionEngine || '';
                 elements.imageStyleSelect.value = latestScript.imageStyleSelect || 'cinematic';
                 elements.customImageStyle.value = latestScript.customImageStyle || '';
