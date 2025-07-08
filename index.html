@@ -8,6 +8,8 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF para geração de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SortableJS para Storyboard Arrastável -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Fontes Google - Carlito para legibilidade -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -556,6 +558,29 @@
             display: none !important;
         }
 
+        /* Adicione estes novos estilos para o Dashboard e Storyboard */
+        .storyboard-item {
+            cursor: grab;
+            border: 1px solid var(--border-light);
+            padding: 0.75rem;
+            border-radius: 8px;
+            background-color: #ffffff;
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+        .dark .storyboard-item {
+            border-color: #4b5563;
+            background-color: #374151;
+        }
+        .storyboard-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .storyboard-item.sortable-ghost {
+            background-color: var(--secondary-bg);
+            border-style: dashed;
+        }
+        .dark .storyboard-item.sortable-ghost {
+            background-color: #4338ca;
+        }
         .asset-card-placeholder {
             border: 2px dashed var(--border-light);
             color: var(--text-light);
@@ -810,8 +835,16 @@
                         </div>
                     </div>
 
-                    <!-- Cartão: Storyboard Visual (REMOVIDO) -->
-                    <div id="storyboardContent" style="display: none;"></div>
+                    <!-- Cartão: Storyboard Visual -->
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Storyboard</h3>
+                            <button id="generateStoryboardBtn" class="btn btn-secondary btn-small">Gerar Completo</button>
+                        </div>
+                        <div id="storyboardContent" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                             <div class="asset-card-placeholder">Gere o roteiro e clique em 'Gerar'</div>
+                        </div>
+                    </div>
                     
                     <!-- Cartão: Salvar e Exportar -->
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
@@ -1025,7 +1058,7 @@
             const hasAnyContent = document.querySelector('#scriptColumn .accordion-item') != null; // Updated selector for new dashboard
 
             // Botões que dependem da conclusão do roteiro principal
-            ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'].forEach(id => { 
+            ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'generateStoryboardBtn'].forEach(id => { // Added generateStoryboardBtn
                 const originalBtn = document.getElementById(id);
                 const floatBtn = document.getElementById(`float_${id}`);
                 if (originalBtn) originalBtn.disabled = !allMainScriptGenerated;
@@ -1438,6 +1471,23 @@ The final output MUST be only the JSON code, like this example:
                     #hashtag1 #hashtag2 ...
                     `;
                     maxTokens = 700;
+                    break;
+                case 'storyboard': // New case for storyboard generation
+                    const scriptSections = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+                    const scriptContentFull = scriptSections.map(id => {
+                        const el = document.getElementById(id)?.querySelector('.generated-content-wrapper p');
+                        return el ? el.textContent : '';
+                    }).join('\n\n');
+
+                    prompt = `Você é um diretor de vídeo e roteirista. Sua tarefa é criar um storyboard detalhado para o seguinte roteiro de vídeo.
+
+**SUAS REGRAS MAIS IMPORTANTES:**1.  **Ritmo Dinâmico:** Crie um item de storyboard a cada **15 a 25 segundos de narração**, aproximadamente. Analise o texto para estimar o tempo.2.  **IMAGEM INICIAL INEGOCIÁVEL:** O primeiro item de storyboard **DEVE OBRIGATORIAMENTE** corresponder à primeira frase do roteiro.3.  **Formato JSON:** Responda APENAS com um array JSON de objetos. Cada objeto deve ter as chaves "time" (string no formato "MM:SS"), "scene" (string curta descrevendo a cena), "visualDescription" (string), e "audioElements" (string descrevendo música e sons).
+
+Roteiro completo:
+---
+${scriptContentFull}
+---`;
+                    maxTokens = 4000;
                     break;
                 default:
                     maxTokens = 1000;
@@ -1871,6 +1921,52 @@ ${scriptContent}
             }
         };
 
+        /**
+         * Gera o storyboard visual.
+         */
+        const generateStoryboard = async () => {
+            if (!isScriptComplete()) {
+                window.showToast("Gere todas as seções do roteiro principal primeiro.");
+                return;
+            }
+            showLoading(buttons.generateStoryboardBtn);
+            const storyboardContentDiv = document.getElementById('storyboardContent');
+            storyboardContentDiv.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`; // Spinner
+            try {
+                const { prompt } = constructScriptPrompt('storyboard', 'Storyboard Visual');
+                const result = await callGroqAPI(prompt, 4000); // Max tokens para um storyboard completo
+                const cleanedResult = cleanGeneratedText(result, true);
+
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para o storyboard.");
+                
+                const storyboardItems = JSON.parse(cleanedResult);
+                storyboardContentDiv.innerHTML = ''; // Limpa o spinner
+
+                if (Array.isArray(storyboardItems) && storyboardItems.length > 0) {
+                    storyboardItems.forEach((item, index) => {
+                        const storyboardHtml = `
+                            <div class="storyboard-item" data-id="${index}">
+                                <p class="text-xs font-semibold text-indigo-500 dark:text-indigo-400">${item.time} - ${item.scene}</p>
+                                <p class="text-sm mt-1"><strong>Visual:</strong> ${item.visualDescription}</p>
+                                <p class="text-xs text-gray-500 mt-1"><strong>Áudio:</strong> ${item.audioElements}</p>
+                            </div>`;
+                        storyboardContentDiv.innerHTML += storyboardHtml;
+                    });
+                    new Sortable(storyboardContentDiv, { animation: 150, ghostClass: 'sortable-ghost' });
+                    markButtonAsCompleted(buttons.generateStoryboardBtn.id);
+                } else {
+                    storyboardContentDiv.innerHTML = `<div class="asset-card-placeholder">Não foi possível gerar o storyboard.</div>`;
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Storyboard: ${error.message}`);
+                console.error("Error generating Storyboard.", error);
+                storyboardContentDiv.innerHTML = `<div class="asset-card-placeholder text-red-500">Erro ao gerar.</div>`;
+            } finally {
+                hideLoading(buttons.generateStoryboardBtn);
+                updateButtonStates();
+            }
+        };
+
 
         /**
          * Realiza o download do roteiro como PDF.
@@ -1991,6 +2087,28 @@ ${scriptContent}
                 }
             }
 
+            // Add Storyboard to PDF
+            const storyboardContent = document.getElementById('storyboardContent');
+            // Check if content is not the placeholder
+            if (storyboardContent && storyboardContent.innerHTML.trim() !== '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>') {
+                if (y > 250) { doc.addPage(); y = 10; }
+                doc.setFontSize(16);
+                doc.text("Storyboard", 10, y);
+                y += 7;
+                doc.setFontSize(12);
+
+                const storyboardItems = Array.from(storyboardContent.querySelectorAll('.storyboard-item')).map(item => {
+                    const timeScene = item.querySelector('p:nth-child(1)')?.textContent || '';
+                    const visual = item.querySelector('p:nth-child(2)')?.textContent || '';
+                    const audio = item.querySelector('p:nth-child(3)')?.textContent || '';
+                    return `${timeScene}\n${visual}\n${audio}`;
+                }).join('\n\n');
+
+                const splitStoryboard = doc.splitTextToSize(storyboardItems, 180);
+                doc.text(splitStoryboard, 10, y);
+                y += (splitStoryboard.length * 7) + 5;
+            }
+
             doc.save(`${elements.videoTheme.value.replace(/[^a-zA-Z0-9]/g, '_')}_roteiro.pdf`);
             window.showToast("PDF gerado!");
         };
@@ -2019,7 +2137,8 @@ ${scriptContent}
             // Limpar os cartões de recursos e restaurar os placeholders
             document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
-            // Removed storyboardContent reset
+            document.getElementById('storyboardContent').innerHTML = '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>';
+
 
             allImagePrompts = {}; // Limpa todos os prompts de imagem
             generatedTitlesAndThumbnails = null;
@@ -2066,7 +2185,7 @@ ${scriptContent}
             // Salva o conteúdo dos cartões de recursos
             projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
             projectData.outputs.videoDescriptionContent = document.getElementById('videoDescriptionContent').innerHTML;
-            // Removed storyboardContent export
+            projectData.outputs.storyboardContent = document.getElementById('storyboardContent').innerHTML;
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchorNode = document.createElement('a');
@@ -2156,7 +2275,18 @@ ${scriptContent}
                     if (projectData.outputs.videoDescriptionContent) {
                         document.getElementById('videoDescriptionContent').innerHTML = projectData.outputs.videoDescriptionContent;
                     }
-                    // Removed storyboardContent import
+                    if (projectData.outputs.storyboardContent) {
+                        const storyboardContentDiv = document.getElementById('storyboardContent');
+                        storyboardContentDiv.innerHTML = projectData.outputs.storyboardContent;
+                        // Re-initialize SortableJS if storyboard content was loaded
+                        if (storyboardContentDiv.querySelector('.storyboard-item')) { // Check if there are actual items
+                            new Sortable(storyboardContentDiv, {
+                                animation: 150,
+                                ghostClass: 'sortable-ghost',
+                                handle: '.storyboard-item' // Ensure handle is set correctly
+                            });
+                        }
+                    }
 
                     // Restaura as variáveis de memória
                     allImagePrompts = projectData.memory.allImagePrompts || {};
@@ -2174,7 +2304,7 @@ ${scriptContent}
                     // Asset buttons (check if content is not placeholder)
                     if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
                     if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
-                    // Removed storyboardContent check for completion
+                    if (document.getElementById('storyboardContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>') markButtonAsCompleted('generateStoryboardBtn');
 
 
                     // Re-renderiza os prompts de imagem para todas as seções
@@ -2312,7 +2442,7 @@ ${scriptContent}
             const taskButtonIds = [
                 'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
                 'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
-                'generateTitlesAndThumbnailsBtn' 
+                'generateTitlesAndThumbnailsBtn', 'generateStoryboardBtn' // Added storyboard
             ];
             const totalTasks = taskButtonIds.length;
 
@@ -2381,7 +2511,7 @@ ${scriptContent}
             if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
             if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
             if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
-            // Removed storyboard button listener
+            if (buttons.generateStoryboardBtn) buttons.generateStoryboardBtn.addEventListener('click', generateStoryboard); // New listener for storyboard
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
             if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
             if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
