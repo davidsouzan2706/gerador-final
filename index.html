@@ -939,7 +939,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
 **Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
 **Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon
 `;
-    const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:', 'es': 'Descripción de la Imagen:' };
+    const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
 
     // --- 2. REFERÊNCIAS A ELEMENTOS DO DOM ---
     const elements = {
@@ -1044,7 +1044,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // ==========================================================
     // VERSÕES FINAIS E SINCRONIZADAS DAS FUNÇÕES
     // ==========================================================
-    // Popula a barra UMA VEZ, criando um link entre original e clone.
+    // VERSÃO FINAL E SIMPLES - Apenas clona o estado atual
     window.populateActionBar = () => {
         const cloneAndAppend = (id, container) => {
             const original = document.getElementById(id);
@@ -1064,42 +1064,40 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         const quickButtonsContainer = document.querySelector('#quickActions .btn-clone-container');
         if (!mainButtonsContainer || !quickButtonsContainer) return;
 
+        // Limpa a barra antes de redesenhar
         mainButtonsContainer.innerHTML = '';
         quickButtonsContainer.innerHTML = '';
 
+        // Clona os botões com seu estado atual
         ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => cloneAndAppend(id, mainButtonsContainer));
         ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => cloneAndAppend(id, quickButtonsContainer));
     };
 
-    // Atualiza o original E o seu clone.
+    // VERSÃO FINAL - Marca como concluído e redesenha a barra
     const markButtonAsCompleted = (buttonId) => {
-        const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
-        buttonsToUpdate.forEach(button => {
-            if (button) {
-                button.classList.remove('btn-primary', 'btn-secondary');
-                button.classList.add('btn-success');
-            }
-        });
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.classList.remove('btn-primary', 'btn-secondary');
+            button.classList.add('btn-success');
+            window.populateActionBar(); // Força a atualização da barra
+        }
     };
 
-    // Reseta o original E o seu clone.
+    // VERSÃO FINAL - Reseta as cores e redesenha a barra
     const resetCompletionIcons = () => {
         for (const buttonId in buttonCheckmarkMap) {
-            const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
-            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
-            const isPasso1 = passo1_buttons.includes(buttonId);
-
-            buttonsToUpdate.forEach(button => {
-                if (button) {
-                    button.classList.remove('btn-success');
-                    if (isPasso1) {
-                        button.classList.add('btn-primary');
-                    } else {
-                        button.classList.add('btn-secondary');
-                    }
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.classList.remove('btn-success');
+                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+                if (passo1_buttons.includes(buttonId)) {
+                    button.classList.add('btn-primary');
+                } else {
+                    button.classList.add('btn-secondary');
                 }
-            });
+            }
         }
+        window.populateActionBar(); // Força a atualização da barra
     };
     
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
@@ -2613,33 +2611,6 @@ ${scriptContent}
     // ===============================================
     // AS NOVAS FUNÇÕES QUE ADICIONAMOS
     // ===============================================
-    // VERSÃO FINAL do populateActionBar
-    window.populateActionBar = () => {
-        const cloneAndAppend = (id, container) => {
-            const original = document.getElementById(id);
-            if (original) {
-                const clone = original.cloneNode(true);
-                clone.id = ''; // Remove o ID duplicado para evitar conflitos
-                clone.dataset.cloneOf = id; // Adiciona um link: data-clone-of="generateIntroBtn"
-                
-                // Adiciona o listener de clique diretamente no clone
-                clone.addEventListener('click', () => original.click());
-                
-                container.appendChild(clone);
-            }
-        };
-
-        const mainButtonsContainer = document.querySelector('#mainActions .btn-clone-container');
-        const quickButtonsContainer = document.querySelector('#quickActions .btn-clone-container');
-        if (!mainButtonsContainer || !quickButtonsContainer) return;
-
-        mainButtonsContainer.innerHTML = '';
-        quickButtonsContainer.innerHTML = '';
-
-        ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => cloneAndAppend(id, mainButtonsContainer));
-        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => cloneAndAppend(id, quickButtonsContainer));
-    };
-
     // VERSÃO CONTEXTUAL do handleFloatingActionBar
     window.handleFloatingActionBar = () => {
         const mainActions = document.getElementById('mainActions');
