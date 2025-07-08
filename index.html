@@ -539,9 +539,10 @@
         body.zen-mode .container > p,
         body.zen-mode #mainInputsGrid, /* Esconde a área de inputs pelo seu ID */
         body.zen-mode #progressBarContainer,
-        body.zen-mode #assetsColumn, /* Esconde a coluna de recursos inteira */
-        body.zen-mode #strategicOutlineCard, /* Esconde o card do esboço */
-        body.zen-mode #scriptGenerationControls { /* Esconde os controles de geração */
+        body.zen-mode #assetsColumn,
+        body.zen-mode #strategicOutlineCard,
+        body.zen-mode #scriptGenerationControls,
+        body.zen-mode .absolute.top-4.right-4 {
             display: none !important;
         }
 
@@ -1130,13 +1131,15 @@
                 if (floatBtn) floatBtn.disabled = !allMainScriptGenerated;
             });
             
+            // /* Bloco removido para manter o botão PDF sempre ativo
             // Botões que dependem de qualquer conteúdo gerado
-            ['downloadPdfBtn'].forEach(id => {
-                 const originalBtn = document.getElementById(id);
-                 const floatBtn = document.getElementById(`float_${id}`);
-                 if (originalBtn) originalBtn.disabled = !hasAnyContent;
-                 if (floatBtn) floatBtn.disabled = !hasAnyContent;
-            });
+            // ['downloadPdfBtn'].forEach(id => {
+            //      const originalBtn = document.getElementById(id);
+            //      const floatBtn = document.getElementById(`float_${id}`);
+            //      if (originalBtn) originalBtn.disabled = !hasAnyContent;
+            //      if (floatBtn) floatBtn.disabled = !hasAnyContent;
+            // });
+            // */
 
             // Botão de reset sempre habilitado (ou desabilitado apenas se não houver nada para resetar)
             const resetBtn = document.getElementById('resetScriptBtn');
@@ -1489,9 +1492,6 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The climax should be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
                     `;
-                    if (narrativeStyle === 'direct') {
-                        prompt += `\nThis is the peak of **Act 2**, leading into Act 3. Deliver the most impactful revelation or the resolution of the main conflict.`;
-                    }
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
                     }
@@ -1501,9 +1501,6 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The conclusion should summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
                     `;
-                    if (narrativeStyle === 'direct') {
-                        prompt += `\nThis is **Act 3** of the story. Provide the final resolution and reflect on the implications of the video's journey.`;
-                    }
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
                     }
@@ -1513,9 +1510,6 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
                     `;
-                    if (narrativeStyle === 'direct') {
-                        prompt += `\nThis is the final part of **Act 3**. Ensure a strong and clear call to action that naturally concludes the video's narrative.`;
-                    }
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
                     }
