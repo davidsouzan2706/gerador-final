@@ -529,6 +529,25 @@
         .animate-fade-in {
             animation: fadeInSlideUp 0.5s ease-out forwards;
         }
+
+        /* Estilos para o Modo Zen */
+        body.zen-mode .floating-action-bar,
+        body.zen-mode .container > h1,
+        body.zen-mode .container > p,
+        body.zen-mode .container > .grid,
+        body.zen-mode .container > .progress-bar-container,
+        body.zen-mode .container > .mb-8:not(#scriptOutput) { /* Exclui a área de output */
+            display: none;
+        }
+        body.zen-mode .container {
+            max-width: 800px; /* Deixa a área de leitura mais confortável */
+            box-shadow: none;
+            background-color: transparent;
+            padding: 1rem;
+        }
+        body.zen-mode #scriptOutput {
+            margin-top: 0 !important; /* Remove margem superior da área de output */
+        }
     </style>
 </head>
 <body>
@@ -556,6 +575,9 @@
                     <button id="float_generateTitlesAndThumbnailsBtn" class="btn btn-secondary">Títulos</button>
                     <button id="float_downloadPdfBtn" class="btn btn-secondary">PDF</button>
                     <button id="float_resetScriptBtn" class="btn btn-secondary">Novo</button>
+                    <button id="float_toggleZenModeBtn" class="btn btn-secondary" title="Modo Foco">
+                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
+                    </button>
                 </div>
             </div>
         </div>
@@ -879,6 +901,32 @@
         };
 
         /**
+         * Abre o Google ImageFX em uma nova aba com o prompt de imagem preenchido.
+         * @param {HTMLElement} buttonElement - O botão "Visualizar" que foi clicado.
+         */
+        window.openImageFx = (buttonElement) => {
+            event.stopPropagation(); // Impede que o clique afete o acordeão
+            // Encontra o bloco de prompt pai
+            const promptBlock = buttonElement.closest('.individual-prompt-block');
+            if (!promptBlock) return;
+            
+            // Pega o texto da descrição da imagem e o bloco de estilo
+            const descriptionContent = promptBlock.querySelector('.prompt-description-content').textContent.trim();
+            const styleContent = promptBlock.querySelector('pre').textContent.trim();
+            
+            // Combina os dois para formar o prompt completo, limpando o texto do estilo
+            const cleanedStyle = styleContent.replace(/\*\*\[.*?\]\*\*|\n/g, ' ').replace(/\s+/g, ' ').trim();
+            const fullPrompt = `${descriptionContent}, ${cleanedStyle}`;
+            
+            // Codifica o prompt para ser usado em uma URL
+            const encodedPrompt = encodeURIComponent(fullPrompt);
+            
+            // Monta a URL final e abre em uma nova aba
+            const imageFxUrl = `https://imagefx.withgoogle.com/?prompt=${encodedPrompt}`;
+            window.open(imageFxUrl, '_blank');
+        };
+
+        /**
          * Mostra um spinner de carregamento e desabilita todos os botões de geração.
          * @param {HTMLElement} button - O botão que acionou o carregamento.
          */
@@ -1016,6 +1064,33 @@
         };
 
         /**
+         * Calcula o tempo de leitura estimado de um texto.
+         * @param {string} text - O texto a ser analisado.
+         * @returns {string} O tempo de leitura formatado (ex: "~1 min 15 seg").
+         */
+        const calculateReadingTime = (text) => {
+            if (!text) return "";
+            const wordsPerMinute = 150; // Média para um ritmo de fala moderado
+            const words = text.trim().split(/\s+/).length;
+            const totalSeconds = (words / wordsPerMinute) * 60;
+            
+            if (totalSeconds < 1) return "";
+            
+            const minutes = Math.floor(totalSeconds / 60);
+            const seconds = Math.round(totalSeconds % 60);
+            
+            let timeString = "~";
+            if (minutes > 0) {
+                timeString += ` ${minutes} min`;
+            }
+            if (seconds > 0) {
+                timeString += ` ${seconds} seg`;
+            }
+            
+            return timeString.trim();
+        };
+
+        /**
          * Gera o HTML para uma seção do roteiro em formato de acordeão.
          * @param {string} sectionId - O ID da seção (ex: 'intro', 'development').
          * @param {string} title - O título da seção a ser exibido.
@@ -1067,6 +1142,7 @@
                         <div class="accordion-header" onclick="toggleAccordion('${bodyId}', '${arrowId}')">
                             <div class="header-content">
                                  <h3>${title}</h3>
+                                 <span class="text-xs font-normal text-gray-400 dark:text-gray-500">${calculateReadingTime(content)}</span>
                                  <svg id="${arrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
                                     <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
                                  </svg>
@@ -1594,7 +1670,13 @@ Trecho do roteiro:
                             <div class="individual-prompt-block">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                                    <div class="flex items-center gap-2">
+                                        <button class="btn btn-secondary btn-small" style="padding: 0.4rem 0.6rem;" onclick="window.openImageFx(this)">
+                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>
+                                            <span class="ml-1 hidden sm:inline">Visualizar</span>
+                                        </button>
+                                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                                    </div>
                                 </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
@@ -2340,6 +2422,14 @@ ${scriptContent}
             if (buttons.importProjectBtn) {
                 buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
                 elements.importFileInput.addEventListener('change', importProject);
+            }
+
+            // Lógica para o Modo Zen
+            const zenModeBtn = document.getElementById('float_toggleZenModeBtn');
+            if (zenModeBtn) {
+                zenModeBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('zen-mode');
+                });
             }
 
             // Define o estado inicial dos botões
