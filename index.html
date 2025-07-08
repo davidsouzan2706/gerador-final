@@ -531,46 +531,51 @@
         }
 
         /* ========================================================== */
-        /* =================== ESTILOS MODO FOCO ==================== */
+        /* ============ ESTILOS MODO FOCO - VERSÃO FINAL ============ */
         /* ========================================================== */
-        /* Quando o modo foco está ativo, esconde esses elementos específicos */
-        body.zen-mode .floating-action-bar,
-        body.zen-mode .container > h1,
-        body.zen-mode .container > p,
-        body.zen-mode #mainInputsGrid, /* Esconde a área de inputs pelo seu ID */
-        body.zen-mode #progressBarContainer,
-        body.zen-mode #assetsColumn,
-        body.zen-mode #strategicOutlineCard,
-        body.zen-mode #scriptGenerationControls,
-        body.zen-mode .absolute.top-4.right-4 {
-            display: none !important;
+        /* Por padrão, esconde a saída do modo foco */
+        #zen-mode-output {
+            display: none;
         }
 
-        /* Ajusta o layout do container e da coluna do roteiro */
-        body.zen-mode .container {
-            max-width: 800px; /* Largura de leitura confortável */
-            padding-top: 2rem;
-            padding-bottom: 2rem;
-            box-shadow: none !important;
-            background-color: transparent !important;
-        }
-
-        body.zen-mode #scriptColumn {
-            max-height: none; /* Remove a altura máxima para ocupar a tela toda */
-            grid-column: span 12 / span 12; /* Faz a coluna do roteiro ocupar 100% da largura */
-        }
-
-        /* Ajuste final para o Modo Foco */
+        /* Quando o modo foco está ativo... */
         body.zen-mode {
-            background-color: #ffffff !important; /* Força o fundo a ser branco */
+            overflow: hidden; /* Impede a rolagem do fundo */
         }
-        .dark body.zen-mode {
-            background-color: #f9fafb !important; /* Um branco levemente acinzentado para o modo escuro */
+
+        body.zen-mode #zen-mode-output {
+            display: block; /* Mostra a nossa área de foco */
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: #fff; /* Fundo sempre branco */
+            z-index: 2000; /* Acima de tudo */
+            overflow-y: auto; /* Permite rolagem interna */
+            padding: 3rem 2rem;
         }
-        /* Faz o texto no modo foco ser sempre preto, para contraste */
-        body.zen-mode .dark .accordion-header h3,
-        body.zen-mode .dark .generated-content-wrapper {
-            color: var(--text-dark) !important;
+
+        body.zen-mode #zen-mode-content {
+            max-width: 800px;
+            margin: 0 auto;
+            color: #000; /* Cor de fonte sempre preta */
+            font-size: 14pt;
+            line-height: 1.7;
+        }
+
+        body.zen-mode #zen-mode-close-btn {
+            position: fixed;
+            top: 20px;
+            right: 30px;
+            font-size: 2rem;
+            color: #aaa;
+            cursor: pointer;
+            z-index: 2001;
+        }
+
+        body.zen-mode #zen-mode-close-btn:hover {
+            color: #000;
         }
         
         /* ========================================================== */
@@ -604,40 +609,39 @@
         /* =============== ESTILOS DE IMPRESSÃO (PDF) =============== */
         /* ========================================================== */
         @media print {
-            /* Reseta o estilo do corpo para impressão */
-            body {
-                background-color: #fff !important; /* Fundo sempre branco */
-                color: #000 !important; /* Cor de fonte sempre preta */
-                font-size: 11pt; /* Tamanho de fonte padrão para documentos */
-            }
-
-            /* Esconde tudo que não queremos imprimir */
+            /* Esconde tudo que não está no nosso container de impressão */
             body > *:not(#print-container) {
                 display: none !important;
             }
 
-            /* Regras para o container de impressão que vamos criar */
-            #print-container {
-                display: block !important; /* Garante que ele seja visível */
+            /* Regras para o container de impressão */
+            #print-container, #print-container * {
+                visibility: visible; /* Garante que ele e TODOS os seus filhos sejam visíveis */
+                color: #000 !important; /* FORÇA tudo dentro dele a ser preto */
+                background-color: #fff !important; /* Garante fundo branco */
             }
 
-            /* Estilo para cada seção dentro da impressão */
-            .print-section {
-                margin-bottom: 24px; /* Espaçamento entre seções */
-                page-break-inside: avoid; /* Tenta não quebrar uma seção no meio da página */
+            #print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                padding: 1.5cm; /* Margens de documento */
+                font-size: 11pt;
             }
+
             .print-section-title {
                 font-size: 16pt;
                 font-weight: bold;
-                color: #000;
+                margin-top: 24px;
                 margin-bottom: 12px;
-                border-bottom: 2px solid #ccc;
+                border-bottom: 1px solid #ccc;
                 padding-bottom: 4px;
-                page-break-after: avoid; /* Tenta não quebrar a página logo após o título */
             }
+
             .print-section-content {
-                color: #000;
                 line-height: 1.6;
+                white-space: pre-wrap; /* Respeita as quebras de linha */
             }
         }
     </style>
@@ -921,6 +925,12 @@
             <p id="fullScreenAlertMessage"></p>
             <button id="fullScreenAlertCloseBtn">Entendi</button>
         </div>
+    </div>
+
+    <!-- Container para o Modo Foco (começa escondido) -->
+    <div id="zen-mode-output">
+        <div id="zen-mode-close-btn" title="Sair do Modo Foco">×</div>
+        <div id="zen-mode-content"></div>
     </div>
 
     <script type="module">
@@ -2069,7 +2079,7 @@ ${scriptContent}
                     htmlToPrint += `
                         <div class="print-section">
                             <div class="print-section-title">${title}</div>
-                            <div class="print-section-content"><p>${content.replace(/\n/g, '<br>')}</p></div>
+                            <div class="print-section-content"><pre>${content}</pre></div>
                         </div>`;
                 }
             });
@@ -2582,43 +2592,27 @@ ${scriptContent}
             // Lógica para o Modo Zen
             const zenModeBtn = document.getElementById('toggleZenModeBtn'); // Updated ID
             if (zenModeBtn) {
-                const mainContainer = document.querySelector('.container');
-                const scriptColumn = document.getElementById('scriptColumn');
-
                 zenModeBtn.addEventListener('click', () => {
-                    const isInZenMode = document.body.classList.toggle('zen-mode');
+                    const scriptContent = document.getElementById('scriptSectionsContainer').innerHTML; // Get content from the scrollable container
+                    const zenContentDiv = document.getElementById('zen-mode-content');
                     
-                    if (isInZenMode) {
-                        // Entrando no Modo Foco: move a coluna do roteiro para o body
-                        mainContainer.style.display = 'none';
-                        document.body.appendChild(scriptColumn);
-                        scriptColumn.classList.add('zen-mode-active');
-                    } else {
-                        // Saindo do Modo Foco: devolve a coluna para o seu lugar
-                        const dashboardGrid = mainContainer.querySelector('#projectDashboard .grid');
-                        dashboardGrid.prepend(scriptColumn); // Coloca de volta no início do grid
-                        scriptColumn.classList.remove('zen-mode-active');
-                        mainContainer.style.display = 'block';
-                    }
+                    // Limpa os botões e outros elementos indesejados do conteúdo
+                    const tempDiv = document.createElement('div');
+                    tempDiv.innerHTML = scriptContent;
+                    // Remove buttons and specific elements that shouldn't be in zen mode view
+                    tempDiv.querySelectorAll('button, .accordion-header .header-buttons, .section-prompts, .section-soundtrack, .asset-card-placeholder, h2, #strategicOutlineCard, #scriptGenerationControls').forEach(el => el.remove());
+                    
+                    zenContentDiv.innerHTML = tempDiv.innerHTML;
+                    document.body.classList.add('zen-mode');
                 });
             }
 
-            // NOVO - LÓGICA PARA SAIR DO MODO FOCO
-            document.body.addEventListener('click', function(event) {
-                // Se o modo foco está ativo E o clique foi no fundo (diretamente no body)
-                if (document.body.classList.contains('zen-mode') && event.target === document.body) {
+            const zenCloseBtn = document.getElementById('zen-mode-close-btn');
+            if(zenCloseBtn) {
+                zenCloseBtn.addEventListener('click', () => {
                     document.body.classList.remove('zen-mode');
-                    // Se a coluna do roteiro foi movida para o body, mova-a de volta
-                    const scriptColumn = document.getElementById('scriptColumn');
-                    if (scriptColumn.classList.contains('zen-mode-active')) {
-                        const mainContainer = document.querySelector('.container');
-                        const dashboardGrid = mainContainer.querySelector('#projectDashboard .grid');
-                        dashboardGrid.prepend(scriptColumn);
-                        scriptColumn.classList.remove('zen-mode-active');
-                        mainContainer.style.display = 'block';
-                    }
-                }
-            });
+                });
+            }
 
             // Define o estado inicial dos botões
             updateButtonStates();
