@@ -530,23 +530,31 @@
             animation: fadeInSlideUp 0.5s ease-out forwards;
         }
 
-        /* Estilos para o Modo Zen */
+        /* ========================================================== */
+        /* =================== ESTILOS MODO FOCO ==================== */
+        /* ========================================================== */
+        .zen-mode-hide {
+            display: none !important; /* Força o elemento a desaparecer */
+        }
+        /* Quando o modo foco está ativo... */
         body.zen-mode .floating-action-bar,
         body.zen-mode .container > h1,
         body.zen-mode .container > p,
         body.zen-mode .container > .grid,
         body.zen-mode .container > .progress-bar-container,
-        body.zen-mode .container > .mb-8:not(#scriptOutput) { /* Exclui a área de output */
-            display: none;
+        body.zen-mode .container > .mb-8 {
+            display: none !important;
         }
         body.zen-mode .container {
             max-width: 800px; /* Deixa a área de leitura mais confortável */
-            box-shadow: none;
-            background-color: transparent;
-            padding: 1rem;
+            box-shadow: none !important;
+            background-color: transparent !important;
+            padding-top: 2rem !important;
+            margin-top: 0 !important;
         }
-        body.zen-mode #scriptOutput {
-            margin-top: 0 !important; /* Remove margem superior da área de output */
+        /* Esconde os botões de modo foco/escuro para não atrapalhar */
+        body.zen-mode .absolute.top-4.right-4 {
+            display: none !important;
         }
     </style>
 </head>
@@ -2334,9 +2342,7 @@ ${scriptContent}
             allButtonIds.forEach(id => {
                 // Exclui o botão do modo zen da barra flutuante, pois ele foi movido
                 if (id.startsWith('generate') || id.startsWith('climax') || id.startsWith('conclusion') || id.startsWith('cta') || id.startsWith('download') || id.startsWith('reset') || id.startsWith('export') || id.startsWith('import')) {
-                    if (id !== 'float_toggleZenModeBtn') { // Explicitly exclude the old floating zen mode button
-                        setupClick(id);
-                    }
+                    setupClick(id);
                 }
             });
             
@@ -2402,6 +2408,14 @@ ${scriptContent}
                     document.body.classList.toggle('zen-mode');
                 });
             }
+
+            // NOVO - LÓGICA PARA SAIR DO MODO FOCO
+            document.body.addEventListener('click', function(event) {
+                // Se o modo foco está ativo E o clique foi no fundo (diretamente no body)
+                if (document.body.classList.contains('zen-mode') && event.target === document.body) {
+                    document.body.classList.remove('zen-mode');
+                }
+            });
 
             // Define o estado inicial dos botões
             updateButtonStates();
