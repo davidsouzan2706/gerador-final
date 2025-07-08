@@ -645,7 +645,7 @@
                 <span class="action-bar-title">Passo 1:</span>
                 <button id="clone_generateIntroBtn" class="btn btn-primary">Introdução</button>
                 <button id="clone_generateDevelopmentBtn" class="btn btn-primary">Desenvolvimento</button>
-                <button id="clone_climaxBtn" class="btn btn-primary">Clímax</button>
+                <button id="clone_generateClimaxBtn" class="btn btn-primary">Clímax</button>
                 <button id="clone_conclusionBtn" class="btn btn-primary">Conclusão</button>
                 <button id="clone_generateCTABtn" class="btn btn-primary">CTA</button>
             </div>
@@ -838,7 +838,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                     <span id="developmentCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="developmentSpinner"></div>
                 </button>
-                <button id="climaxBtn" class="btn btn-primary">
+                <button id="generateClimaxBtn" class="btn btn-primary">
                     <span class="button-text">Clímax</span>
                     <span id="climaxCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="climaxSpinner"></div>
@@ -987,7 +987,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttons = {
         generateIntroBtn: document.getElementById('generateIntroBtn'),
         generateDevelopmentBtn: document.getElementById('generateDevelopmentBtn'),
-        generateClimaxBtn: document.getElementById('climaxBtn'),
+        generateClimaxBtn: document.getElementById('generateClimaxBtn'), // CORRIGIDO: ID no HTML agora é generateClimaxBtn
         conclusionBtn: document.getElementById('conclusionBtn'),
         generateCTABtn: document.getElementById('generateCTABtn'),
         generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
@@ -1004,7 +1004,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttonCheckmarkMap = {
         'generateIntroBtn': 'introCheck',
         'generateDevelopmentBtn': 'developmentCheck',
-        'climaxBtn': 'climaxCheck',
+        'generateClimaxBtn': 'climaxCheck', // CORRIGIDO: ID no HTML agora é generateClimaxBtn
         'conclusionBtn': 'conclusionCheck',
         'generateCTABtn': 'ctaCheck',
         'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck',
@@ -1073,13 +1073,13 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const resetCompletionIcons = () => {
         // Lista de todos os botões que podem mudar de cor
         const allActionButtons = [
-            'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
+            'generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', // CORRIGIDO
             'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
             'generateTitlesAndThumbnailsBtn'
         ];
 
         // Lista dos que devem ser azuis (primários)
-        const primaryButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+        const primaryButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn']; // CORRIGIDO
 
         allActionButtons.forEach(buttonId => {
             // Pega o original E o seu clone na barra flutuante de uma só vez
@@ -1211,26 +1211,34 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const isScriptComplete = () => { return ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].every(id => !document.getElementById(id).classList.contains('hidden')); };
 
     const updateButtonStates = () => {
-        // Força o reset antes de qualquer outra atualização
-        resetCompletionIcons(); // Chama a versão autocontida e à prova de falhas
-
-        const anyMainScriptGenerated = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].some(id => !document.getElementById(id).classList.contains('hidden'));
         const allMainScriptGenerated = isScriptComplete();
-        
-        buttons.generateDescriptionBtn.disabled = !allMainScriptGenerated;
-        buttons.generateTitlesAndThumbnailsBtn.disabled = !allMainScriptGenerated;
-        // buttons.generateImagePromptsBtn.disabled = !allMainScriptGenerated; // Removido
 
-        // Verifica se há conteúdo gerado (script, títulos/thumbnails, ou prompts de imagem em qualquer seção)
-        const hasAnyImagePrompts = Object.keys(allImagePrompts).length > 0 && Object.values(allImagePrompts).some(arr => arr.length > 0);
-        const hasAnyContent = anyMainScriptGenerated || hasAnyImagePrompts || !!generatedTitlesAndThumbnails;
-        buttons.downloadPdfBtn.disabled = !hasAnyContent;
+        // Lista de botões a serem atualizados
+        const supportButtons = ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'];
+        supportButtons.forEach(id => {
+            const original = document.getElementById(id);
+            const clone = document.getElementById(`clone_${id}`);
+            if(original) original.disabled = !allMainScriptGenerated;
+            if(clone) clone.disabled = !allMainScriptGenerated;
+        });
         
-        // O botão de reset agora pode ser sempre habilitado
-        buttons.resetScriptBtn.disabled = false;
+        const hasAnyContent = [
+            ...Array.from(document.querySelectorAll('#scriptOutput > .script-section')),
+            document.getElementById('titlesThumbnailsSection')
+        ].some(el => el && el.innerHTML.trim() !== '');
 
-        // ADICIONADO: Atualiza os botões na barra flutuante
-        // populateActionBar(); // Removido, pois a barra agora é estática
+        const exportButtons = ['downloadPdfBtn'];
+        exportButtons.forEach(id => {
+            const original = document.getElementById(id);
+            const clone = document.getElementById(`clone_${id}`);
+            if(original) original.disabled = !hasAnyContent;
+            if(clone) clone.disabled = !hasAnyContent;
+        });
+
+        const resetBtn = document.getElementById('resetScriptBtn');
+        const cloneResetBtn = document.getElementById('clone_resetScriptBtn');
+        if(resetBtn) resetBtn.disabled = false;
+        if(cloneResetBtn) cloneResetBtn.disabled = false;
     };
     
     const getBasePromptContext = () => {
@@ -1648,7 +1656,7 @@ The final output MUST be only the JSON code, like this example:
         const mainButtonIdMap = {
             'intro': 'generateIntroBtn',
             'development': 'generateDevelopmentBtn',
-            'climax': 'climaxBtn',
+            'climax': 'generateClimaxBtn', // CORRIGIDO
             'conclusion': 'conclusionBtn',
             'cta': 'generateCTABtn'
         };
@@ -2264,7 +2272,7 @@ ${scriptContent}
                             switch (elementId) {
                                 case 'intro': markButtonAsCompleted('generateIntroBtn'); break;
                                 case 'development': markButtonAsCompleted('generateDevelopmentBtn'); break;
-                                case 'climax': markButtonAsCompleted('climaxBtn'); break;
+                                case 'climax': markButtonAsCompleted('generateClimaxBtn'); break; // CORRIGIDO
                                 case 'conclusion': markButtonAsCompleted('conclusionBtn'); break;
                                 case 'cta': markButtonAsCompleted('generateCTABtn'); break;
                                 case 'titlesThumbnails': markButtonAsCompleted('generateTitlesAndThumbnailsBtn'); break;
@@ -2468,7 +2476,7 @@ ${scriptContent}
                 // Marca os botões como concluídos se o conteúdo existir
                 if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                 if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
-                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn');
+                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('generateClimaxBtn'); // CORRIGIDO
                 if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                 if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
                 if (document.getElementById('videoDescriptionOutputSection').innerHTML.trim()) markButtonAsCompleted('generateDescriptionBtn');
@@ -2497,7 +2505,7 @@ ${scriptContent}
     const setupButtonListeners = () => {
         if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
         if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
-        if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
+        if (buttons.generateClimaxBtn) buttons.generateClimaxBtn.addEventListener('click', () => handleGenerateSection(buttons.generateClimaxBtn, 'climax', 'Clímax', 'climax')); // CORRIGIDO
         if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
         if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
         if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
@@ -2538,7 +2546,7 @@ ${scriptContent}
         // Adiciona listeners para os botões CLONADOS
         document.getElementById('clone_generateIntroBtn').addEventListener('click', () => document.getElementById('generateIntroBtn').click());
         document.getElementById('clone_generateDevelopmentBtn').addEventListener('click', () => document.getElementById('generateDevelopmentBtn').click());
-        document.getElementById('clone_climaxBtn').addEventListener('click', () => document.getElementById('climaxBtn').click());
+        document.getElementById('clone_generateClimaxBtn').addEventListener('click', () => document.getElementById('generateClimaxBtn').click()); // CORRIGIDO
         document.getElementById('clone_conclusionBtn').addEventListener('click', () => document.getElementById('conclusionBtn').click());
         document.getElementById('clone_generateCTABtn').addEventListener('click', () => document.getElementById('generateCTABtn').click());
         document.getElementById('clone_generateDescriptionBtn').addEventListener('click', () => document.getElementById('generateDescriptionBtn').click());
