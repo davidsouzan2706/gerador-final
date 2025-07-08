@@ -671,13 +671,13 @@
         /* ========= ESTILO PARA BOTÃO DE SUCESSO (VERDE) ========= */
         /* ========================================================== */
         /* Usamos seletores de ID para máxima especificidade */
-        #generateIntroBtn.btn-success, #generateDevelopmentBtn.btn-success, #generateClimaxBtn.btn-success, #conclusionBtn.btn-success, #generateCTABtn.btn-success, #generateDescriptionBtn.btn-success, #generateTitlesAndThumbnailsBtn.btn-success {
-            background-color: #10B981 !important; /* Verde vibrante */
+        .btn.btn-success {
+            background-color: #10B981 !important; /* Verde vibrante com !important */
             color: #ffffff !important;
             box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
         }
         .btn.btn-success:hover:not(:disabled) {
-            background-color: #059669; /* Um verde mais escuro para o hover */
+            background-color: #059669 !important; /* Verde mais escuro com !important */
             box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
         }
         /* Remove o ícone de check, pois não precisamos mais dele */
