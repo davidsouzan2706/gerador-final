@@ -1070,18 +1070,25 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         });
     };
 
-    // VERSÃO FINAL SIMPLES - RESETA OS DOIS BOTÕES
+    // VERSÃO FINAL E CORRETA do resetCompletionIcons
     const resetCompletionIcons = () => {
-        for (const originalId in buttonCheckmarkMap) {
-            const originalButton = document.getElementById(originalId);
-            const floatButton = document.getElementById(`float_${originalId}`);
-            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
-            const isPasso1 = passo1_buttons.includes(originalId);
+        const passo1_buttons_ids = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+        
+        for (const buttonId in buttonCheckmarkMap) {
+            const isPasso1 = passo1_buttons_ids.includes(buttonId);
+            const originalButton = document.getElementById(buttonId);
+            const floatButton = document.getElementById(`float_${buttonId}`);
 
             [originalButton, floatButton].forEach(btn => {
-                if(btn) {
+                if (btn) {
                     btn.classList.remove('btn-success');
-                    btn.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
+                    if (isPasso1) {
+                        btn.classList.remove('btn-secondary');
+                        btn.classList.add('btn-primary');
+                    } else {
+                        btn.classList.remove('btn-primary');
+                        btn.classList.add('btn-secondary');
+                    }
                 }
             });
         }
