@@ -160,6 +160,13 @@
             cursor: pointer;
             user-select: none; /* Impede seleção de texto ao clicar */
         }
+        /* Estilo para o cabeçalho do acordeão ativo */
+        .accordion-header.active {
+            background-color: var(--secondary-bg);
+        }
+        .dark .accordion-header.active {
+            background-color: #374151; /* Gray-700 */
+        }
         .header-content {
             display: flex;
             align-items: center;
@@ -507,6 +514,21 @@
         }
         .dark .section-prompts, .dark .section-soundtrack { border-top-color: #4b5563; }
         .dark .soundtrack-list { color: #d1d5db; }
+
+        /* Animação para surgimento suave das seções */
+        @keyframes fadeInSlideUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        .animate-fade-in {
+            animation: fadeInSlideUp 0.5s ease-out forwards;
+        }
     </style>
 </head>
 <body>
@@ -840,6 +862,23 @@
         };
 
         /**
+         * Fornece feedback visual em um botão após uma ação de cópia.
+         * @param {HTMLElement} buttonElement - O elemento do botão que foi clicado.
+         */
+        window.showCopyFeedback = (buttonElement) => {
+            const originalText = buttonElement.innerHTML;
+            buttonElement.innerHTML = 'Copiado!';
+            buttonElement.classList.add('btn-success');
+            buttonElement.disabled = true; // Desabilita o botão temporariamente
+
+            setTimeout(() => {
+                buttonElement.innerHTML = originalText;
+                buttonElement.classList.remove('btn-success');
+                buttonElement.disabled = false;
+            }, 2000); // Reverte após 2 segundos
+        };
+
+        /**
          * Mostra um spinner de carregamento e desabilita todos os botões de geração.
          * @param {HTMLElement} button - O botão que acionou o carregamento.
          */
@@ -998,7 +1037,7 @@
                 </svg>
             </button>`;
 
-            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('.generated-content-wrapper').textContent)">Copiar</button>`;
+            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
             
             // Constrói condicionalmente as seções de prompt e trilha sonora
             const promptsSectionHtml = showPromptsButton ? `
@@ -1422,6 +1461,7 @@ The final output MUST be only the JSON code, like this example:
                 if (targetSectionElement) {
                     targetSectionElement.innerHTML = generateSectionHtmlContent(elementId, sectionTitle, result);
                     targetSectionElement.classList.remove('hidden');
+                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
                 } else {
                     console.error(`Target section element with ID '${elementId}Section' not found.`);
                     window.showToast("Erro interno: Seção do roteiro não encontrada.");
@@ -1554,7 +1594,7 @@ Trecho do roteiro:
                             <div class="individual-prompt-block">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent)">Copiar</button>
+                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
                                 </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
@@ -1701,6 +1741,7 @@ ${scriptContent}
                     );
                     
                     targetSectionElement.classList.remove('hidden');
+                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
                     markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
                 }
                 
@@ -1779,6 +1820,7 @@ ${scriptContent}
                         { showPromptsButton: false, showSoundtrackButton: false } // <-- A MÁGICA ACONTECE AQUI
                     );
                     targetSectionElement.classList.remove('hidden');
+                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
                 } else {
                     console.error("Target section element with ID 'videoDescriptionOutputSection' not found.");
                     window.showToast("Erro interno: Seção de descrição não encontrada.");
@@ -1921,6 +1963,7 @@ ${scriptContent}
             document.querySelectorAll('#scriptOutput > .script-section').forEach(sec => {
                 sec.innerHTML = '';
                 sec.classList.add('hidden');
+                sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
 
             allImagePrompts = {}; // Limpa todos os prompts de imagem
@@ -1992,7 +2035,7 @@ ${scriptContent}
                         <div class="individual-prompt-block">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent)">Copiar</button>
+                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
                             </div>
                             <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                             <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
@@ -2035,6 +2078,7 @@ ${scriptContent}
                         if (element && projectData.outputs[key]) {
                             element.innerHTML = projectData.outputs[key];
                             element.classList.remove('hidden');
+                            element.classList.add('animate-fade-in'); // Adiciona a animação ao importar
                         }
                     }
 
@@ -2169,11 +2213,11 @@ ${scriptContent}
         window.toggleAccordion = (bodyId, arrowId) => {
             const body = document.getElementById(bodyId);
             const arrow = document.getElementById(arrowId);
-            if (body) { // Verifica se o corpo existe
+            if (body && arrow) {
                 body.classList.toggle('open');
-            }
-            if (arrow) { // Verifica se a seta existe
                 arrow.classList.toggle('open');
+                // Adiciona ou remove a classe 'active' no elemento pai do cabeçalho
+                arrow.closest('.accordion-header').classList.toggle('active');
             }
         };
 
