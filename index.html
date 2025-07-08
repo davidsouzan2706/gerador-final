@@ -397,7 +397,7 @@
         }
         .dark .input-group input:focus,
         .dark .input-group select:focus,
-        .dark .input-group textarea:focus {
+        .input-group textarea:focus {
             border-color: #6366f1; /* indigo-500 */
             background-color: #4b5563; /* gray-600 */
             box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
@@ -640,15 +640,22 @@
     <!-- NOVO HTML COM DUAS BARRAS -->
     <div id="floatingActionBar" class="floating-action-bar">
         <div class="action-bar-content">
-            <!-- Barra para o Passo 1 -->
+            <!-- Grupo de Ações Principais -->
             <div id="mainActions" class="action-bar-buttons-group">
                 <span class="action-bar-title">Passo 1:</span>
-                <div class="btn-clone-container"></div>
+                <button id="clone_generateIntroBtn" class="btn btn-primary">Introdução</button>
+                <button id="clone_generateDevelopmentBtn" class="btn btn-primary">Desenvolvimento</button>
+                <button id="clone_climaxBtn" class="btn btn-primary">Clímax</button>
+                <button id="clone_conclusionBtn" class="btn btn-primary">Conclusão</button>
+                <button id="clone_generateCTABtn" class="btn btn-primary">CTA</button>
             </div>
-            <!-- Barra para os Passos 2 e 3 -->
+            <!-- Grupo de Ações Rápidas -->
             <div id="quickActions" class="action-bar-buttons-group hidden">
                 <span class="action-bar-title">Ações Rápidas:</span>
-                <div class="btn-clone-container"></div>
+                <button id="clone_generateDescriptionBtn" class="btn btn-secondary">Descrição</button>
+                <button id="clone_generateTitlesAndThumbnailsBtn" class="btn btn-secondary">Títulos</button>
+                <button id="clone_downloadPdfBtn" class="btn btn-secondary">PDF</button>
+                <button id="clone_resetScriptBtn" class="btn btn-secondary">Novo</button>
             </div>
         </div>
     </div>
@@ -831,7 +838,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                     <span id="developmentCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="developmentSpinner"></div>
                 </button>
-                <button id="generateClimaxBtn" class="btn btn-primary">
+                <button id="climaxBtn" class="btn btn-primary">
                     <span class="button-text">Clímax</span>
                     <span id="climaxCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="climaxSpinner"></div>
@@ -1044,44 +1051,20 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // ==========================================================
     // VERSÕES FINAIS E SINCRONIZADAS DAS FUNÇÕES
     // ==========================================================
-    // VERSÃO FINAL E SIMPLES - Apenas clona o estado atual
-    window.populateActionBar = () => {
-        const cloneAndAppend = (id, container) => {
-            const original = document.getElementById(id);
-            if (original) {
-                const clone = original.cloneNode(true);
-                clone.id = ''; // Remove o ID duplicado para evitar conflitos
-                clone.dataset.cloneOf = id; // Adiciona um link: data-clone-of="generateIntroBtn"
-                
-                // Adiciona o listener de clique diretamente no clone
-                clone.addEventListener('click', () => original.click());
-                
-                container.appendChild(clone);
-            }
-        };
-
-        const mainButtonsContainer = document.querySelector('#mainActions .btn-clone-container');
-        const quickButtonsContainer = document.querySelector('#quickActions .btn-clone-container');
-        if (!mainButtonsContainer || !quickButtonsContainer) return;
-
-        // Limpa a barra antes de redesenhar
-        mainButtonsContainer.innerHTML = '';
-        quickButtonsContainer.innerHTML = '';
-
-        // Clona os botões com seu estado atual
-        ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => cloneAndAppend(id, mainButtonsContainer));
-        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => cloneAndAppend(id, quickButtonsContainer));
-    };
+    // DELETED: window.populateActionBar function
 
     // VERSÃO FINAL - Marca como concluído e redesenha a barra
     const markButtonAsCompleted = (buttonId) => {
-        const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
-        buttonsToUpdate.forEach(button => {
-            if(button) {
-                button.classList.remove('btn-primary', 'btn-secondary');
-                button.classList.add('btn-success');
-            }
-        });
+        const original = document.getElementById(buttonId);
+        const clone = document.getElementById(`clone_${buttonId}`);
+        if(original) {
+            original.classList.remove('btn-primary', 'btn-secondary');
+            original.classList.add('btn-success');
+        }
+        if(clone) {
+            clone.classList.remove('btn-primary', 'btn-secondary');
+            clone.classList.add('btn-success');
+        }
     };
 
     // ==========================================================
@@ -1100,22 +1083,20 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
 
         allActionButtons.forEach(buttonId => {
             // Pega o original E o seu clone na barra flutuante de uma só vez
-            const buttonsToReset = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
-
-            buttonsToReset.forEach(button => {
-                if (button) {
-                    button.classList.remove('btn-success'); // Tira o verde
-
-                    // Adiciona a cor original correta de volta
-                    if (primaryButtons.includes(buttonId)) {
-                        button.classList.add('btn-primary');
-                        button.classList.remove('btn-secondary');
-                    } else {
-                        button.classList.add('btn-secondary');
-                        button.classList.remove('btn-primary');
-                    }
-                }
-            });
+            const original = document.getElementById(buttonId);
+            const clone = document.getElementById(`clone_${buttonId}`);
+            const isPasso1 = primaryButtons.includes(buttonId);
+            
+            if(original) {
+                original.classList.remove('btn-success'); // Tira o verde
+                original.classList.remove('btn-primary', 'btn-secondary'); // Remove ambos para garantir
+                original.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary'); // Adiciona a correta
+            }
+            if(clone) {
+                clone.classList.remove('btn-success'); // Tira o verde
+                clone.classList.remove('btn-primary', 'btn-secondary'); // Remove ambos para garantir
+                clone.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary'); // Adiciona a correta
+            }
         });
     };
     
@@ -1249,7 +1230,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.resetScriptBtn.disabled = false;
 
         // ADICIONADO: Atualiza os botões na barra flutuante
-        window.populateActionBar(); // Força a atualização da barra após o estado dos botões ser definido
+        // populateActionBar(); // Removido, pois a barra agora é estática
     };
     
     const getBasePromptContext = () => {
@@ -2553,6 +2534,17 @@ ${scriptContent}
             });
             fileInput.addEventListener('change', importProject);
         }
+
+        // Adiciona listeners para os botões CLONADOS
+        document.getElementById('clone_generateIntroBtn').addEventListener('click', () => document.getElementById('generateIntroBtn').click());
+        document.getElementById('clone_generateDevelopmentBtn').addEventListener('click', () => document.getElementById('generateDevelopmentBtn').click());
+        document.getElementById('clone_climaxBtn').addEventListener('click', () => document.getElementById('climaxBtn').click());
+        document.getElementById('clone_conclusionBtn').addEventListener('click', () => document.getElementById('conclusionBtn').click());
+        document.getElementById('clone_generateCTABtn').addEventListener('click', () => document.getElementById('generateCTABtn').click());
+        document.getElementById('clone_generateDescriptionBtn').addEventListener('click', () => document.getElementById('generateDescriptionBtn').click());
+        document.getElementById('clone_generateTitlesAndThumbnailsBtn').addEventListener('click', () => document.getElementById('generateTitlesAndThumbnailsBtn').click());
+        document.getElementById('clone_downloadPdfBtn').addEventListener('click', () => document.getElementById('downloadPdfBtn').click());
+        document.getElementById('clone_resetScriptBtn').addEventListener('click', () => document.getElementById('resetScriptBtn').click());
     };
 
     // NOVA FUNÇÃO para análise estratégica
@@ -2678,7 +2670,7 @@ ${scriptContent}
 	// initializeFirebase();
         
 	setupButtonListeners(); // Agora é seguro chamar
-        populateActionBar(); // Chama UMA VEZ para criar os clones.
+        // populateActionBar(); // Removido, pois a barra agora é estática
         updateButtonStates(); // Define o estado inicial dos botões.
 
         // Dentro de DOMContentLoaded
