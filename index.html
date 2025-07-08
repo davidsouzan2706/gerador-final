@@ -12,6 +12,8 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <!-- Adicione esta linha no <head> do seu HTML -->
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
     <style>
         /* ========================================================== */
         /* ==================== ESTILOS GERAIS ==================== */
@@ -1810,45 +1812,60 @@ ${scriptContent}
             y += 10;
 
             const sectionOrder = ['intro', 'development', 'climax', 'conclusion', 'cta', 'videoDescriptionOutput', 'titlesThumbnails'];
+            
             sectionOrder.forEach(id => {
                 const sectionElement = document.getElementById(`${id}Section`);
-                if (sectionElement && !sectionElement.classList.contains('hidden')) {
-                    const title = sectionElement.querySelector('h3').textContent;
-                    doc.setFontSize(16);
-                    doc.text(title, 10, y);
-                    y += 7;
-                    doc.setFontSize(12);
+                // Pular a seção inteira se ela estiver vazia ou escondida
+                if (!sectionElement || sectionElement.classList.contains('hidden') || sectionElement.innerHTML.trim() === '') {
+                    return; 
+                }
 
-                    if (id === 'titlesThumbnails') {
-                        const titlesContainer = sectionElement.querySelector('h4:nth-of-type(1) + div');
-                        if (titlesContainer) {
-                            const titlesText = Array.from(titlesContainer.querySelectorAll('p')).map(p => p.textContent).join('\n');
-                            const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
-                            doc.text(splitTitles, 10, y);
-                            y += (splitTitles.length * 5) + 5;
-                        }
+                const titleElement = sectionElement.querySelector('h3');
+                // Pular se não houver um título (proteção extra)
+                if (!titleElement) return; 
 
-                        const thumbnailsContainer = sectionElement.querySelector('h4:nth-of-type(2) + div');
-                        if (thumbnailsContainer) {
-                            const thumbnailsText = Array.from(thumbnailsContainer.querySelectorAll('div[class*="thumbnail-item-separator"], div:not([class]) p.font-semibold')) // Lógica complexa para pegar todos
-                                .map(el => el.textContent.trim().replace(/\s+/g, ' ')).join('\n\n');
-                            
-                            const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
-                            doc.text(splitThumbnails, 10, y);
-                            y += (splitThumbnails.length * 5) + 5;
-                        }
-                    } else {
-                        // For regular script sections, get content from the editable paragraph
-                        const content = sectionElement.querySelector('.generated-content-wrapper').textContent; // Updated selector
+                const title = titleElement.textContent;
+                doc.setFontSize(16);
+                doc.text(title, 10, y);
+                y += 7;
+                doc.setFontSize(12);
+
+                if (id === 'titlesThumbnails') {
+                    // Lógica para extrair títulos
+                    const titlesContainer = sectionElement.querySelector('h4:nth-of-type(1) + div');
+                    if (titlesContainer) {
+                        const titlesText = Array.from(titlesContainer.querySelectorAll('p')).map(p => p.textContent).join('\n');
+                        const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
+                        doc.text(splitTitles, 10, y);
+                        y += (splitTitles.length * 5) + 5;
+                    }
+
+                    // Lógica para extrair thumbnails
+                    const thumbnailsContainer = sectionElement.querySelector('h4:nth-of-type(2) + div');
+                    if (thumbnailsContainer) {
+                        const thumbDivs = thumbnailsContainer.querySelectorAll('.thumbnail-item-separator, div > p.font-semibold');
+                        const thumbnailsText = Array.from(thumbDivs).map(el => {
+                           const parent = el.closest('div.p-3 > div');
+                           return parent ? parent.textContent.trim().replace(/\s+/g, ' ') : el.textContent.trim().replace(/\s+/g, ' ');
+                        }).filter((v, i, a) => a.indexOf(v) === i).join('\n\n');
+                        
+                        const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
+                        doc.text(splitThumbnails, 10, y);
+                        y += (splitThumbnails.length * 5) + 5;
+                    }
+                } else {
+                    const contentElement = sectionElement.querySelector('.accordion-body .generated-content-wrapper'); // Updated selector
+                    if (contentElement) {
+                        const content = contentElement.textContent;
                         const splitContent = doc.splitTextToSize(content, 180);
                         doc.text(splitContent, 10, y);
                         y += (splitContent.length * 7) + 5;
                     }
+                }
 
-                    if (y > 280) {
-                        doc.addPage();
-                        y = 10;
-                    }
+                if (y > 280) {
+                    doc.addPage();
+                    y = 10;
                 }
             });
 
