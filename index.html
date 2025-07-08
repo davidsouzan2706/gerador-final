@@ -435,9 +435,74 @@
         .dark .prompt-description-content { color: #d1d5db; }
         .dark pre { background-color: #374151 !important; color: #d1d5db; }
         .dark #darkModeToggle { color: #9ca3af; }
-        .dark .tooltip { background-color: #4b5563; color: #e5e7eb; }
-        .dark .tooltip::before { background-color: #374151; }
-        .dark .tooltip::after { border-color: #374151 transparent transparent transparent; }
+        /* ========================================================== */
+        /* ==================== ESTILOS TOOLTIP ===================== */
+        /* ========================================================== */
+        .tooltip {
+            position: relative;
+            cursor: help;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background-color: #e0e7ff; /* Indigo-100 */
+            color: #4338ca; /* Indigo-700 */
+            font-weight: bold;
+            font-size: 0.8rem;
+            border: 1px solid #c7d2fe;
+        }
+        .dark .tooltip {
+            background-color: #4b5563; /* Gray-600 */
+            color: #e5e7eb; /* Gray-200 */
+            border-color: #374151; /* Gray-700 */
+        }
+        /* Esconde o tooltip por padrão */
+        .tooltip::before, .tooltip::after {
+            visibility: hidden;
+            opacity: 0;
+            transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
+            position: absolute;
+            bottom: 150%; /* Posiciona acima do (?) */
+            left: 50%;
+            transform: translateX(-50%) translateY(10px); /* Começa um pouco abaixo */
+            z-index: 10;
+        }
+        /* Mostra o tooltip no hover */
+        .tooltip:hover::before, .tooltip:hover::after {
+            visibility: visible;
+            opacity: 1;
+            transform: translateX(-50%) translateY(0); /* Sobe para a posição final */
+        }
+        /* Estilo da caixa de texto do tooltip */
+        .tooltip::before {
+            content: attr(data-tooltip); /* Pega o texto do atributo! */
+            background-color: #1f2937; /* Gray-800 */
+            color: #f9fafb; /* Gray-50 */
+            padding: 0.75rem;
+            border-radius: 8px;
+            width: 300px; /* Largura do tooltip */
+            text-align: left;
+            white-space: pre-wrap; /* Respeita as quebras de linha do atributo */
+            font-size: 0.85rem;
+            line-height: 1.5;
+            font-weight: normal;
+        }
+        .dark .tooltip::before {
+            background-color: #374151; /* Gray-700 */
+        }
+        /* Estilo da setinha do tooltip */
+        .tooltip::after {
+            content: '';
+            border-width: 6px;
+            border-style: solid;
+            border-color: #1f2937 transparent transparent transparent; /* Seta aponta para baixo */
+            margin-left: -6px; /* Centraliza a seta */
+        }
+        .dark .tooltip::after {
+            border-color: #374151 transparent transparent transparent;
+        }
         .dark .section-prompts, .dark .section-soundtrack { border-top-color: #4b5563; }
         .dark .soundtrack-list { color: #d1d5db; }
     </style>
@@ -780,11 +845,9 @@
             Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
         
             const textSpan = button.querySelector('.button-text');
-            // REMOVIDO: const checkmarkSpan = button.querySelector('.completion-icon');
             const spinnerDiv = button.querySelector('.loading-spinner');
 
             if (textSpan) textSpan.classList.add('hidden');
-            // REMOVIDO: if (checkmarkSpan) checkmarkSpan.classList.add('hidden');
             if (spinnerDiv) spinnerDiv.classList.remove('hidden');
         };
 
@@ -802,11 +865,6 @@
             const textSpan = button.querySelector('.button-text');
             if (textSpan) textSpan.classList.remove('hidden');
 
-            // REMOVIDO: const checkmarkSpan = button.querySelector('.completion-icon');
-            // REMOVIDO: // Só mostra o checkmark se o botão foi marcado como completo
-            // REMOVIDO: if (checkmarkSpan && button.classList.contains('btn-success')) {
-            // REMOVIDO:     checkmarkSpan.classList.remove('hidden');
-            // REMOVIDO: }
             updateButtonStates(); // Chama a função centralizada para reavaliar o estado
         };
 
@@ -837,12 +895,6 @@
                 const isPasso1 = passo1_buttons_ids.includes(buttonId);
                 const originalButton = document.getElementById(buttonId);
                 const floatButton = document.getElementById(`float_${buttonId}`);
-
-                // REMOVIDO: Esconde o checkmark explicitamente
-                // REMOVIDO: const originalCheckmark = originalButton?.querySelector('.completion-icon');
-                // REMOVIDO: const floatCheckmark = floatButton?.querySelector('.completion-icon');
-                // REMOVIDO: if (originalCheckmark) originalCheckmark.classList.add('hidden');
-                // REMOVIDO: if (floatCheckmark) floatCheckmark.classList.add('hidden');
 
                 // Remove a classe de sucesso e adiciona a classe correta (primary/secondary)
                 [originalButton, floatButton].forEach(btn => {
@@ -2028,7 +2080,7 @@ ${scriptContent}
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
                 if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
                 if(strategy.video_objective) elements.videoObjective.value = strategy.video_objective;
-                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrativeStyle;
+                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style; // CORRIGIDO AQUI
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
