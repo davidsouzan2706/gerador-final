@@ -533,49 +533,32 @@
         /* ========================================================== */
         /* ============ ESTILOS MODO FOCO - VERSÃO FINAL ============ */
         /* ========================================================== */
-        /* Por padrão, esconde a saída do modo foco */
-        #zen-mode-output {
-            display: none;
-        }
-
         /* Quando o modo foco está ativo... */
-        body.zen-mode {
-            overflow: hidden; /* Impede a rolagem do fundo */
+        /* 1. Esconde os elementos que não queremos ver */
+        body.zen-mode .floating-action-bar,
+        body.zen-mode #mainInputsGrid,
+        body.zen-mode #progressBarContainer,
+        body.zen-mode #assetsColumn,
+        body.zen-mode .absolute.top-4.right-4, /* Esconde os botões do canto */
+        body.zen-mode .container > h1,
+        body.zen-mode .container > p {
+            display: none !important;
         }
 
-        body.zen-mode #zen-mode-output {
-            display: block; /* Mostra a nossa área de foco */
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #fff; /* Fundo sempre branco */
-            z-index: 2000; /* Acima de tudo */
-            overflow-y: auto; /* Permite rolagem interna */
-            padding: 3rem 2rem;
+        /* 2. Ajusta o container e o grid principal */
+        body.zen-mode .container {
+            max-width: 100%;
+            padding: 1rem;
         }
 
-        body.zen-mode #zen-mode-content {
-            max-width: 800px;
-            margin: 0 auto;
-            color: #000; /* Cor de fonte sempre preta */
-            font-size: 14pt;
-            line-height: 1.7;
+        body.zen-mode #projectDashboard .grid {
+            display: block; /* Faz o grid se comportar como um bloco normal */
         }
 
-        body.zen-mode #zen-mode-close-btn {
-            position: fixed;
-            top: 20px;
-            right: 30px;
-            font-size: 2rem;
-            color: #aaa;
-            cursor: pointer;
-            z-index: 2001;
-        }
-
-        body.zen-mode #zen-mode-close-btn:hover {
-            color: #000;
+        /* 3. Expande a coluna do roteiro para ocupar todo o espaço */
+        body.zen-mode #scriptColumn {
+            max-height: none; 
+            grid-column: auto; /* Reseta as regras de coluna do grid */
         }
         
         /* ========================================================== */
@@ -925,12 +908,6 @@
             <p id="fullScreenAlertMessage"></p>
             <button id="fullScreenAlertCloseBtn">Entendi</button>
         </div>
-    </div>
-
-    <!-- Container para o Modo Foco (começa escondido) -->
-    <div id="zen-mode-output">
-        <div id="zen-mode-close-btn" title="Sair do Modo Foco">×</div>
-        <div id="zen-mode-content"></div>
     </div>
 
     <script type="module">
@@ -2590,27 +2567,10 @@ ${scriptContent}
             }
 
             // Lógica para o Modo Zen
-            const zenModeBtn = document.getElementById('toggleZenModeBtn'); // Updated ID
+            const zenModeBtn = document.getElementById('toggleZenModeBtn');
             if (zenModeBtn) {
                 zenModeBtn.addEventListener('click', () => {
-                    const scriptContent = document.getElementById('scriptSectionsContainer').innerHTML; // Get content from the scrollable container
-                    const zenContentDiv = document.getElementById('zen-mode-content');
-                    
-                    // Limpa os botões e outros elementos indesejados do conteúdo
-                    const tempDiv = document.createElement('div');
-                    tempDiv.innerHTML = scriptContent;
-                    // Remove buttons and specific elements that shouldn't be in zen mode view
-                    tempDiv.querySelectorAll('button, .accordion-header .header-buttons, .section-prompts, .section-soundtrack, .asset-card-placeholder, h2, #strategicOutlineCard, #scriptGenerationControls').forEach(el => el.remove());
-                    
-                    zenContentDiv.innerHTML = tempDiv.innerHTML;
-                    document.body.classList.add('zen-mode');
-                });
-            }
-
-            const zenCloseBtn = document.getElementById('zen-mode-close-btn');
-            if(zenCloseBtn) {
-                zenCloseBtn.addEventListener('click', () => {
-                    document.body.classList.remove('zen-mode');
+                    document.body.classList.toggle('zen-mode');
                 });
             }
 
