@@ -1095,29 +1095,46 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     };
     
     const markButtonAsCompleted = (buttonId) => {
-        const button = document.getElementById(buttonId);
-        if (button) {
-            // Remove as classes de cor antigas
-            button.classList.remove('btn-primary'); 
-            button.classList.remove('btn-secondary'); 
-            // Adiciona a nova classe de sucesso
-            button.classList.add('btn-success');
+        // Encontra o botão original e o atualiza
+        const originalButton = document.getElementById(buttonId);
+        if (originalButton) {
+            originalButton.classList.remove('btn-primary', 'btn-secondary');
+            originalButton.classList.add('btn-success');
+        }
+
+        // Encontra o clone correspondente na barra flutuante e o atualiza também
+        const floatingBar = document.getElementById('floatingActionBar');
+        if (floatingBar) {
+            // A query `[id='${buttonId}']` encontra o clone pelo mesmo ID
+            const clonedButton = floatingBar.querySelector(`[id='${buttonId}']`);
+            if (clonedButton) {
+                clonedButton.classList.remove('btn-primary', 'btn-secondary');
+                clonedButton.classList.add('btn-success');
+            }
         }
     };
     
     const resetCompletionIcons = () => {
+        const floatingBar = document.getElementById('floatingActionBar');
+
         for (const buttonId in buttonCheckmarkMap) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.classList.remove('btn-success');
-                
-                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
-                if(passo1_buttons.includes(buttonId)) {
-                    button.classList.add('btn-primary');
-                } else {
-                    // Garante que botões do Passo 2 voltem a ser 'secondary'
-                    button.classList.add('btn-secondary');
-                }
+            const originalButton = document.getElementById(buttonId);
+            const clonedButton = floatingBar ? floatingBar.querySelector(`[id='${buttonId}']`) : null;
+            
+            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
+            const isPasso1 = passo1_buttons.includes(buttonId);
+
+            // Reseta o botão original
+            if (originalButton) {
+                originalButton.classList.remove('btn-success');
+                originalButton.classList.remove(isPasso1 ? 'btn-secondary' : 'btn-primary');
+                originalButton.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
+            }
+            // Reseta o clone
+            if (clonedButton) {
+                clonedButton.classList.remove('btn-success');
+                clonedButton.classList.remove(isPasso1 ? 'btn-secondary' : 'btn-primary');
+                clonedButton.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
             }
         }
     };
@@ -2411,7 +2428,7 @@ ${scriptContent}
         const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
         const downloadAnchorNode = document.createElement('a');
         downloadAnchorNode.setAttribute("href", dataStr);
-        const fileName = elements.videoTheme.value.trim().replace(/[^a-z0-9]/gi, '_').toLowerCase() || 'roteiro_viral';
+        const fileName = elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro_viral';
         downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
         document.body.appendChild(downloadAnchorNode);
         downloadAnchorNode.click();
