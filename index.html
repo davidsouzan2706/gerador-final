@@ -1782,18 +1782,15 @@ Trecho do roteiro:
 
             soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
 
-            const prompt = `Você é um produtor musical e compositor de trilhas sonoras para filmes. Analise o tone, o ritmo e a emoção do seguinte trecho de roteiro.
+            const prompt = `Você é um especialista em prompts para IAs de geração de música (como Suno/Udio). Sua tarefa é analisar o seguinte trecho de roteiro e criar 3 prompts de texto distintos e detalhados.
 
-Sua tarefa é criar 3 prompts de texto detalhados e prontos para serem usados em uma IA de geração de música (como Suno ou Udio). Cada prompt deve gerar uma trilha sonora instrumental única e de alta qualidade que combine com o roteiro.
+**REGRAS DE FORMATAÇÃO (NÃO NEGOCIÁVEIS):**1.  Sua resposta DEVE SER um array JSON válido.2.  O array deve conter EXATAMENTE 3 strings.3.  CADA string deve ser um parágrafo único, bem escrito e descritivo, pronto para ser colado em uma IA de música. NÃO use chaves, colchetes ou qualquer outra sintaxe de objeto DENTRO da string do prompt.
 
-Para cada um dos 3 prompts, inclua:
-- O gênero/estilo (ex: cinematic, orchestral, ambient, electronic).
-- O humor/emoção (ex: inspirational, tense, mysterious, melancholic, epic).
-- Instrumentos chave (ex: solo piano, string section, taiko drums, synth pads).
-- Influências de estilo (ex: Hans Zimmer style, Lo-fi chillhop, Two Steps from Hell).
-- Instruções negativas (ex: no vocals, no saxophone).
+**EXEMPLO DE RESPOSTA PERFEITA:**
+["Generate an epic, cinematic orchestral piece in the style of Hans Zimmer... No vocals or percussion, focus on the emotional intensity of the strings and piano.","Create a contemplative, melancholic ambient track with a slow, mournful tempo... No bright or cheerful notes, focus on the darker, more introspective tones.","Craft an uplifting, inspirational electronic piece with a moderate tempo... avoid any jarring or harsh sounds, focusing on the soaring, inspirational quality of the melody."
+]
 
-Responda APENAS com um array JSON de strings, onde cada string é um prompt musical completo e detalhado.
+Agora, use o roteiro abaixo como inspiração para criar 3 prompts seguindo EXATAMENTE este formato.
 
 Trecho do roteiro para analisar:
 ---
@@ -1804,6 +1801,11 @@ ${scriptContent}
                 const rawResult = await callGroqAPI(prompt, 500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const suggestions = JSON.parse(cleanedResult);
+
+                // Adiciona tratamento de erro para garantir que suggestions é um array de strings
+                if (!Array.isArray(suggestions) || !suggestions.every(s => typeof s === 'string')) {
+                    throw new Error("A IA retornou um formato de trilha sonora inesperado. Esperava um array de strings.");
+                }
 
                 soundtrackContainer.innerHTML = ''; // Limpa o spinner
                 if (suggestions && suggestions.length > 0) {
