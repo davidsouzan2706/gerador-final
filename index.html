@@ -1,4 +1,3 @@
-<!-- Versão 2.0 - UI Atualizada 2 -->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -668,6 +667,22 @@
             max-height: 5000px; /* Um valor alto para permitir a expansão */
             padding: 1rem 1.5rem 1.5rem;
         }
+        /* ========================================================== */
+        /* ========= ESTILO PARA BOTÃO DE SUCESSO (VERDE) ========= */
+        /* ========================================================== */
+        .btn.btn-success {
+            background-color: #10B981; /* Um verde vibrante (Tailwind Emerald 500) */
+            color: #ffffff;
+            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
+        }
+        .btn.btn-success:hover:not(:disabled) {
+            background-color: #059669; /* Um verde mais escuro para o hover */
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+        }
+        /* Remove o ícone de check, pois não precisamos mais dele */
+        .btn.btn-success .completion-icon {
+            display: none;
+        }
     </style>
 </head>
 <body>
@@ -1078,8 +1093,33 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         updateButtonStates(); // Chama a função centralizada para reavaliar o estado
     };
     
-    const markButtonAsCompleted = (buttonId) => { const button = document.getElementById(buttonId); if (button) { button.dataset.completed = 'true'; const checkmarkElement = button.querySelector('.completion-icon'); if (checkmarkElement) checkmarkElement.classList.remove('hidden'); } };
-    const resetCompletionIcons = () => { for (const buttonId in buttonCheckmarkMap) { const button = document.getElementById(buttonId); if (button) { button.dataset.completed = 'false'; const checkmarkElement = button.querySelector('.completion-icon'); if (checkmarkElement) checkmarkElement.classList.add('hidden'); const textSpan = button.querySelector('.button-text'); const spinnerDiv = button.querySelector('.loading-spinner'); if (textSpan) textSpan.classList.remove('hidden'); if (spinnerDiv) spinnerDiv.classList.add('hidden'); } } };
+    const markButtonAsCompleted = (buttonId) => {
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.classList.add('btn-success');
+            // Remove a cor azul primária, se existir, para evitar conflitos
+            button.classList.remove('btn-primary'); 
+        }
+    };
+    
+    const resetCompletionIcons = () => {
+        for (const buttonId in buttonCheckmarkMap) {
+            const button = document.getElementById(buttonId);
+            if (button) {
+                // Remove a classe de sucesso
+                button.classList.remove('btn-success');
+                
+                // Adiciona de volta a classe primária apenas nos botões do Passo 1
+                if (button.classList.contains('btn')) { // Checa se é um botão de ação principal
+                    const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
+                    if(passo1_buttons.includes(buttonId)) {
+                        button.classList.add('btn-primary');
+                    }
+                }
+            }
+        }
+    };
+    
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
     const hideFullScreenAlert = () => { elements.fullScreenAlertOverlay.classList.remove('visible'); };
     const toggleCustomImageStyleVisibility = () => { elements.customImageStyleContainer.style.display = elements.imageStyleSelect.value === 'custom' ? 'block' : 'none'; };
@@ -2551,7 +2591,7 @@ ${scriptContent}
             if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
             if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
             if(strategy.video_objective) elements.videoObjective.value = strategy.video_objective;
-            if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style;
+            if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrativeStyle;
             if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
             if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
