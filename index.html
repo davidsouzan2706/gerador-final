@@ -137,18 +137,8 @@
         }
 
         /* Icone de Conclusão */
-        .completion-icon {
-            margin-left: 0.5rem;
-            color: var(--success-color);
-            font-size: 2.2em; /* Controla o tamanho do SVG */
-            line-height: 1;
-            display: inline-flex;
-            align-items: center;
-            justify-content: center;
-            width: 1em; /* Faz o SVG escalar com font-size */
-            height: 1em;
-        }
-        .completion-icon.hidden { display: none; }
+        /* REMOVIDO: .completion-icon { ... } */
+        /* REMOVIDO: .completion-icon.hidden { display: none; } */
 
         /* ========================================================== */
         /* ==================== UI MELHORADA ====================== */
@@ -565,8 +555,8 @@
                 <div class="input-group">
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace">
-                        <option value="slow">Lento</m>
                         <option value="moderate" selected>Moderado</option>
+                        <option value="slow">Lento</m>
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
@@ -639,27 +629,22 @@
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <button id="generateIntroBtn" class="btn btn-primary">
                     <span class="button-text">Introdução</span>
-                    <span id="introCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="introSpinner"></div>
                 </button>
                 <button id="generateDevelopmentBtn" class="btn btn-primary">
                     <span class="button-text">Desenvolvimento</span>
-                    <span id="developmentCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="developmentSpinner"></div>
                 </button>
                 <button id="climaxBtn" class="btn btn-primary">
                     <span class="button-text">Clímax</span>
-                    <span id="climaxCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="climaxSpinner"></div>
                 </button>
                 <button id="conclusionBtn" class="btn btn-primary">
                     <span class="button-text">Conclusão</span>
-                    <span id="conclusionCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="conclusionSpinner"></div>
                 </button>
                 <button id="generateCTABtn" class="btn btn-primary">
                     <span class="button-text">CTA</span>
-                    <span id="ctaCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="ctaSpinner"></div>
                 </button>
             </div>
@@ -671,12 +656,10 @@
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button id="generateDescriptionBtn" class="btn btn-secondary">
                     <span class="button-text">Descrição do Vídeo</span>
-                    <span id="descriptionCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="descriptionSpinner"></div>
                 </button>
                 <button id="generateTitlesAndThumbnailsBtn" class="btn btn-secondary">
                     <span class="button-text">Títulos de Vídeos e Thumbnails</span>
-                    <span id="titlesThumbnailsCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="titlesThumbnailsSpinner"></div>
                 </button>
             </div>
@@ -743,16 +726,8 @@
             if (el.tagName === 'BUTTON') buttons[el.id] = el;
             else elements[el.id] = el;
         });
-        // Mapeamento de IDs de botões para IDs de ícones de checkmark (se usados)
-        const buttonCheckmarkMap = {
-            'generateIntroBtn': 'introCheck',
-            'generateDevelopmentBtn': 'developmentCheck',
-            'climaxBtn': 'climaxCheck',
-            'conclusionBtn': 'conclusionCheck',
-            'generateCTABtn': 'ctaCheck',
-            'generateDescriptionBtn': 'descriptionCheck',
-            'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck'
-        };
+        // REMOVIDO: Mapeamento de IDs de botões para IDs de ícones de checkmark (se usados)
+        // const buttonCheckmarkMap = { ... };
 
         // ==========================================================
         // ================== FUNÇÕES DE UTILIDADE ==================
@@ -805,11 +780,11 @@
             Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
         
             const textSpan = button.querySelector('.button-text');
-            const checkmarkSpan = button.querySelector('.completion-icon');
+            // REMOVIDO: const checkmarkSpan = button.querySelector('.completion-icon');
             const spinnerDiv = button.querySelector('.loading-spinner');
 
             if (textSpan) textSpan.classList.add('hidden');
-            if (checkmarkSpan) checkmarkSpan.classList.add('hidden');
+            // REMOVIDO: if (checkmarkSpan) checkmarkSpan.classList.add('hidden');
             if (spinnerDiv) spinnerDiv.classList.remove('hidden');
         };
 
@@ -827,11 +802,11 @@
             const textSpan = button.querySelector('.button-text');
             if (textSpan) textSpan.classList.remove('hidden');
 
-            const checkmarkSpan = button.querySelector('.completion-icon');
-            // Só mostra o checkmark se o botão foi marcado como completo
-            if (checkmarkSpan && button.classList.contains('btn-success')) {
-                checkmarkSpan.classList.remove('hidden');
-            }
+            // REMOVIDO: const checkmarkSpan = button.querySelector('.completion-icon');
+            // REMOVIDO: // Só mostra o checkmark se o botão foi marcado como completo
+            // REMOVIDO: if (checkmarkSpan && button.classList.contains('btn-success')) {
+            // REMOVIDO:     checkmarkSpan.classList.remove('hidden');
+            // REMOVIDO: }
             updateButtonStates(); // Chama a função centralizada para reavaliar o estado
         };
 
@@ -858,16 +833,16 @@
         const resetCompletionIcons = () => {
             const passo1_buttons_ids = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
             
-            for (const buttonId in buttonCheckmarkMap) {
+            for (const buttonId in buttons) { // Iterar sobre todos os botões
                 const isPasso1 = passo1_buttons_ids.includes(buttonId);
                 const originalButton = document.getElementById(buttonId);
                 const floatButton = document.getElementById(`float_${buttonId}`);
 
-                // Esconde o checkmark explicitamente
-                const originalCheckmark = originalButton?.querySelector('.completion-icon');
-                const floatCheckmark = floatButton?.querySelector('.completion-icon');
-                if (originalCheckmark) originalCheckmark.classList.add('hidden');
-                if (floatCheckmark) floatCheckmark.classList.add('hidden');
+                // REMOVIDO: Esconde o checkmark explicitamente
+                // REMOVIDO: const originalCheckmark = originalButton?.querySelector('.completion-icon');
+                // REMOVIDO: const floatCheckmark = floatButton?.querySelector('.completion-icon');
+                // REMOVIDO: if (originalCheckmark) originalCheckmark.classList.add('hidden');
+                // REMOVIDO: if (floatCheckmark) floatCheckmark.classList.add('hidden');
 
                 // Remove a classe de sucesso e adiciona a classe correta (primary/secondary)
                 [originalButton, floatButton].forEach(btn => {
@@ -2157,8 +2132,7 @@ ${scriptContent}
                 elements.progressText.textContent = `${percentage}%`;
 
                 if (percentage === 100) {
-                    elements.progressText.textContent = "Projeto Pronto!";
-                    // Muda a cor da barra para o azul primário para celebrar
+                    elements.progressBar.textContent = "Projeto Pronto!"; // Atualiza o texto diretamente na barra
                     elements.progressBar.style.backgroundColor = 'var(--primary-color)';
                 } else {
                      // Garante que a cor volte ao verde se não for 100%
@@ -2188,10 +2162,13 @@ ${scriptContent}
             };
 
             // Conecta os botões flutuantes aos originais
-            Object.keys(buttonCheckmarkMap).forEach(id => setupClick(id));
-            setupClick('downloadPdfBtn');
-            setupClick('resetScriptBtn');
-            setupClick('exportProjectBtn'); // Adicionado para o botão de exportar
+            // Iterar sobre todos os botões que têm um flutuante correspondente
+            const allButtonIds = Object.keys(buttons);
+            allButtonIds.forEach(id => {
+                if (id.startsWith('generate') || id.startsWith('climax') || id.startsWith('conclusion') || id.startsWith('cta') || id.startsWith('download') || id.startsWith('reset') || id.startsWith('export') || id.startsWith('import')) {
+                    setupClick(id);
+                }
+            });
             
             // Adiciona os listeners de ação aos botões originais
             if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
