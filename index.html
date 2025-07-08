@@ -604,53 +604,40 @@
         /* =============== ESTILOS DE IMPRESSÃO (PDF) =============== */
         /* ========================================================== */
         @media print {
-            /* Esconde tudo por padrão */
-            body * {
-                visibility: hidden;
+            /* Reseta o estilo do corpo para impressão */
+            body {
+                background-color: #fff !important; /* Fundo sempre branco */
+                color: #000 !important; /* Cor de fonte sempre preta */
+                font-size: 11pt; /* Tamanho de fonte padrão para documentos */
             }
 
-            /* Torna a área de conteúdo do roteiro e seus filhos visíveis */
-            #scriptColumn, #scriptColumn * {
-                visibility: visible;
+            /* Esconde tudo que não queremos imprimir */
+            body > *:not(#print-container) {
+                display: none !important;
             }
-            
-            /* Garante que o conteúdo ocupe toda a área de impressão */
-            #scriptColumn {
-                position: absolute;
-                left: 0;
-                top: 0;
-                width: 100%;
-                padding: 2cm; /* Margens de um documento profissional */
-                font-size: 12pt;
-                line-height: 1.5;
+
+            /* Regras para o container de impressão que vamos criar */
+            #print-container {
+                display: block !important; /* Garante que ele seja visível */
             }
-            
-            /* Remove elementos desnecessários da impressão */
-            #scriptColumn h2, 
-            #scriptColumn #strategicOutlineCard, 
-            #scriptColumn #scriptGenerationControls,
-            .accordion-header .header-buttons,
-            .accordion-body .section-prompts,
-            .accordion-body .section-soundtrack {
-                display: none;
+
+            /* Estilo para cada seção dentro da impressão */
+            .print-section {
+                margin-bottom: 24px; /* Espaçamento entre seções */
+                page-break-inside: avoid; /* Tenta não quebrar uma seção no meio da página */
             }
-            
-            /* Força os acordeões a ficarem abertos e sem bordas */
-            .accordion-item, .accordion-header {
-                border: none !important;
-                box-shadow: none !important;
-            }
-            .accordion-body {
-                max-height: none !important; /* Mostra todo o conteúdo */
-                padding: 0 !important;
-                margin-bottom: 2rem; /* Espaçamento entre seções */
-            }
-            .accordion-header h3 {
+            .print-section-title {
                 font-size: 16pt;
-                margin-bottom: 0.5rem;
+                font-weight: bold;
+                color: #000;
+                margin-bottom: 12px;
+                border-bottom: 2px solid #ccc;
+                padding-bottom: 4px;
+                page-break-after: avoid; /* Tenta não quebrar a página logo após o título */
             }
-            .accordion-arrow {
-                display: none;
+            .print-section-content {
+                color: #000;
+                line-height: 1.6;
             }
         }
     </style>
@@ -2054,8 +2041,70 @@ ${scriptContent}
          * Realiza o download do roteiro como PDF.
          */
         const downloadPdf = async () => {
-            // Apenas chama a função de impressão nativa do navegador
+            // 1. Criar um container temporário para a impressão
+            let printContainer = document.createElement('div');
+            printContainer.id = 'print-container';
+
+            // 2. Coletar e formatar TODO o conteúdo que queremos imprimir
+            let htmlToPrint = `<h1 style="text-align: center; font-size: 22pt; margin-bottom: 24px;">${elements.videoTheme.value}</h1>`;
+
+            // Adicionar o esboço estratégico
+            if (strategicOutline) {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Esboço Estratégico</div>
+                        <div class="print-section-content">
+                            <ul style="list-style-type: disc; padding-left: 20px;">`;
+                for (const key in strategicOutline) {
+                    htmlToPrint += `<li><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> ${strategicOutline[key]}</li>`;
+                }
+                htmlToPrint += `</ul></div></div>`;
+            }
+
+            // Adicionar o roteiro principal
+            document.querySelectorAll('#scriptSectionsContainer .accordion-item').forEach(item => {
+                const title = item.querySelector('h3')?.textContent;
+                const content = item.querySelector('.generated-content-wrapper')?.textContent;
+                if (title && content) {
+                    htmlToPrint += `
+                        <div class="print-section">
+                            <div class="print-section-title">${title}</div>
+                            <div class="print-section-content"><p>${content.replace(/\n/g, '<br>')}</p></div>
+                        </div>`;
+                }
+            });
+            
+            // Adicionar Descrição e Hashtags
+            const videoDescriptionContent = document.getElementById('videoDescriptionContent');
+            if (videoDescriptionContent && videoDescriptionContent.textContent.trim() !== 'Clique em \'Gerar\' para ver a descrição') {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Descrição & Hashtags</div>
+                        <div class="print-section-content">${videoDescriptionContent.innerHTML}</div>
+                    </div>`;
+            }
+
+            // Adicionar Títulos e Thumbnails
+            const titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent');
+            if (titlesThumbnailsContent && titlesThumbnailsContent.textContent.trim() !== 'Clique em \'Gerar\' para ver as sugestões') {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Títulos & Thumbnails</div>
+                        <div class="print-section-content">${titlesThumbnailsContent.innerHTML}</div>
+                    </div>`;
+            }
+
+            // 3. Injetar o HTML no container e adicioná-lo ao body
+            printContainer.innerHTML = htmlToPrint;
+            document.body.appendChild(printContainer);
+
+            // 4. Chamar a impressão
             window.print();
+
+            // 5. Remover o container temporário após a impressão (com um pequeno atraso para garantir a renderização)
+            setTimeout(() => {
+                document.body.removeChild(printContainer);
+            }, 500); // 500ms de atraso
         };
 
         /**
@@ -2533,8 +2582,24 @@ ${scriptContent}
             // Lógica para o Modo Zen
             const zenModeBtn = document.getElementById('toggleZenModeBtn'); // Updated ID
             if (zenModeBtn) {
+                const mainContainer = document.querySelector('.container');
+                const scriptColumn = document.getElementById('scriptColumn');
+
                 zenModeBtn.addEventListener('click', () => {
-                    document.body.classList.toggle('zen-mode');
+                    const isInZenMode = document.body.classList.toggle('zen-mode');
+                    
+                    if (isInZenMode) {
+                        // Entrando no Modo Foco: move a coluna do roteiro para o body
+                        mainContainer.style.display = 'none';
+                        document.body.appendChild(scriptColumn);
+                        scriptColumn.classList.add('zen-mode-active');
+                    } else {
+                        // Saindo do Modo Foco: devolve a coluna para o seu lugar
+                        const dashboardGrid = mainContainer.querySelector('#projectDashboard .grid');
+                        dashboardGrid.prepend(scriptColumn); // Coloca de volta no início do grid
+                        scriptColumn.classList.remove('zen-mode-active');
+                        mainContainer.style.display = 'block';
+                    }
                 });
             }
 
@@ -2543,6 +2608,15 @@ ${scriptContent}
                 // Se o modo foco está ativo E o clique foi no fundo (diretamente no body)
                 if (document.body.classList.contains('zen-mode') && event.target === document.body) {
                     document.body.classList.remove('zen-mode');
+                    // Se a coluna do roteiro foi movida para o body, mova-a de volta
+                    const scriptColumn = document.getElementById('scriptColumn');
+                    if (scriptColumn.classList.contains('zen-mode-active')) {
+                        const mainContainer = document.querySelector('.container');
+                        const dashboardGrid = mainContainer.querySelector('#projectDashboard .grid');
+                        dashboardGrid.prepend(scriptColumn);
+                        scriptColumn.classList.remove('zen-mode-active');
+                        mainContainer.style.display = 'block';
+                    }
                 }
             });
 
