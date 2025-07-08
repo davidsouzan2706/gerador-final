@@ -393,6 +393,16 @@
         }
 
         /* ========================================================== */
+        /* ===== CORREÇÃO DE COR DE TEXTO PARA MODO CLARO ===== */
+        /* ========================================================== */
+        .p-3.border.border-gray-200 p {
+            color: #374151; /* Cor padrão para texto (gray-700) */
+        }
+        .p-3.border.border-gray-200 .font-semibold {
+            color: #1f2937; /* Cor mais escura para o título (gray-800) */
+        }
+
+        /* ========================================================== */
         /* ==================== MODO ESCURO ======================= */
         /* ========================================================== */
         body.dark {
@@ -614,7 +624,7 @@
         </div>
 
         <!-- ========================================================== -->
-        <!-- ========= NOVA BARRA DE PROGRESSO VISUAL ============= -->
+        <!-- ========= NOVA BARRA DE PROGRESO VISUAL ============= -->
         <!-- ========================================================== -->
         <div id="progressBarContainer" class="progress-bar-container mb-8">
             <div class="flex justify-between mb-1">
