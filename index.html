@@ -1058,7 +1058,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     };
 
     // --- 3. FUNÇÕES DE UTILIDADE (DEFINIDAS PRIMEIRO) ---
-    window.showToast = (message) => { elements.toastNotification.textContent = message; elements.toastNotification.classList.add('toast-visible'); setTimeout(() => { elements.toastNotification.classList.remove('toast-visible'); setTimeout(() => { elements.toastNotification.textContent = ''; }, 300); }, 2000); };
+    window.showToast = (message) => { elements.toastNotification.textContent = message; elements.toastNotification.classList.add('toast-visible'); setTimeout(() => { elements.toastNotification.classList.remove('toast-visible'); setTimeout(() => { elements.toastNotification.textContent = ''; }, 300); }, 3000); };
     window.copyTextToClipboard = async (text) => { try { await navigator.clipboard.writeText(text); window.showToast('Copiado!'); } catch (err) { const ta = document.createElement('textarea'); ta.value = text; ta.style.position = 'fixed'; ta.style.opacity = '0'; document.body.appendChild(ta); ta.focus(); ta.select(); try { document.execCommand('copy'); window.showToast('Copiado!'); } finally { document.body.removeChild(ta); } } };
     
     // **VILÃO 2 CORRIGIDO: showLoading com bloqueio total**
@@ -1096,9 +1096,11 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const markButtonAsCompleted = (buttonId) => {
         const button = document.getElementById(buttonId);
         if (button) {
-            button.classList.add('btn-success');
-            // Remove a cor azul primária, se existir, para evitar conflitos
+            // Remove as classes de cor antigas
             button.classList.remove('btn-primary'); 
+            button.classList.remove('btn-secondary'); 
+            // Adiciona a nova classe de sucesso
+            button.classList.add('btn-success');
         }
     };
     
@@ -2483,13 +2485,13 @@ ${scriptContent}
                 updateButtonStates();
                 
                 // Marca os botões como concluídos se o conteúdo existir
-                if (document.getElementById('introSection').innerHTML.includes('<h3>Introdução</h3>')) markButtonAsCompleted('generateIntroBtn');
-                if (document.getElementById('developmentSection').innerHTML.includes('<h3>Desenvolvimento</h3>')) markButtonAsCompleted('generateDevelopmentBtn');
-                if (document.getElementById('climaxSection').innerHTML.includes('<h3>Clímax</h3>')) markButtonAsCompleted('generateClimaxBtn');
-                if (document.getElementById('conclusionSection').innerHTML.includes('<h3>Conclusão</h3>')) markButtonAsCompleted('conclusionBtn');
-                if (document.getElementById('ctaSection').innerHTML.includes('<h3>Chamada para Ação</h3>')) markButtonAsCompleted('generateCTABtn');
-                if (document.getElementById('videoDescriptionOutputSection').innerHTML.includes('<h3>Descrição do Vídeo e Hashtags</h3>')) markButtonAsCompleted('generateDescriptionBtn');
-                if (document.getElementById('titlesThumbnailsSection').innerHTML.includes('<h3>Títulos e Thumbnails</h3>')) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+                if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
+                if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
+                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('generateClimaxBtn');
+                if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
+                if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
+                if (document.getElementById('videoDescriptionOutputSection').innerHTML.trim()) markButtonAsCompleted('generateDescriptionBtn');
+                if (document.getElementById('titlesThumbnailsSection').innerHTML.trim()) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
 
                 // Re-renderiza os prompts de imagem para todas as seções
                 for (const sectionId in allImagePrompts) {
