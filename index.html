@@ -395,10 +395,10 @@
         /* ========================================================== */
         /* ===== CORREÇÃO DE COR DE TEXTO PARA MODO CLARO ===== */
         /* ========================================================== */
-        .p-3.border.border-gray-200 p {
-            color: #374151; /* Cor padrão para texto (gray-700) */
+        body:not(.dark) #titlesThumbnailsSection .p-3 p {
+            color: #374151; /* Cor de texto para modo claro */
         }
-        .p-3.border.border-gray-200 .font-semibold {
+        body:not(.dark) #titlesThumbnailsSection .font-semibold {
             color: #1f2937; /* Cor mais escura para o título (gray-800) */
         }
 
@@ -2195,6 +2195,7 @@ ${scriptContent}
             Object.keys(buttonCheckmarkMap).forEach(id => setupClick(id));
             setupClick('downloadPdfBtn');
             setupClick('resetScriptBtn');
+            setupClick('exportProjectBtn'); // Adicionado para o botão de exportar
             
             // Adiciona os listeners de ação aos botões originais
             if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
@@ -2206,6 +2207,7 @@ ${scriptContent}
             if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
             if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
+            if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
             
             // Outros listeners
             if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
