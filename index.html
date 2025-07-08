@@ -1033,7 +1033,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttons = {
         generateIntroBtn: document.getElementById('generateIntroBtn'),
         generateDevelopmentBtn: document.getElementById('generateDevelopmentBtn'),
-        generateClimaxBtn: document.getElementById('generateClimaxBtn'),
+        generateClimaxBtn: document.getElementById('climaxBtn'),
         conclusionBtn: document.getElementById('conclusionBtn'),
         generateCTABtn: document.getElementById('generateCTABtn'),
         generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
@@ -1050,7 +1050,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttonCheckmarkMap = {
         'generateIntroBtn': 'introCheck',
         'generateDevelopmentBtn': 'developmentCheck',
-        'generateClimaxBtn': 'climaxCheck',
+        'climaxBtn': 'climaxCheck',
         'conclusionBtn': 'conclusionCheck',
         'generateCTABtn': 'ctaCheck',
         'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck',
@@ -1094,31 +1094,39 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         updateButtonStates(); // Chama a função centralizada para reavaliar o estado
     };
     
-    // VERSÃO SIMPLIFICADA E CORRETA
+    // VERSÃO FINAL do markButtonAsCompleted
     const markButtonAsCompleted = (buttonId) => {
         const button = document.getElementById(buttonId);
         if (button) {
             button.classList.remove('btn-primary', 'btn-secondary');
             button.classList.add('btn-success');
+            // Força a atualização da barra imediatamente após a mudança
+            window.populateActionBar(); 
         }
     };
     
+    // VERSÃO FINAL do resetCompletionIcons
     const resetCompletionIcons = () => {
-        for (const buttonId in buttonCheckmarkMap) {
-            const originalButton = document.getElementById(buttonId);
-            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
-            const isPasso1 = passo1_buttons.includes(buttonId);
+        const passo1_buttons_ids = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+        const passo2_buttons_ids = ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'];
 
-            // Reseta o botão original
-            if (originalButton) {
-                originalButton.classList.remove('btn-success');
-                if (isPasso1) {
-                    originalButton.classList.add('btn-primary');
-                } else {
-                    originalButton.classList.add('btn-secondary');
-                }
+        // Reseta botões do Passo 1
+        passo1_buttons_ids.forEach(id => {
+            const btn = document.getElementById(id);
+            if(btn) {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-primary');
             }
-        }
+        });
+
+        // Reseta botões do Passo 2
+        passo2_buttons_ids.forEach(id => {
+            const btn = document.getElementById(id);
+            if(btn) {
+                btn.classList.remove('btn-success');
+                btn.classList.add('btn-secondary');
+            }
+        });
         // Após resetar todos os originais, repopulamos a barra,
         // garantindo que ela pegue o estado mais recente.
         window.populateActionBar();
@@ -1669,7 +1677,7 @@ The final output MUST be only the JSON code, like this example:
         const mainButtonIdMap = {
             'intro': 'generateIntroBtn',
             'development': 'generateDevelopmentBtn',
-            'climax': 'generateClimaxBtn',
+            'climax': 'climaxBtn',
             'conclusion': 'conclusionBtn',
             'cta': 'generateCTABtn'
         };
@@ -2285,7 +2293,7 @@ ${scriptContent}
                             switch (elementId) {
                                 case 'intro': markButtonAsCompleted('generateIntroBtn'); break;
                                 case 'development': markButtonAsCompleted('generateDevelopmentBtn'); break;
-                                case 'climax': markButtonAsCompleted('generateClimaxBtn'); break;
+                                case 'climax': markButtonAsCompleted('climaxBtn'); break;
                                 case 'conclusion': markButtonAsCompleted('conclusionBtn'); break;
                                 case 'cta': markButtonAsCompleted('generateCTABtn'); break;
                                 case 'titlesThumbnails': markButtonAsCompleted('generateTitlesAndThumbnailsBtn'); break;
@@ -2489,7 +2497,7 @@ ${scriptContent}
                 // Marca os botões como concluídos se o conteúdo existir
                 if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                 if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
-                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('generateClimaxBtn');
+                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn');
                 if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                 if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
                 if (document.getElementById('videoDescriptionOutputSection').innerHTML.trim()) markButtonAsCompleted('generateDescriptionBtn');
@@ -2518,7 +2526,7 @@ ${scriptContent}
     const setupButtonListeners = () => {
         if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
         if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
-        if (buttons.generateClimaxBtn) buttons.generateClimaxBtn.addEventListener('click', () => handleGenerateSection(buttons.generateClimaxBtn, 'climax', 'Clímax', 'climax'));
+        if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
         if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
         if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
         if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
@@ -2632,37 +2640,27 @@ ${scriptContent}
     // ===============================================
     // AS NOVAS FUNÇÕES QUE ADICIONAMOS
     // ===============================================
-    // VERSÃO FINAL E REATIVA DO populateActionBar
+    // VERSÃO FINAL do populateActionBar
     window.populateActionBar = () => {
-        const mainActionsContainer = document.querySelector('#mainActions .btn-clone-container');
-        const quickActionsContainer = document.querySelector('#quickActions .btn-clone-container');
-
-        if (!mainActionsContainer || !quickActionsContainer) return;
-
-        // Limpa os botões existentes
-        mainActionsContainer.innerHTML = '';
-        quickActionsContainer.innerHTML = '';
-
-        // Clona e adiciona os botões do Passo 1
-        ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => {
+        const cloneAndAppend = (id, container) => {
             const original = document.getElementById(id);
             if (original) {
                 const clone = original.cloneNode(true);
-                // Remove o spinner do clone, se houver
-                const spinner = clone.querySelector('.loading-spinner');
-                if(spinner) spinner.classList.add('hidden');
-                mainActionsContainer.appendChild(clone);
+                // Copia TODAS as classes do original para o clone
+                clone.className = original.className; 
+                container.appendChild(clone);
             }
-        });
+        };
 
-        // Clona e adiciona os botões de Ações Rápidas
-        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => {
-            const original = document.getElementById(id);
-            if (original) {
-                const clone = original.cloneNode(true);
-                quickActionsContainer.appendChild(clone);
-            }
-        });
+        const mainButtonsContainer = document.querySelector('#mainActions .btn-clone-container');
+        const quickButtonsContainer = document.querySelector('#quickActions .btn-clone-container');
+        if (!mainButtonsContainer || !quickButtonsContainer) return;
+
+        mainButtonsContainer.innerHTML = '';
+        quickButtonsContainer.innerHTML = '';
+
+        ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => cloneAndAppend(id, mainButtonsContainer));
+        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => cloneAndAppend(id, quickButtonsContainer));
     };
 
     // VERSÃO CONTEXTUAL do handleFloatingActionBar
