@@ -670,9 +670,10 @@
         /* ========================================================== */
         /* ========= ESTILO PARA BOTÃO DE SUCESSO (VERDE) ========= */
         /* ========================================================== */
-        .btn.btn-success {
-            background-color: #10B981; /* Um verde vibrante (Tailwind Emerald 500) */
-            color: #ffffff;
+        /* Usamos seletores de ID para máxima especificidade */
+        #generateIntroBtn.btn-success, #generateDevelopmentBtn.btn-success, #generateClimaxBtn.btn-success, #conclusionBtn.btn-success, #generateCTABtn.btn-success, #generateDescriptionBtn.btn-success, #generateTitlesAndThumbnailsBtn.btn-success {
+            background-color: #10B981 !important; /* Verde vibrante */
+            color: #ffffff !important;
             box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
         }
         .btn.btn-success:hover:not(:disabled) {
@@ -1108,15 +1109,14 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         for (const buttonId in buttonCheckmarkMap) {
             const button = document.getElementById(buttonId);
             if (button) {
-                // Remove a classe de sucesso
                 button.classList.remove('btn-success');
                 
-                // Adiciona de volta a classe primária apenas nos botões do Passo 1
-                if (button.classList.contains('btn')) { // Checa se é um botão de ação principal
-                    const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
-                    if(passo1_buttons.includes(buttonId)) {
-                        button.classList.add('btn-primary');
-                    }
+                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
+                if(passo1_buttons.includes(buttonId)) {
+                    button.classList.add('btn-primary');
+                } else {
+                    // Garante que botões do Passo 2 voltem a ser 'secondary'
+                    button.classList.add('btn-secondary');
                 }
             }
         }
@@ -2543,10 +2543,16 @@ ${scriptContent}
         // Conectar o novo botão à função
         if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
 
-        // Conectar os novos botões de exportar/importar
-        if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject);
-        if (buttons.importProjectBtn) elements.importFileInput.addEventListener('click', () => elements.importFileInput.click());
-        if (elements.importFileInput) elements.importFileInput.addEventListener('change', importProject);
+        // Lógica de Importação - Garantia de Funcionamento
+        const importBtn = document.getElementById('importProjectBtn');
+        const fileInput = document.getElementById('importFileInput');
+        if (importBtn && fileInput) {
+            importBtn.addEventListener('click', () => {
+                console.log("Botão de Importar Clicado!"); // Para depuração
+                fileInput.click();
+            });
+            fileInput.addEventListener('change', importProject);
+        }
     };
 
     // NOVA FUNÇÃO para análise estratégica
