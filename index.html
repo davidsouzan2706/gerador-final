@@ -575,9 +575,6 @@
                     <button id="float_generateTitlesAndThumbnailsBtn" class="btn btn-secondary">Títulos</button>
                     <button id="float_downloadPdfBtn" class="btn btn-secondary">PDF</button>
                     <button id="float_resetScriptBtn" class="btn btn-secondary">Novo</button>
-                    <button id="float_toggleZenModeBtn" class="btn btn-secondary" title="Modo Foco">
-                        <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
-                    </button>
                 </div>
             </div>
         </div>
@@ -585,9 +582,12 @@
 
     <div class="container relative">
         <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">Gerador de Roteiros Virais</h1>
-        <!-- Botão de Modo Escuro -->
-        <div class="absolute top-4 right-4">
-             <button id="darkModeToggle" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <!-- Botão de Modo Escuro e Modo Foco -->
+        <div class="absolute top-4 right-4 flex items-center gap-2">
+            <button id="toggleZenModeBtn" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-500 dark:text-gray-400" title="Modo Foco">
+                <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
+            </button>
+            <button id="darkModeToggle" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
                 <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                 <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-14.66l-.707.707M4.04 19.96l-.707.707M21 12h-1M4 12H3m16.66-7.96l-.707-.707M4.04 4.04l-.707-.707m11.314 0l-1.414 1.414M5.464 18.536l-1.414 1.414m12.728-1.414l-1.414-1.414m-9.9-9.9l-1.414-1.414M12 6a6 6 0 100 12 6 6 0 000-12z" /></svg>
             </button>
@@ -898,32 +898,6 @@
                 buttonElement.classList.remove('btn-success');
                 buttonElement.disabled = false;
             }, 2000); // Reverte após 2 segundos
-        };
-
-        /**
-         * Abre o Google ImageFX em uma nova aba com o prompt de imagem preenchido.
-         * @param {HTMLElement} buttonElement - O botão "Visualizar" que foi clicado.
-         */
-        window.openImageFx = (buttonElement) => {
-            event.stopPropagation(); // Impede que o clique afete o acordeão
-            // Encontra o bloco de prompt pai
-            const promptBlock = buttonElement.closest('.individual-prompt-block');
-            if (!promptBlock) return;
-            
-            // Pega o texto da descrição da imagem e o bloco de estilo
-            const descriptionContent = promptBlock.querySelector('.prompt-description-content').textContent.trim();
-            const styleContent = promptBlock.querySelector('pre').textContent.trim();
-            
-            // Combina os dois para formar o prompt completo, limpando o texto do estilo
-            const cleanedStyle = styleContent.replace(/\*\*\[.*?\]\*\*|\n/g, ' ').replace(/\s+/g, ' ').trim();
-            const fullPrompt = `${descriptionContent}, ${cleanedStyle}`;
-            
-            // Codifica o prompt para ser usado em uma URL
-            const encodedPrompt = encodeURIComponent(fullPrompt);
-            
-            // Monta a URL final e abre em uma nova aba
-            const imageFxUrl = `https://imagefx.withgoogle.com/?prompt=${encodedPrompt}`;
-            window.open(imageFxUrl, '_blank');
         };
 
         /**
@@ -1670,13 +1644,7 @@ Trecho do roteiro:
                             <div class="individual-prompt-block">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                    <div class="flex items-center gap-2">
-                                        <button class="btn btn-secondary btn-small" style="padding: 0.4rem 0.6rem;" onclick="window.openImageFx(this)">
-                                            <svg xmlns="http://www.w3.org/2000/svg" width="14" height="14" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>
-                                            <span class="ml-1 hidden sm:inline">Visualizar</span>
-                                        </button>
-                                        <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
-                                    </div>
+                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
                                 </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
@@ -2364,8 +2332,11 @@ ${scriptContent}
             // Iterar sobre todos os botões que têm um flutuante correspondente
             const allButtonIds = Object.keys(buttons);
             allButtonIds.forEach(id => {
+                // Exclui o botão do modo zen da barra flutuante, pois ele foi movido
                 if (id.startsWith('generate') || id.startsWith('climax') || id.startsWith('conclusion') || id.startsWith('cta') || id.startsWith('download') || id.startsWith('reset') || id.startsWith('export') || id.startsWith('import')) {
-                    setupClick(id);
+                    if (id !== 'float_toggleZenModeBtn') { // Explicitly exclude the old floating zen mode button
+                        setupClick(id);
+                    }
                 }
             });
             
@@ -2425,7 +2396,7 @@ ${scriptContent}
             }
 
             // Lógica para o Modo Zen
-            const zenModeBtn = document.getElementById('float_toggleZenModeBtn');
+            const zenModeBtn = document.getElementById('toggleZenModeBtn'); // Updated ID
             if (zenModeBtn) {
                 zenModeBtn.addEventListener('click', () => {
                     document.body.classList.toggle('zen-mode');
