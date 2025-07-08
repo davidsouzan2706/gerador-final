@@ -3,17 +3,18 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Gerador de Roteiros Virais v109 - A Versão da Vitória</title>
+    <title>Gerador de Roteiros Virais v2.0 - O Painel do Projeto</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- jsPDF para geração de PDF -->
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <!-- SortableJS para Storyboard Arrastável -->
+    <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
     <!-- Fontes Google - Carlito para legibilidade -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
-    <!-- Adicione esta linha no <head> do seu HTML -->
-    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🤖</text></svg>">
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <style>
         /* ========================================================== */
         /* ==================== ESTILOS GERAIS ==================== */
@@ -556,9 +557,47 @@
         body.zen-mode .absolute.top-4.right-4 {
             display: none !important;
         }
+
+        /* Adicione estes novos estilos para o Dashboard e Storyboard */
+        .storyboard-item {
+            cursor: grab;
+            border: 1px solid var(--border-light);
+            padding: 0.75rem;
+            border-radius: 8px;
+            background-color: #ffffff;
+            transition: box-shadow 0.2s, background-color 0.2s;
+        }
+        .dark .storyboard-item {
+            border-color: #4b5563;
+            background-color: #374151;
+        }
+        .storyboard-item:hover {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        }
+        .storyboard-item.sortable-ghost {
+            background-color: var(--secondary-bg);
+            border-style: dashed;
+        }
+        .dark .storyboard-item.sortable-ghost {
+            background-color: #4338ca;
+        }
+        .asset-card-placeholder {
+            border: 2px dashed var(--border-light);
+            color: var(--text-light);
+            height: 100px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        .dark .asset-card-placeholder {
+            border-color: #4b5563;
+            color: #6b7280;
+        }
     </style>
 </head>
-<body>
+<body class="bg-gray-100 dark:bg-gray-900">
     <!-- ========================================================== -->
     <!-- ===== BARRA FLUTUANTE COM BOTÕES INDEPENDENTES ===== -->
     <!-- ========================================================== -->
@@ -589,19 +628,19 @@
     </div>
 
     <div class="container relative">
-        <h1 class="text-4xl font-extrabold text-center text-gray-800 mb-2">Gerador de Roteiros Virais</h1>
-        <!-- Botão de Modo Escuro e Modo Foco -->
         <div class="absolute top-4 right-4 flex items-center gap-2">
             <button id="toggleZenModeBtn" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-500 dark:text-gray-400" title="Modo Foco">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
             </button>
-            <button id="darkModeToggle" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+            <button id="darkModeToggle" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-500 dark:text-gray-400" title="Modo Escuro">
                 <svg id="moonIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z" /></svg>
                 <svg id="sunIcon" xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 hidden" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 3v1m0 16v1m8.66-14.66l-.707.707M4.04 19.96l-.707.707M21 12h-1M4 12H3m16.66-7.96l-.707-.707M4.04 4.04l-.707-.707m11.314 0l-1.414 1.414M5.464 18.536l-1.414 1.414m12.728-1.414l-1.414-1.414m-9.9-9.9l-1.414-1.414M12 6a6 6 0 100 12 6 6 0 000-12z" /></svg>
             </button>
         </div>
-        <p class="text-center text-gray-500 mb-8">Crie conteúdo de alto impacto para o seu canal do YouTube.</p>
-
+        
+        <h1 class="text-4xl font-extrabold text-center text-gray-800 dark:text-gray-100 mb-2">Gerador de Roteiros Virais v2.0</h1>
+        <p class="text-center text-gray-500 dark:text-gray-400 mb-8">O seu painel de controle para conteúdo de alto impacto.</p>
+        
         <!-- Seção de Inputs da Aplicação -->
         <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="input-group">
@@ -742,8 +781,8 @@
         </div>
         <!-- ========================================================== -->
 
-        <!-- Botões de Ação Principais -->
-        <div class="mb-8 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
+        <!-- Botões de Ação Principais (Mantidos aqui para referência do JS, mas serão movidos para o Dashboard) -->
+        <div class="mb-8 p-4 bg-indigo-50 border border-indigo-200 rounded-lg hidden">
             <h3 class="font-bold text-lg text-indigo-800 mb-3">Passo 1: Gerar o Roteiro Principal</h3>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
                 <button id="generateIntroBtn" class="btn btn-primary">
@@ -769,8 +808,8 @@
             </div>
         </div>
 
-        <!-- Botões de Material de Suporte -->
-        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <!-- Botões de Material de Suporte (Mantidos aqui para referência do JS, mas serão movidos para o Dashboard) -->
+        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg hidden">
             <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 2: Criar Material de Suporte</h3>
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button id="generateDescriptionBtn" class="btn btn-secondary">
@@ -784,27 +823,96 @@
             </div>
         </div>
        
-        <!-- Botões de Salvar e Exportar -->
-        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg">
+        <!-- Botões de Salvar e Exportar (Mantidos aqui para referência do JS, mas serão movidos para o Dashboard) -->
+        <div class="mb-8 p-4 bg-gray-50 border border-gray-200 rounded-lg hidden">
             <h3 class="font-bold text-lg text-gray-800 mb-3">Passo 3: Salvar e Exportar</h3>
              <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                 <button id="exportProjectBtn" class="btn btn-secondary">Exportar Projeto</button>
                 <button id="importProjectBtn" class="btn btn-secondary">Importar Projeto</button>
                 <input type="file" id="importFileInput" class="hidden" accept=".json">
-                <button id="downloadPdfBtn" class="btn btn-secondary">Download PDF</button>
-                <button id="resetScriptBtn" class="btn btn-secondary">Novo Roteiro</button>
+                <button id="downloadPdfBtn" class="btn btn-secondary">PDF</button>
+                <button id="resetScriptBtn" class="btn btn-secondary">Novo</button>
             </div>
         </div>
 
-        <!-- Área de Saída do Roteiro (Acordeões) -->
-        <div id="scriptOutput" class="mt-8">
-            <div id="introSection" class="script-section hidden"></div>
-            <div id="developmentSection" class="script-section hidden"></div>
-            <div id="climaxSection" class="script-section hidden"></div>
-            <div id="conclusionSection" class="script-section hidden"></div>
-            <div id="ctaSection" class="script-section hidden"></div>
-            <div id="videoDescriptionOutputSection" class="script-section hidden"></div>
-            <div id="titlesThumbnailsSection" class="script-section hidden"></div>
+        <!-- ========================================================== -->
+        <!-- ===== NOVA ÁREA DE SAÍDA: O PAINEL DO PROJETO ======== -->
+        <!-- ========================================================== -->
+        <div id="projectDashboard" class="hidden mt-12">
+            <div class="grid grid-cols-1 lg:grid-cols-12 gap-8">
+                
+                <!-- Coluna Principal: Roteiro -->
+                <div id="scriptColumn" class="lg:col-span-7 space-y-4">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Roteiro Principal</h2>
+                    <!-- Os acordeões do roteiro serão inseridos aqui pelo JS -->
+                    <div id="introSection" class="script-section"></div>
+                    <div id="developmentSection" class="script-section"></div>
+                    <div id="climaxSection" class="script-section"></div>
+                    <div id="conclusionSection" class="script-section"></div>
+                    <div id="ctaSection" class="script-section"></div>
+                     <!-- Botões de Geração do Roteiro -->
+                    <div class="p-4 bg-indigo-50 dark:bg-gray-800 border border-indigo-200 dark:border-gray-700 rounded-lg">
+                        <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3">Gerar Seções do Roteiro</h3>
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3">
+                            <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
+                            <button id="generateDevelopmentBtn" class="btn btn-primary btn-small">Desenvolvimento</button>
+                            <button id="climaxBtn" class="btn btn-primary btn-small">Clímax</button>
+                            <button id="conclusionBtn" class="btn btn-primary btn-small">Conclusão</button>
+                            <button id="generateCTABtn" class="btn btn-primary btn-small">CTA</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Coluna Lateral: Recursos e Metadados -->
+                <div id="assetsColumn" class="lg:col-span-5 space-y-6">
+                    <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Recursos</h2>
+                    
+                    <!-- Cartão: Títulos e Thumbnails -->
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Títulos & Thumbnails</h3>
+                            <button id="generateTitlesAndThumbnailsBtn" class="btn btn-secondary btn-small">Gerar</button>
+                        </div>
+                        <div id="titlesThumbnailsContent">
+                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver as sugestões</div>
+                        </div>
+                    </div>
+
+                    <!-- Cartão: Descrição e Hashtags -->
+                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Descrição & Hashtags</h3>
+                            <button id="generateDescriptionBtn" class="btn btn-secondary btn-small">Gerar</button>
+                        </div>
+                        <div id="videoDescriptionContent">
+                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver a descrição</div>
+                        </div>
+                    </div>
+
+                    <!-- Cartão: Storyboard Visual -->
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Storyboard</h3>
+                            <button id="generateStoryboardBtn" class="btn btn-secondary btn-small">Gerar Completo</button>
+                        </div>
+                        <div id="storyboardContent" class="space-y-2 max-h-96 overflow-y-auto pr-2">
+                             <div class="asset-card-placeholder">Gere o roteiro e clique em 'Gerar'</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Cartão: Salvar e Exportar -->
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                         <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Finalizar Projeto</h3>
+                         <div class="grid grid-cols-2 gap-3">
+                            <button id="exportProjectBtn" class="btn btn-secondary">Exportar</button>
+                            <button id="importProjectBtn" class="btn btn-secondary">Importar</button>
+                            <input type="file" id="importFileInput" class="hidden" accept=".json">
+                            <button id="downloadPdfBtn" class="btn btn-secondary">PDF</button>
+                            <button id="resetScriptBtn" class="btn btn-secondary">Novo</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
 
@@ -1001,10 +1109,10 @@
         const updateButtonStates = () => {
             const allMainScriptGenerated = isScriptComplete();
             // Verifica se há qualquer conteúdo gerado para habilitar PDF e reset
-            const hasAnyContent = document.querySelector('#scriptOutput .accordion-item') != null;
+            const hasAnyContent = document.querySelector('#scriptColumn .accordion-item') != null; // Updated selector for new dashboard
 
             // Botões que dependem da conclusão do roteiro principal
-            ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'].forEach(id => {
+            ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'generateStoryboardBtn'].forEach(id => { // Added generateStoryboardBtn
                 const originalBtn = document.getElementById(id);
                 const floatBtn = document.getElementById(`float_${id}`);
                 if (originalBtn) originalBtn.disabled = !allMainScriptGenerated;
@@ -1418,6 +1526,23 @@ The final output MUST be only the JSON code, like this example:
                     `;
                     maxTokens = 700;
                     break;
+                case 'storyboard': // New case for storyboard generation
+                    const scriptSections = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+                    const scriptContentFull = scriptSections.map(id => {
+                        const el = document.getElementById(id)?.querySelector('.generated-content-wrapper p');
+                        return el ? el.textContent : '';
+                    }).join('\n\n');
+
+                    prompt = `Você é um diretor de vídeo e roteirista. Sua tarefa é criar um storyboard detalhado para o seguinte roteiro de vídeo.
+
+**SUAS REGRAS MAIS IMPORTANTES:**1.  **Ritmo Dinâmico:** Crie um item de storyboard a cada **15 a 25 segundos de narração**, aproximadamente. Analise o texto para estimar o tempo.2.  **IMAGEM INICIAL INEGOCIÁVEL:** O primeiro item de storyboard **DEVE OBRIGATORIAMENTE** corresponder à primeira frase do roteiro.3.  **Formato JSON:** Responda APENAS com um array JSON de objetos. Cada objeto deve ter as chaves "time" (string no formato "MM:SS"), "scene" (string curta descrevendo a cena), "visualDescription" (string), e "audioElements" (string descrevendo música e sons).
+
+Roteiro completo:
+---
+${scriptContentFull}
+---`;
+                    maxTokens = 4000;
+                    break;
                 default:
                     maxTokens = 1000;
                     break;
@@ -1735,80 +1860,48 @@ ${scriptContent}
             showLoading(buttons.generateTitlesAndThumbnailsBtn);
             try {
                 const { prompt, maxTokens } = constructScriptPrompt('titles_thumbnails');
-                let result = await callGroqAPI(prompt, maxTokens);
-                let cleanedResult = cleanGeneratedText(result, true);
-                let parsedContent = { titles: [], thumbnails: [] };
-                try {
-                    if (cleanedResult) {
-                        parsedContent = JSON.parse(cleanedResult);
-                        generatedTitlesAndThumbnails = parsedContent;
-                    }
-                } catch (e) {
-                    console.error("Falha ao analisar o JSON da IA:", e, cleanedResult);
-                    window.showToast("Erro: A IA retornou um formato de título/thumbnail inválido.");
-                    generatedTitlesAndThumbnails = null;
-                }
+                const result = await callGroqAPI(prompt, maxTokens);
+                const cleanedResult = cleanGeneratedText(result, true);
                 
-                const targetSectionElement = document.getElementById('titlesThumbnailsSection');
-                if (targetSectionElement) {
-                    let titlesListHtml = '<p class="text-red-500">Não foi possível extrair os títulos.</p>';
-                    if (parsedContent.titles && parsedContent.titles.length > 0) {
-                        titlesListHtml = parsedContent.titles.map((title, index) => `<p class="text-gray-700 dark:text-gray-300">${index + 1}. ${title}</p>`).join('');
-                    }
-                    
-                    let thumbnailsListHtml = '<p class="text-red-500">Não foi possível extrair as thumbnails.</p>';
-                    if (parsedContent.thumbnails && parsedContent.thumbnails.length > 0) {
-                        thumbnailsListHtml = parsedContent.thumbnails.map((thumb, index) => {
-                            const itemClasses = index === 0 ? '' : 'thumbnail-item-separator';
-                            return `
-                                <div class="${itemClasses}"> 
-                                    <p class="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">"${thumb.title}"</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-400 leading-tight">Descrição: ${thumb.description}</p>
-                                </div>
-                            `;
-                        }).join('\n');
-                    }
-                    
-                    const contentForAccordion = `
-                        <div class="mt-4 space-y-6">
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido.");
+                
+                const parsedContent = JSON.parse(cleanedResult);
+                generatedTitlesAndThumbnails = parsedContent;
+
+                const targetContentElement = document.getElementById('titlesThumbnailsContent');
+                if (targetContentElement) {
+                    const titlesListHtml = parsedContent.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                    const thumbnailsListHtml = parsedContent.thumbnails.map((thumb, index) => `
+                        <div class="${index === 0 ? '' : 'thumbnail-item-separator'}"> 
+                            <p class="font-semibold">"${thumb.title}"</p>
+                            <p class="text-sm leading-tight">Descrição: ${thumb.description}</p>
+                        </div>
+                    `).join('');
+
+                    targetContentElement.innerHTML = `
+                        <div class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
                             <div>
-                                <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Títulos de Vídeos:</h4>
-                                <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm space-y-2">
-                                    ${titlesListHtml}
-                                </div>
-                                <div class="mt-4">
-                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">
-                                        Analisar Potencial de Clique (CTR)
-                                    </button>
-                                    <div id="ctrAnalysisResult" class="mt-4"></div>
+                                <h4 class="font-bold text-base mb-2">Sugestões de Títulos:</h4>
+                                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md space-y-2">${titlesListHtml}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">Analisar CTR</button>
+                                    <div id="ctrAnalysisResult" class="mt-3"></div>
                                 </div>
                             </div>
                             <div>
-                                <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Thumbnails:</h4>
-                                <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm">${thumbnailsListHtml}</div>
+                                <h4 class="font-bold text-base mb-2">Ideias de Thumbnail:</h4>
+                                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md space-y-3">${thumbnailsListHtml}</div>
                             </div>
                         </div>
                     `;
-                    
-                    // Usa a função de acordeão padrão, passando o HTML complexo diretamente
-                    targetSectionElement.innerHTML = generateSectionHtmlContent(
-                        'titlesThumbnails', 
-                        'Títulos e Thumbnails', 
-                        contentForAccordion, // Passando o HTML complexo diretamente
-                        { showPromptsButton: false, showSoundtrackButton: false }
-                    );
-                    
-                    targetSectionElement.classList.remove('hidden');
-                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
                     markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
                 }
-                
-                updateButtonStates();
             } catch (error) {
-                window.showToast(`Falha ao gerar Títulos e Thumbnails: ${error.message}`);
-                console.error(`Error generating Titles/Thumbnails.`, error);
+                window.showToast(`Falha ao gerar Títulos: ${error.message}`);
+                console.error("Error generating Titles/Thumbnails.", error);
             } finally {
                 hideLoading(buttons.generateTitlesAndThumbnailsBtn);
+                updateButtonStates();
             }
         };
 
@@ -1866,33 +1959,68 @@ ${scriptContent}
             showLoading(buttons.generateDescriptionBtn);
             try {
                 const { prompt, maxTokens } = constructScriptPrompt('description');
-                let result = await callGroqAPI(prompt, maxTokens);
-                result = cleanGeneratedText(result, false);
-                result = removeMetaComments(result);
-                const targetSectionElement = document.getElementById('videoDescriptionOutputSection');
-                if (targetSectionElement) {
-                    targetSectionElement.innerHTML = generateSectionHtmlContent(
-                        'videoDescriptionOutput', 
-                        'Descrição do Vídeo e Hashtags', 
-                        result,
-                        { showPromptsButton: false, showSoundtrackButton: false } // <-- A MÁGICA ACONTECE AQUI
-                    );
-                    targetSectionElement.classList.remove('hidden');
-                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
-                } else {
-                    console.error("Target section element with ID 'videoDescriptionOutputSection' not found.");
-                    window.showToast("Erro interno: Seção de descrição não encontrada.");
-                    return;
+                const result = cleanGeneratedText(await callGroqAPI(prompt, maxTokens), false);
+                
+                const targetContentElement = document.getElementById('videoDescriptionContent');
+                if (targetContentElement) {
+                    targetContentElement.innerHTML = `<div class="p-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded-md whitespace-pre-wrap">${result}</div>`;
+                    markButtonAsCompleted(buttons.generateDescriptionBtn.id);
                 }
-                markButtonAsCompleted(buttons.generateDescriptionBtn.id);
-                updateButtonStates();
             } catch (error) {
-                window.showToast(`Falha ao gerar Descrição do Vídeo: ${error.message}`);
-                console.error(`Error generating Video Description.`, error);
+                window.showToast(`Falha ao gerar Descrição: ${error.message}`);
+                console.error("Error generating Video Description.", error);
             } finally {
                 hideLoading(buttons.generateDescriptionBtn);
+                updateButtonStates();
             }
         };
+
+        /**
+         * Gera o storyboard visual.
+         */
+        const generateStoryboard = async () => {
+            if (!isScriptComplete()) {
+                window.showToast("Gere todas as seções do roteiro principal primeiro.");
+                return;
+            }
+            showLoading(buttons.generateStoryboardBtn);
+            const storyboardContentDiv = document.getElementById('storyboardContent');
+            storyboardContentDiv.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`; // Spinner
+            try {
+                const { prompt } = constructScriptPrompt('storyboard', 'Storyboard Visual');
+                const result = await callGroqAPI(prompt, 4000); // Max tokens para um storyboard completo
+                const cleanedResult = cleanGeneratedText(result, true);
+
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para o storyboard.");
+                
+                const storyboardItems = JSON.parse(cleanedResult);
+                storyboardContentDiv.innerHTML = ''; // Limpa o spinner
+
+                if (Array.isArray(storyboardItems) && storyboardItems.length > 0) {
+                    storyboardItems.forEach((item, index) => {
+                        const storyboardHtml = `
+                            <div class="storyboard-item" data-id="${index}">
+                                <p class="text-xs font-semibold text-indigo-500 dark:text-indigo-400">${item.time} - ${item.scene}</p>
+                                <p class="text-sm mt-1"><strong>Visual:</strong> ${item.visualDescription}</p>
+                                <p class="text-xs text-gray-500 mt-1"><strong>Áudio:</strong> ${item.audioElements}</p>
+                            </div>`;
+                        storyboardContentDiv.innerHTML += storyboardHtml;
+                    });
+                    new Sortable(storyboardContentDiv, { animation: 150, ghostClass: 'sortable-ghost' });
+                    markButtonAsCompleted(buttons.generateStoryboardBtn.id);
+                } else {
+                    storyboardContentDiv.innerHTML = `<div class="asset-card-placeholder">Não foi possível gerar o storyboard.</div>`;
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Storyboard: ${error.message}`);
+                console.error("Error generating Storyboard.", error);
+                storyboardContentDiv.innerHTML = `<div class="asset-card-placeholder text-red-500">Erro ao gerar.</div>`;
+            } finally {
+                hideLoading(buttons.generateStoryboardBtn);
+                updateButtonStates();
+            }
+        };
+
 
         /**
          * Realiza o download do roteiro como PDF.
@@ -1911,7 +2039,7 @@ ${scriptContent}
             doc.text(`Tema: ${elements.videoTheme.value}`, 10, y);
             y += 10;
 
-            const sectionOrder = ['intro', 'development', 'climax', 'conclusion', 'cta', 'videoDescriptionOutput', 'titlesThumbnails'];
+            const sectionOrder = ['intro', 'development', 'climax', 'conclusion', 'cta']; // Only script sections for PDF
             
             sectionOrder.forEach(id => {
                 const sectionElement = document.getElementById(`${id}Section`);
@@ -1930,37 +2058,12 @@ ${scriptContent}
                 y += 7;
                 doc.setFontSize(12);
 
-                if (id === 'titlesThumbnails') {
-                    // Lógica para extrair títulos
-                    const titlesContainer = sectionElement.querySelector('h4:nth-of-type(1) + div');
-                    if (titlesContainer) {
-                        const titlesText = Array.from(titlesContainer.querySelectorAll('p')).map(p => p.textContent).join('\n');
-                        const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
-                        doc.text(splitTitles, 10, y);
-                        y += (splitTitles.length * 5) + 5;
-                    }
-
-                    // Lógica para extrair thumbnails
-                    const thumbnailsContainer = sectionElement.querySelector('h4:nth-of-type(2) + div');
-                    if (thumbnailsContainer) {
-                        const thumbDivs = thumbnailsContainer.querySelectorAll('.thumbnail-item-separator, div > p.font-semibold');
-                        const thumbnailsText = Array.from(thumbDivs).map(el => {
-                           const parent = el.closest('div.p-3 > div');
-                           return parent ? parent.textContent.trim().replace(/\s+/g, ' ') : el.textContent.trim().replace(/\s+/g, ' ');
-                        }).filter((v, i, a) => a.indexOf(v) === i).join('\n\n');
-                        
-                        const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
-                        doc.text(splitThumbnails, 10, y);
-                        y += (splitThumbnails.length * 5) + 5;
-                    }
-                } else {
-                    const contentElement = sectionElement.querySelector('.accordion-body .generated-content-wrapper'); // Updated selector
-                    if (contentElement) {
-                        const content = contentElement.textContent;
-                        const splitContent = doc.splitTextToSize(content, 180);
-                        doc.text(splitContent, 10, y);
-                        y += (splitContent.length * 7) + 5;
-                    }
+                const contentElement = sectionElement.querySelector('.accordion-body .generated-content-wrapper'); // Updated selector
+                if (contentElement) {
+                    const content = contentElement.textContent;
+                    const splitContent = doc.splitTextToSize(content, 180);
+                    doc.text(splitContent, 10, y);
+                    y += (splitContent.length * 7) + 5;
                 }
 
                 if (y > 280) {
@@ -1968,6 +2071,46 @@ ${scriptContent}
                     y = 10;
                 }
             });
+
+            // Add Description and Hashtags
+            const videoDescriptionContent = document.getElementById('videoDescriptionContent');
+            // Check if content is not the placeholder
+            if (videoDescriptionContent && videoDescriptionContent.innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') {
+                 if (y > 250) { doc.addPage(); y = 10; }
+                 doc.setFontSize(16);
+                 doc.text("Descrição do Vídeo e Hashtags", 10, y);
+                 y += 7;
+                 doc.setFontSize(12);
+                 const descriptionText = videoDescriptionContent.querySelector('div.p-3')?.textContent || '';
+                 const splitDescription = doc.splitTextToSize(descriptionText, 180);
+                 doc.text(splitDescription, 10, y);
+                 y += (splitDescription.length * 7) + 5;
+            }
+
+            // Add Titles and Thumbnails
+            const titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent');
+            // Check if content is not the placeholder
+            if (titlesThumbnailsContent && titlesThumbnailsContent.innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') {
+                if (y > 250) { doc.addPage(); y = 10; }
+                doc.setFontSize(16);
+                doc.text("Títulos e Thumbnails", 10, y);
+                y += 7;
+                doc.setFontSize(12);
+
+                const titlesText = Array.from(titlesThumbnailsContent.querySelectorAll('h4:nth-of-type(1) + div p')).map(p => p.textContent).join('\n');
+                const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
+                doc.text(splitTitles, 10, y);
+                y += (splitTitles.length * 5) + 5;
+
+                const thumbnailsText = Array.from(titlesThumbnailsContent.querySelectorAll('h4:nth-of-type(2) + div .thumbnail-item-separator, h4:nth-of-type(2) + div > div:not(.thumbnail-item-separator)')).map(el => {
+                    const title = el.querySelector('p.font-semibold')?.textContent || '';
+                    const description = el.querySelector('p.text-sm')?.textContent || '';
+                    return `${title}\n${description}`;
+                }).join('\n\n');
+                const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
+                doc.text(splitThumbnails, 10, y);
+                y += (splitThumbnails.length * 5) + 5;
+            }
 
             // Loop através das seções para adicionar os prompts de imagem
             for (const sectionId in allImagePrompts) {
@@ -1998,6 +2141,28 @@ ${scriptContent}
                 }
             }
 
+            // Add Storyboard to PDF
+            const storyboardContent = document.getElementById('storyboardContent');
+            // Check if content is not the placeholder
+            if (storyboardContent && storyboardContent.innerHTML.trim() !== '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>') {
+                if (y > 250) { doc.addPage(); y = 10; }
+                doc.setFontSize(16);
+                doc.text("Storyboard", 10, y);
+                y += 7;
+                doc.setFontSize(12);
+
+                const storyboardItems = Array.from(storyboardContent.querySelectorAll('.storyboard-item')).map(item => {
+                    const timeScene = item.querySelector('p:nth-child(1)')?.textContent || '';
+                    const visual = item.querySelector('p:nth-child(2)')?.textContent || '';
+                    const audio = item.querySelector('p:nth-child(3)')?.textContent || '';
+                    return `${timeScene}\n${visual}\n${audio}`;
+                }).join('\n\n');
+
+                const splitStoryboard = doc.splitTextToSize(storyboardItems, 180);
+                doc.text(splitStoryboard, 10, y);
+                y += (splitStoryboard.length * 7) + 5;
+            }
+
             doc.save(`${elements.videoTheme.value.replace(/[^a-zA-Z0-9]/g, '_')}_roteiro.pdf`);
             window.showToast("PDF gerado!");
         };
@@ -2018,18 +2183,26 @@ ${scriptContent}
             elements.narrativeStyle.value = 'direct';
             elements.videoDuration.value = '';
 
-            document.querySelectorAll('#scriptOutput > .script-section').forEach(sec => {
+            // Limpar a coluna de roteiro
+            document.querySelectorAll('#scriptColumn > .script-section').forEach(sec => {
                 sec.innerHTML = '';
-                sec.classList.add('hidden');
                 sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
+            // Limpar os cartões de recursos e restaurar os placeholders
+            document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
+            document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
+            document.getElementById('storyboardContent').innerHTML = '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>';
+
 
             allImagePrompts = {}; // Limpa todos os prompts de imagem
             generatedTitlesAndThumbnails = null;
             
             resetCompletionIcons();
             updateButtonStates();
-            updateProgressBar(); // <-- ADICIONADO AQUI
+            updateProgressBar(); 
+
+            // Esconder o dashboard até que um novo conteúdo seja gerado
+            elements.projectDashboard.classList.add('hidden');
 
             window.showToast("Pronto para um novo roteiro!");
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -2055,13 +2228,18 @@ ${scriptContent}
                 }
             }
             // Salva o conteúdo gerado (HTML interno das seções)
-            const sectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection', 'videoDescriptionOutputSection', 'titlesThumbnailsSection'];
-            sectionIds.forEach(id => {
+            const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            scriptSectionIds.forEach(id => {
                 const sectionElement = document.getElementById(id);
                 if (sectionElement) {
                     projectData.outputs[id] = sectionElement.innerHTML;
                 }
             });
+
+            // Salva o conteúdo dos cartões de recursos
+            projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
+            projectData.outputs.videoDescriptionContent = document.getElementById('videoDescriptionContent').innerHTML;
+            projectData.outputs.storyboardContent = document.getElementById('storyboardContent').innerHTML;
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
             const downloadAnchorNode = document.createElement('a');
@@ -2080,7 +2258,10 @@ ${scriptContent}
          * @param {string} sectionElementId - O ID do elemento HTML da seção.
          */
         const renderImagePromptsForSection = (sectionElementId) => {
-            const promptContainer = document.getElementById(sectionElementId)?.querySelector('.prompt-container');
+            const sectionElement = document.getElementById(sectionElementId);
+            if (!sectionElement) return;
+
+            const promptContainer = sectionElement.querySelector('.prompt-container');
             if (!promptContainer) return;
 
             promptContainer.innerHTML = ''; // Limpa prompts existentes
@@ -2130,13 +2311,34 @@ ${scriptContent}
                         }
                     }
 
-                    // Restaura o conteúdo gerado
-                    for (const key in projectData.outputs) {
-                        const element = document.getElementById(key);
-                        if (element && projectData.outputs[key]) {
-                            element.innerHTML = projectData.outputs[key];
-                            element.classList.remove('hidden');
-                            element.classList.add('animate-fade-in'); // Adiciona a animação ao importar
+                    // Restaura o conteúdo gerado nas seções do roteiro
+                    const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+                    scriptSectionIds.forEach(id => {
+                        const sectionElement = document.getElementById(id);
+                        if (sectionElement && projectData.outputs[id]) {
+                            sectionElement.innerHTML = projectData.outputs[id];
+                            sectionElement.classList.remove('hidden'); // Ensure it's visible if it has content
+                            sectionElement.classList.add('animate-fade-in');
+                        }
+                    });
+
+                    // Restore content of the asset cards
+                    if (projectData.outputs.titlesThumbnailsContent) {
+                        document.getElementById('titlesThumbnailsContent').innerHTML = projectData.outputs.titlesThumbnailsContent;
+                    }
+                    if (projectData.outputs.videoDescriptionContent) {
+                        document.getElementById('videoDescriptionContent').innerHTML = projectData.outputs.videoDescriptionContent;
+                    }
+                    if (projectData.outputs.storyboardContent) {
+                        const storyboardContentDiv = document.getElementById('storyboardContent');
+                        storyboardContentDiv.innerHTML = projectData.outputs.storyboardContent;
+                        // Re-initialize SortableJS if storyboard content was loaded
+                        if (storyboardContentDiv.querySelector('.storyboard-item')) { // Check if there are actual items
+                            new Sortable(storyboardContentDiv, {
+                                animation: 150,
+                                ghostClass: 'sortable-ghost',
+                                handle: '.storyboard-item' // Ensure handle is set correctly
+                            });
                         }
                     }
 
@@ -2147,13 +2349,17 @@ ${scriptContent}
                     updateButtonStates();
                     
                     // Marca os botões como concluídos se o conteúdo existir
+                    // Script sections
                     if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                     if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
                     if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn');
                     if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                     if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
-                    if (document.getElementById('videoDescriptionOutputSection').innerHTML.trim()) markButtonAsCompleted('generateDescriptionBtn');
-                    if (document.getElementById('titlesThumbnailsSection').innerHTML.trim()) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+                    // Asset buttons (check if content is not placeholder)
+                    if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
+                    if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+                    if (document.getElementById('storyboardContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Gere o roteiro e clique em \'Gerar\'</div>') markButtonAsCompleted('generateStoryboardBtn');
+
 
                     // Re-renderiza os prompts de imagem para todas as seções
                     for (const sectionId in allImagePrompts) {
@@ -2161,7 +2367,9 @@ ${scriptContent}
                             renderImagePromptsForSection(sectionId);
                         }
                     }
-                    updateProgressBar(); // <-- ADICIONADO AQUI
+                    updateProgressBar(); 
+                    // Show dashboard after import
+                    elements.projectDashboard.classList.remove('hidden');
                     window.showToast("Projeto importado com sucesso!");
 
                 } catch (err) {
@@ -2224,6 +2432,7 @@ ${scriptContent}
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
                 window.showToast("Estratégia definida com sucesso!");
+                elements.projectDashboard.classList.remove('hidden'); // Show dashboard after strategy is set
 
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
@@ -2239,13 +2448,13 @@ ${scriptContent}
         window.handleFloatingActionBar = () => {
             const mainActions = document.getElementById('mainActions');
             const quickActions = document.getElementById('quickActions');
-            const scriptOutput = document.getElementById('scriptOutput');
+            const projectDashboard = document.getElementById('projectDashboard'); // Changed from scriptOutput
             
-            if (!scriptOutput) return;
+            if (!projectDashboard) return;
 
             const actionBar = elements.floatingActionBar;
             // Ponto de gatilho para a barra flutuante (um pouco antes da área de output)
-            const triggerPoint = scriptOutput.offsetTop - actionBar.offsetHeight - 50; // 50px de buffer
+            const triggerPoint = projectDashboard.offsetTop - actionBar.offsetHeight - 50; // 50px de buffer
 
             if (window.scrollY > triggerPoint) {
                 // Se rolou para a área de resultados, mostra a barra e as Ações Rápidas
@@ -2287,13 +2496,14 @@ ${scriptContent}
             const taskButtonIds = [
                 'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
                 'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
-                'generateTitlesAndThumbnailsBtn'
+                'generateTitlesAndThumbnailsBtn', 'generateStoryboardBtn' // Added storyboard
             ];
             const totalTasks = taskButtonIds.length;
 
             let completedTasks = 0;
             taskButtonIds.forEach(id => {
                 const button = document.getElementById(id);
+                // Check if the button is marked as success (meaning content was generated)
                 if (button && button.classList.contains('btn-success')) {
                     completedTasks++;
                 }
@@ -2325,6 +2535,7 @@ ${scriptContent}
             // Adiciona as novas referências de elementos
             elements.progressBar = document.getElementById('progressBar');
             elements.progressText = document.getElementById('progressText');
+            elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
 
             // Configura os event listeners para os botões
             const setupClick = (originalId) => {
@@ -2354,6 +2565,7 @@ ${scriptContent}
             if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
             if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
             if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
+            if (buttons.generateStoryboardBtn) buttons.generateStoryboardBtn.addEventListener('click', generateStoryboard); // New listener for storyboard
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
             if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
             if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
@@ -2421,7 +2633,7 @@ ${scriptContent}
             updateButtonStates();
             // Adiciona o listener de rolagem para a barra flutuante
             window.addEventListener('scroll', window.handleFloatingActionBar);
-            updateProgressBar(); // <-- ADICIONADO AQUI
+            updateProgressBar(); 
         });
     </script>
 </body>
