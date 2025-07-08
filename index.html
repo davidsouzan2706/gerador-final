@@ -765,6 +765,16 @@
                 <!-- Coluna Principal: Roteiro -->
                 <div id="scriptColumn" class="lg:col-span-7 space-y-4">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Roteiro Principal</h2>
+                    <!-- Cartão do Esboço Estratégico -->
+                    <div id="strategicOutlineCard" class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md mb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Esboço Estratégico</h3>
+                            <button id="generateOutlineBtn" class="btn btn-secondary btn-small">Criar Esboço</button>
+                        </div>
+                        <div id="outlineContent">
+                             <div class="asset-card-placeholder text-sm">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>
+                        </div>
+                    </div>
                     <!-- Os acordeões do roteiro serão inseridos aqui pelo JS -->
                     <div id="introSection" class="script-section"></div>
                     <div id="developmentSection" class="script-section"></div>
@@ -775,11 +785,11 @@
                     <div class="p-4 bg-indigo-50 dark:bg-gray-800 border border-indigo-200 dark:border-gray-700 rounded-lg">
                         <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3">Gerar Seções do Roteiro</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-3 lg:grid-cols-3 gap-3">
-                            <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
-                            <button id="generateDevelopmentBtn" class="btn btn-primary btn-small">Desenvolvimento</button>
-                            <button id="climaxBtn" class="btn btn-primary btn-small">Clímax</button>
-                            <button id="conclusionBtn" class="btn btn-primary btn-small">Conclusão</button>
-                            <button id="generateCTABtn" class="btn btn-primary btn-small">CTA</button>
+                            <button id="generateIntroBtn" class="btn btn-primary btn-small" disabled>Introdução</button>
+                            <button id="generateDevelopmentBtn" class="btn btn-primary btn-small" disabled>Desenvolvimento</button>
+                            <button id="climaxBtn" class="btn btn-primary btn-small" disabled>Clímax</button>
+                            <button id="conclusionBtn" class="btn btn-primary btn-small" disabled>Conclusão</button>
+                            <button id="generateCTABtn" class="btn btn-primary btn-small" disabled>CTA</button>
                         </div>
                     </div>
                 </div>
@@ -845,6 +855,7 @@
         // Variáveis de estado globais
         let generatedTitlesAndThumbnails = null;
         let allImagePrompts = {}; // Armazena prompts de imagem por seção
+        let strategicOutline = null; // Variável para armazenar o esboço estratégico
 
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
@@ -1045,6 +1056,14 @@
             const floatResetBtn = document.getElementById('float_resetScriptBtn');
             if (resetBtn) resetBtn.disabled = false; // Ajuste conforme a necessidade de reset
             if (floatResetBtn) floatResetBtn.disabled = false;
+
+            // NEW: Habilitar botões de geração de roteiro se o esboço estiver pronto
+            const outlineContent = elements.outlineContent.textContent.trim();
+            const isOutlineGenerated = outlineContent !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && outlineContent !== "Não foi possível gerar o esboço. Tente novamente." && outlineContent !== "Erro ao gerar o esboço. Tente novamente.";
+            ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => {
+                const btn = document.getElementById(id);
+                if (btn) btn.disabled = !isOutlineGenerated;
+            });
         };
 
         /**
@@ -1137,7 +1156,7 @@
             ` : '';
 
             // Removido o regenerateBtnHtml do header-buttons para a Descrição do Vídeo
-            const headerButtonsHtml = (sectionId === 'videoDescriptionOutput' || sectionId === 'titlesThumbnails') ?
+            const headerButtonsHtml = (sectionId === 'videoDescriptionOutput' || sectionId === 'titlesThumbnails' || sectionId === 'strategicOutline') ?
                 `${copyBtnHtml}` :
                 `${regenerateBtnHtml} ${copyBtnHtml}`;
 
@@ -1282,9 +1301,10 @@
          * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
          * @param {string} sectionName - O nome da seção (ex: 'intro', 'titles_thumbnails').
          * @param {string} sectionTitle - O título da seção para o prompt.
+         * @param {string|null} outlineDirective - Uma diretriz específica do esboço estratégico para esta seção.
          * @returns {{prompt: string, maxTokens: number}} O prompt e o limite de tokens.
          */
-        const constructScriptPrompt = (sectionName, sectionTitle) => {
+        const constructScriptPrompt = (sectionName, sectionTitle, outlineDirective = null) => {
             const baseContext = getBasePromptContext();
             const videoDuration = elements.videoDuration.value;
             const selectedLanguage = elements.languageSelect.value;
@@ -1292,6 +1312,13 @@
 
             let prompt = `${baseContext}\n\nGenerate the **${sectionTitle}** section of the video script. Focus on making it highly engaging and suitable for a viral video. Ensure the tone and content align with the channel and audience.`;
             let maxTokens = 2000;
+
+            // =======================================================
+            // === BLOCO DE CÓDIGO PARA ADICIONAR ====================
+            if (outlineDirective) {
+                prompt += `\n\n**IMPORTANT STRATEGIC GUIDELINE:** For this specific section, you MUST follow this strategic plan: "${outlineDirective}"`;
+            }
+            // =======================================================
 
             prompt += `\n\nIMPORTANT: Do NOT include any scene descriptions, visual/audio cues (e.g., [SHOT], (Camera pan), (Music swells)), or speaker labels (e.g., "Narrator:", "Host:") in the generated script content. Provide only the spoken text.`;
             prompt += `\n\nABSOLUTELY NO META-COMMENTS. Do not add any explanatory text about the script itself. Your entire response must be ONLY the text to be spoken in the video, and nothing else.`;
@@ -1337,6 +1364,26 @@
             prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle. Instead of stating facts plainly, use descriptive, evocative language to paint a picture in the viewer's mind. Create a sensory and visual experience through your words.`;
 
             switch (sectionName) {
+                case 'outline': // New case for strategic outline
+                    prompt = `${baseContext}
+
+Você é um mestre roteirista e estrategista de conteúdo. Sua tarefa é criar um "beat sheet" ou um esboço estratégico detalhado para o vídeo. Analise todos os parâmetros fornecidos (tema, público, estilo narrativo, etc.) para criar a estrutura mais impactante possível.
+
+Responda APENAS com um objeto JSON. O objeto deve conter chaves para cada parte principal do roteiro: "introduction", "development", "climax", "conclusion", e "cta".
+
+O valor de cada chave deve ser uma string descrevendo o objetivo, o conteúdo e a emoção daquela seção específica. Seja conciso, mas estratégico.
+
+Exemplo de formato JSON esperado:
+{
+  "introduction": "Começar com uma pergunta retórica chocante sobre a mortalidade, seguida por uma promessa de que a história de Lázaro detém uma resposta inesperada. Gancho emocional: curiosidade e um toque de medo existencial.",
+  "development": "Construir a narrativa explorando o luto das irmãs de Lázaro, humanizando a história. Apresentar a chegada tardia de Jesus como um ponto de tensão e dúvida. Foco na emoção de perda antes do milagre.",
+  "climax": "O momento de maior tensão no túmulo. Descrever a ordem de Jesus com autoridade e o espanto da multidão. O milagre deve ser o pico emocional e visual do vídeo.",
+  "conclusion": "Resumir a lição: o milagre não é sobre desafiar a morte, mas sobre o poder da fé. Conectar a história de Lázaro à jornada de fé pessoal do espectador.",
+  "cta": "Fazer uma chamada para ação suave, pedindo para o espectador compartilhar sua própria história de superação ou fé nos comentários, criando uma comunidade."
+}
+`;
+                    maxTokens = 1500;
+                    break;
                 case 'intro':
                     prompt += `
                     The introduction should hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
@@ -1521,9 +1568,19 @@ The final output MUST be only the JSON code, like this example:
          */
         const handleGenerateSection = async (button, sectionName, sectionTitle, elementId) => {
             if (!validateInputs()) return;
+            
+            // VERIFICAÇÃO DE SEGURANÇA: Garante que o esboço foi gerado primeiro.
+            if (!strategicOutline) {
+                window.showToast("Por favor, crie o Esboço Estratégico primeiro.");
+                return;
+            }
+
             showLoading(button);
             try {
-                const { prompt, maxTokens } = constructScriptPrompt(sectionName, sectionTitle);
+                // Pega a diretriz específica para esta seção do nosso esboço global
+                const directive = strategicOutline[sectionName]; 
+                
+                const { prompt, maxTokens } = constructScriptPrompt(sectionName, sectionTitle, directive);
                 let result = await callGroqAPI(prompt, maxTokens);
                 
                 // Limpeza específica de metadados da IA
@@ -1538,9 +1595,10 @@ The final output MUST be only the JSON code, like this example:
 
                 const targetSectionElement = document.getElementById(`${elementId}Section`);
                 if (targetSectionElement) {
-                    targetSectionElement.innerHTML = generateSectionHtmlContent(elementId, sectionTitle, result);
-                    targetSectionElement.classList.remove('hidden');
-                    targetSectionElement.classList.add('animate-fade-in'); // <-- LINHA ADICIONADA
+                    const sectionHtml = generateSectionHtmlContent(elementId, sectionTitle, result);
+                    targetSectionElement.innerHTML = sectionHtml;
+                    const accordionItem = targetSectionElement.querySelector('.accordion-item');
+                    if(accordionItem) accordionItem.classList.add('animate-fade-in');
                 } else {
                     console.error(`Target section element with ID '${elementId}Section' not found.`);
                     window.showToast("Erro interno: Seção do roteiro não encontrada.");
@@ -1548,7 +1606,7 @@ The final output MUST be only the JSON code, like this example:
                 }
                 
                 markButtonAsCompleted(button.id);
-                updateButtonStates(); // Atualiza o estado dos botões após uma seção ser gerada
+                updateButtonStates();
 
             } catch (error) {
                 window.showToast(`Falha ao gerar ${sectionTitle}: ${error.message}`);
@@ -1871,6 +1929,50 @@ ${scriptContent}
             }
         };
 
+        /**
+         * Gera o esboço estratégico do roteiro.
+         */
+        const generateStrategicOutline = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateOutlineBtn);
+            const outlineContentDiv = elements.outlineContent;
+            outlineContentDiv.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('outline', 'Esboço Estratégico');
+                const result = await callGroqAPI(prompt, maxTokens); // Use maxTokens from constructScriptPrompt
+                const cleanedResult = cleanGeneratedText(result, true);
+
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para o esboço.");
+
+                strategicOutline = JSON.parse(cleanedResult); // Armazena o esboço globalmente
+                
+                // Formata o esboço para exibição
+                let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">';
+                for (const key in strategicOutline) {
+                    outlineHtml += `<li><strong class="font-semibold text-gray-800 dark:text-gray-200 capitalize">${key}:</strong> ${strategicOutline[key]}</li>`;
+                }
+                outlineHtml += '</ul>';
+                outlineContentDiv.innerHTML = outlineHtml;
+
+                // Habilita os botões de geração de seção
+                const scriptGenButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+                scriptGenButtons.forEach(id => {
+                    if(buttons[id]) buttons[id].disabled = false;
+                });
+
+                markButtonAsCompleted(buttons.generateOutlineBtn.id);
+
+            } catch (error) {
+                window.showToast(`Falha ao gerar Esboço: ${error.message}`);
+                console.error("Error generating Outline.", error);
+                outlineContentDiv.innerHTML = `<div class="asset-card-placeholder text-red-500">Erro ao gerar o esboço. Tente novamente.</div>`;
+            } finally {
+                hideLoading(buttons.generateOutlineBtn);
+                updateButtonStates();
+            }
+        };
+
 
         /**
          * Realiza o download do roteiro como PDF.
@@ -1888,6 +1990,20 @@ ${scriptContent}
             y += 7;
             doc.text(`Tema: ${elements.videoTheme.value}`, 10, y);
             y += 10;
+
+            // Add Strategic Outline to PDF
+            const outlineContent = elements.outlineContent;
+            if (outlineContent && outlineContent.textContent.trim() !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && outlineContent.textContent.trim() !== "Não foi possível gerar o esboço. Tente novamente." && outlineContent.textContent.trim() !== "Erro ao gerar.") {
+                if (y > 250) { doc.addPage(); y = 10; }
+                doc.setFontSize(16);
+                doc.text("Esboço Estratégico", 10, y);
+                y += 7;
+                doc.setFontSize(12);
+                const outlineText = Array.from(outlineContent.querySelectorAll('li')).map(li => `- ${li.textContent}`).join('\n');
+                const splitOutline = doc.splitTextToSize(outlineText, 180);
+                doc.text(splitOutline, 10, y);
+                y += (splitOutline.length * 7) + 5;
+            }
 
             const sectionOrder = ['intro', 'development', 'climax', 'conclusion', 'cta']; // Only script sections for PDF
             
@@ -2016,6 +2132,10 @@ ${scriptContent}
                 sec.innerHTML = '';
                 sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
+            // Limpar o cartão do esboço
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder text-sm">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
+            strategicOutline = null; // Reseta o esboço estratégico
+
             // Limpar os cartões de recursos e restaurar os placeholders
             document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
@@ -2044,7 +2164,8 @@ ${scriptContent}
                 outputs: {},
                 memory: {
                     allImagePrompts: allImagePrompts,
-                    generatedTitlesAndThumbnails: generatedTitlesAndThumbnails
+                    generatedTitlesAndThumbnails: generatedTitlesAndThumbnails,
+                    strategicOutline: strategicOutline // Exporta o esboço
                 }
             };
 
@@ -2062,6 +2183,9 @@ ${scriptContent}
                     projectData.outputs[id] = sectionElement.innerHTML;
                 }
             });
+
+            // Salva o conteúdo do esboço
+            projectData.outputs.strategicOutlineContent = elements.outlineContent.innerHTML;
 
             // Salva o conteúdo dos cartões de recursos
             projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
@@ -2149,6 +2273,12 @@ ${scriptContent}
                         }
                     });
 
+                    // Restore strategic outline content
+                    if (projectData.outputs.strategicOutlineContent) {
+                        elements.outlineContent.innerHTML = projectData.outputs.strategicOutlineContent;
+                    }
+                    strategicOutline = projectData.memory.strategicOutline || null; // Importa o esboço
+
                     // Restore content of the asset cards
                     if (projectData.outputs.titlesThumbnailsContent) {
                         document.getElementById('titlesThumbnailsContent').innerHTML = projectData.outputs.titlesThumbnailsContent;
@@ -2165,6 +2295,10 @@ ${scriptContent}
                     updateButtonStates();
                     
                     // Marca os botões como concluídos se o conteúdo existir
+                    // Strategic Outline button
+                    if (elements.outlineContent.textContent.trim() !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && elements.outlineContent.textContent.trim() !== "Não foi possível gerar o esboço. Tente novamente." && elements.outlineContent.textContent.trim() !== "Erro ao gerar.") {
+                        markButtonAsCompleted('generateOutlineBtn');
+                    }
                     // Script sections
                     if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                     if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
@@ -2310,6 +2444,7 @@ ${scriptContent}
         const updateProgressBar = () => {
             // Lista de todas as tarefas que contam para o progresso
             const taskButtonIds = [
+                'generateOutlineBtn', // Added outline button
                 'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
                 'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
                 'generateTitlesAndThumbnailsBtn' 
@@ -2352,6 +2487,7 @@ ${scriptContent}
             elements.progressBar = document.getElementById('progressBar');
             elements.progressText = document.getElementById('progressText');
             elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
+            elements.outlineContent = document.getElementById('outlineContent'); // New reference for outline content
 
             // Configura os event listeners para os botões
             const setupClick = (originalId) => {
@@ -2374,6 +2510,7 @@ ${scriptContent}
             });
             
             // Adiciona os listeners de ação aos botões originais
+            if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); // New listener for outline
             if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
             if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
             if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
