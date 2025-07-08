@@ -1083,7 +1083,7 @@
 
         /**
          * Mostra um alerta em tela cheia com uma mensagem.
-         * @param {string} message - A mensagem do alerta.
+         * @param {string} message - A mensagem a ser exibida.
          */
         const showFullScreenAlert = (message) => {
             elements.fullScreenAlertMessage.textContent = message;
@@ -1424,6 +1424,9 @@ Exemplo de formato JSON esperado:
                     if (narrativeStyle === 'direct') {
                         prompt += `\nThis is the peak of **Act 2**, leading into Act 3. Deliver the most impactful revelation or the resolution of the main conflict.`;
                     }
+                    if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
+                        prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
+                    }
                     maxTokens = 500;
                     break;
                 case 'conclusion':
@@ -1744,7 +1747,7 @@ Trecho do roteiro:
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                                     <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
-                                </div>
+                            </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
                                 <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
@@ -2370,7 +2373,7 @@ ${scriptContent}
             O objeto JSON deve ter as seguintes chaves:
             1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
             2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
-            3.  "video_objective": (string) Escolha o objetivo principal do vídeo da seguinte lista: [${videoObjectiveOptions}].
+            3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções: [${videoObjectiveOptions}].
             4.  "narrative_style": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStyleOptions}].
             5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
             6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
@@ -2385,7 +2388,24 @@ ${scriptContent}
                 // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
                 if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
-                if(strategy.video_objective) elements.videoObjective.value = strategy.video_objective;
+                
+                if (strategy.video_objective) {
+                    const objectiveSelect = elements.videoObjective;
+                    const returnedValue = strategy.video_objective;
+                    
+                    // Cria um array com todos os valores válidos das opções
+                    const validOptions = Array.from(objectiveSelect.options).map(opt => opt.value);
+                    
+                    // Verifica se o valor retornado pela IA está na nossa lista de opções válidas
+                    if (validOptions.includes(returnedValue)) {
+                        objectiveSelect.value = returnedValue;
+                    } else {
+                        // Se não for válido, define um padrão seguro (ex: 'informar')
+                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
+                        objectiveSelect.value = 'informar'; 
+                    }
+                }
+
                 if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style; // CORRIGIDO AQUI
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
