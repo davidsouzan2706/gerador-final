@@ -1075,29 +1075,48 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
 
     // VERSÃO FINAL - Marca como concluído e redesenha a barra
     const markButtonAsCompleted = (buttonId) => {
-        const button = document.getElementById(buttonId);
-        if (button) {
-            button.classList.remove('btn-primary', 'btn-secondary');
-            button.classList.add('btn-success');
-            window.populateActionBar(); // Força a atualização da barra
-        }
+        const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
+        buttonsToUpdate.forEach(button => {
+            if(button) {
+                button.classList.remove('btn-primary', 'btn-secondary');
+                button.classList.add('btn-success');
+            }
+        });
     };
 
-    // VERSÃO FINAL - Reseta as cores e redesenha a barra
+    // ==========================================================
+    // VERSÃO XEQUE-MATE do resetCompletionIcons
+    // ==========================================================
     const resetCompletionIcons = () => {
-        for (const buttonId in buttonCheckmarkMap) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.classList.remove('btn-success');
-                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
-                if (passo1_buttons.includes(buttonId)) {
-                    button.classList.add('btn-primary');
-                } else {
-                    button.classList.add('btn-secondary');
+        // Lista de todos os botões que podem mudar de cor
+        const allActionButtons = [
+            'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
+            'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
+            'generateTitlesAndThumbnailsBtn'
+        ];
+
+        // Lista dos que devem ser azuis (primários)
+        const primaryButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+
+        allActionButtons.forEach(buttonId => {
+            // Pega o original E o seu clone na barra flutuante de uma só vez
+            const buttonsToReset = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
+
+            buttonsToReset.forEach(button => {
+                if (button) {
+                    button.classList.remove('btn-success'); // Tira o verde
+
+                    // Adiciona a cor original correta de volta
+                    if (primaryButtons.includes(buttonId)) {
+                        button.classList.add('btn-primary');
+                        button.classList.remove('btn-secondary');
+                    } else {
+                        button.classList.add('btn-secondary');
+                        button.classList.remove('btn-primary');
+                    }
                 }
-            }
-        }
-        window.populateActionBar(); // Força a atualização da barra
+            });
+        });
     };
     
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
@@ -1212,7 +1231,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
 
     const updateButtonStates = () => {
         // Força o reset antes de qualquer outra atualização
-        resetCompletionIcons();
+        resetCompletionIcons(); // Chama a versão autocontida e à prova de falhas
 
         const anyMainScriptGenerated = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].some(id => !document.getElementById(id).classList.contains('hidden'));
         const allMainScriptGenerated = isScriptComplete();
@@ -1230,7 +1249,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.resetScriptBtn.disabled = false;
 
         // ADICIONADO: Atualiza os botões na barra flutuante
-        // REMOVIDO: window.populateActionBar(); // Esta linha foi removida conforme a instrução.
+        window.populateActionBar(); // Força a atualização da barra após o estado dos botões ser definido
     };
     
     const getBasePromptContext = () => {
@@ -2350,7 +2369,7 @@ ${scriptContent}
         
         apiKeys.forEach(keyObj => keyObj.usageCount = 0);
 
-        resetCompletionIcons();
+        resetCompletionIcons(); // Chama a versão autocontida e à prova de falhas
         updateButtonStates(); // **CORREÇÃO: Chamar updateButtonStates aqui**
 
         window.showToast("Pronto para um novo roteiro!");
