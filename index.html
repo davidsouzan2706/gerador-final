@@ -385,6 +385,14 @@
         .action-bar-buttons-group .btn-container .btn:first-child { margin-left: 0; }
 
         /* ========================================================== */
+        /* ======== ESTILOS PARA A BARRA DE PROGRESSO ========= */
+        /* ========================================================== */
+        #progressBar {
+            transition: width 0.5s ease-in-out; /* Animação suave do crescimento da barra */
+            background-color: var(--success-color); /* Usa a nossa cor de sucesso verde! */
+        }
+
+        /* ========================================================== */
         /* ==================== MODO ESCURO ======================= */
         /* ========================================================== */
         body.dark {
@@ -605,6 +613,20 @@
             </div>
         </div>
 
+        <!-- ========================================================== -->
+        <!-- ========= NOVA BARRA DE PROGRESSO VISUAL ============= -->
+        <!-- ========================================================== -->
+        <div id="progressBarContainer" class="progress-bar-container mb-8">
+            <div class="flex justify-between mb-1">
+                <span class="text-base font-medium text-gray-700 dark:text-gray-300">Progresso do Projeto</span>
+                <span id="progressText" class="text-sm font-medium text-gray-700 dark:text-gray-300">0%</span>
+            </div>
+            <div class="w-full bg-gray-200 rounded-full h-2.5 dark:bg-gray-700">
+                <div id="progressBar" class="bg-indigo-600 h-2.5 rounded-full" style="width: 0%"></div>
+            </div>
+        </div>
+        <!-- ========================================================== -->
+
         <!-- Botões de Ação Principais -->
         <div class="mb-8 p-4 bg-indigo-50 border border-indigo-200 rounded-lg">
             <h3 class="font-bold text-lg text-indigo-800 mb-3">Passo 1: Gerar o Roteiro Principal</h3>
@@ -821,6 +843,7 @@
                     btn.classList.add('btn-success');
                 }
             });
+            updateProgressBar(); // <-- ADICIONADO AQUI
         };
 
         /**
@@ -1835,6 +1858,7 @@ ${scriptContent}
             
             resetCompletionIcons();
             updateButtonStates();
+            updateProgressBar(); // <-- ADICIONADO AQUI
 
             window.showToast("Pronto para um novo roteiro!");
             window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -1965,7 +1989,7 @@ ${scriptContent}
                             renderImagePromptsForSection(sectionId);
                         }
                     }
-
+                    updateProgressBar(); // <-- ADICIONADO AQUI
                     window.showToast("Projeto importado com sucesso!");
 
                 } catch (err) {
@@ -2100,11 +2124,53 @@ ${scriptContent}
         };
 
         // ==========================================================
+        // NOVA FUNÇÃO PARA ATUALIZAR A BARRA DE PROGRESSO
+        // ==========================================================
+        const updateProgressBar = () => {
+            // Lista de todas as tarefas que contam para o progresso
+            const taskButtonIds = [
+                'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
+                'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
+                'generateTitlesAndThumbnailsBtn'
+            ];
+            const totalTasks = taskButtonIds.length;
+
+            let completedTasks = 0;
+            taskButtonIds.forEach(id => {
+                const button = document.getElementById(id);
+                if (button && button.classList.contains('btn-success')) {
+                    completedTasks++;
+                }
+            });
+
+            const percentage = Math.round((completedTasks / totalTasks) * 100);
+
+            // Atualiza a UI
+            if (elements.progressBar && elements.progressText) {
+                elements.progressBar.style.width = `${percentage}%`;
+                elements.progressText.textContent = `${percentage}%`;
+
+                if (percentage === 100) {
+                    elements.progressText.textContent = "Projeto Pronto!";
+                    // Muda a cor da barra para o azul primário para celebrar
+                    elements.progressBar.style.backgroundColor = 'var(--primary-color)';
+                } else {
+                     // Garante que a cor volte ao verde se não for 100%
+                    elements.progressBar.style.backgroundColor = 'var(--success-color)';
+                }
+            }
+        };
+
+        // ==========================================================
         // ================== INICIALIZAÇÃO =======================
         // ==========================================================
         document.addEventListener('DOMContentLoaded', () => {
             console.log("DOM Content Loaded. Initializing app."); 
             
+            // Adiciona as novas referências de elementos
+            elements.progressBar = document.getElementById('progressBar');
+            elements.progressText = document.getElementById('progressText');
+
             // Configura os event listeners para os botões
             const setupClick = (originalId) => {
                 const floatBtn = document.getElementById(`float_${originalId}`);
@@ -2153,6 +2219,7 @@ ${scriptContent}
             }
             // Adiciona o listener de rolagem para a barra flutuante
             window.addEventListener('scroll', window.handleFloatingActionBar);
+            updateProgressBar(); // <-- ADICIONADO AQUI
         });
     </script>
 </body>
