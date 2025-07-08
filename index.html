@@ -791,8 +791,10 @@
             if (el.tagName === 'BUTTON') buttons[el.id] = el;
             else elements[el.id] = el;
         });
-        // REMOVIDO: Mapeamento de IDs de botões para IDs de ícones de checkmark (se usados)
-        // const buttonCheckmarkMap = { ... };
+
+        // ADICIONADO: Mapeamento manual para os ícones de modo escuro
+        elements.moonIcon = document.getElementById('moonIcon');
+        elements.sunIcon = document.getElementById('sunIcon');
 
         // ==========================================================
         // ================== FUNÇÕES DE UTILIDADE ==================
@@ -978,9 +980,13 @@
          * @param {string} sectionId - O ID da seção (ex: 'intro', 'development').
          * @param {string} title - O título da seção a ser exibido.
          * @param {string} content - O conteúdo do roteiro para a seção.
+         * @param {object} options - Opções para controlar a exibição de botões (showPromptsButton, showSoundtrackButton).
          * @returns {string} O HTML completo da seção.
          */
-        const generateSectionHtmlContent = (sectionId, title, content) => {
+        const generateSectionHtmlContent = (sectionId, title, content, options = {}) => {
+            // Define os valores padrão se não forem fornecidos
+            const { showPromptsButton = true, showSoundtrackButton = true } = options;
+            
             const bodyId = `${sectionId}Body`;
             const arrowId = `${sectionId}Arrow`;
 
@@ -992,6 +998,30 @@
             </button>`;
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('p').textContent)">Copiar</button>`;
+            
+            // Constrói condicionalmente as seções de prompt e trilha sonora
+            const promptsSectionHtml = showPromptsButton ? `
+                <div class="section-prompts">
+                    <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">
+                        Gerar Prompts de Imagem
+                    </button>
+                    <div class="prompt-container mt-4"></div>
+                </div>
+            ` : '';
+            
+            const soundtrackSectionHtml = showSoundtrackButton ? `
+                <div class="section-soundtrack">
+                    <button class="btn btn-secondary btn-small" onclick="window.suggestSoundtrack('${sectionId}Section')">
+                        Sugerir Trilha Sonora
+                    </button>
+                    <div class="soundtrack-container mt-4"></div>
+                </div>
+            ` : '';
+
+            // Removido o regenerateBtnHtml do header-buttons para a Descrição do Vídeo
+            const headerButtonsHtml = (sectionId === 'videoDescriptionOutput' || sectionId === 'titlesThumbnails') ?
+                `${copyBtnHtml}` :
+                `${regenerateBtnHtml} ${copyBtnHtml}`;
 
             return `<div class="accordion-item">
                         <div class="accordion-header" onclick="toggleAccordion('${bodyId}', '${arrowId}')">
@@ -1002,24 +1032,13 @@
                                  </svg>
                             </div>
                             <div class="header-buttons">
-                                ${regenerateBtnHtml}
-                                ${copyBtnHtml}
+                                ${headerButtonsHtml}
                             </div>
                         </div>
                         <div id="${bodyId}" class="accordion-body">
                             <p class="whitespace-pre-wrap" contenteditable="true">${content}</p>
-                            <div class="section-prompts">
-                                <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">
-                                    Gerar Prompts de Imagem
-                                </button>
-                                <div class="prompt-container mt-4"></div>
-                            </div>
-                            <div class="section-soundtrack">
-                                <button class="btn btn-secondary btn-small" onclick="window.suggestSoundtrack('${sectionId}Section')">
-                                    Sugerir Trilha Sonora
-                                </button>
-                                <div class="soundtrack-container mt-4"></div>
-                            </div>
+                            ${promptsSectionHtml}
+                            ${soundtrackSectionHtml}
                         </div>
                     </div>`;
         };
@@ -1754,7 +1773,12 @@ ${scriptContent}
                 result = removeMetaComments(result);
                 const targetSectionElement = document.getElementById('videoDescriptionOutputSection');
                 if (targetSectionElement) {
-                    targetSectionElement.innerHTML = generateSectionHtmlContent('videoDescriptionOutput', 'Descrição do Vídeo e Hashtags', result);
+                    targetSectionElement.innerHTML = generateSectionHtmlContent(
+                        'videoDescriptionOutput', 
+                        'Descrição do Vídeo e Hashtags', 
+                        result,
+                        { showPromptsButton: false, showSoundtrackButton: false } // <-- A MÁGICA ACONTECE AQUI
+                    );
                     targetSectionElement.classList.remove('hidden');
                 } else {
                     console.error("Target section element with ID 'videoDescriptionOutputSection' not found.");
@@ -2101,13 +2125,13 @@ ${scriptContent}
         const setDarkMode = (isDark) => {
             if (isDark) {
                 document.body.classList.add('dark');
-                elements.moonIcon.classList.add('hidden');
-                elements.sunIcon.classList.remove('hidden');
+                if (elements.moonIcon) elements.moonIcon.classList.add('hidden');
+                if (elements.sunIcon) elements.sunIcon.classList.remove('hidden');
                 localStorage.setItem('darkMode', 'enabled');
             } else {
                 document.body.classList.remove('dark');
-                elements.moonIcon.classList.remove('hidden');
-                elements.sunIcon.classList.add('hidden');
+                if (elements.moonIcon) elements.moonIcon.classList.remove('hidden');
+                if (elements.sunIcon) elements.sunIcon.classList.add('hidden');
                 localStorage.setItem('darkMode', 'disabled');
             }
         };
