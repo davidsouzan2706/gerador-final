@@ -1649,11 +1649,8 @@ ${scriptContent}
                     generatedTitlesAndThumbnails = null;
                 }
                 
-                // === INÍCIO DA MUDANÇA PRINCIPAL ===
-                
                 const targetSectionElement = document.getElementById('titlesThumbnailsSection');
                 if (targetSectionElement) {
-                    // 1. Monta o conteúdo interno (o corpo do acordeão)
                     let titlesListHtml = '<p class="text-red-500">Não foi possível extrair os títulos.</p>';
                     if (parsedContent.titles && parsedContent.titles.length > 0) {
                         titlesListHtml = parsedContent.titles.map((title, index) => `<p class="text-gray-700 dark:text-gray-300">${index + 1}. ${title}</p>`).join('');
@@ -1693,16 +1690,15 @@ ${scriptContent}
                         </div>
                     `;
                     
-                    // 2. USA a nossa função de acordeão padrão!
-                    // Hack: Criamos um conteúdo de placeholder e depois o substituímos.
+                    // Usa a função de acordeão padrão, passando um conteúdo temporário
                     targetSectionElement.innerHTML = generateSectionHtmlContent(
                         'titlesThumbnails', 
                         'Títulos e Thumbnails', 
-                        'PLACEHOLDER_CONTENT',
+                        'Conteúdo temporário', // Conteúdo temporário que será substituído
                         { showPromptsButton: false, showSoundtrackButton: false }
                     );
                     
-                    // Agora substituímos o placeholder pelo nosso HTML rico.
+                    // Agora substitui o conteúdo do parágrafo dentro do accordion-body pelo HTML rico
                     const bodyElement = targetSectionElement.querySelector('#titlesThumbnailsBody p');
                     if (bodyElement) {
                         bodyElement.outerHTML = contentForAccordion;
@@ -1711,8 +1707,6 @@ ${scriptContent}
                     targetSectionElement.classList.remove('hidden');
                     markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
                 }
-                
-                // === FIM DA MUDANÇA PRINCIPAL ===
                 
                 updateButtonStates();
             } catch (error) {
@@ -1853,7 +1847,8 @@ ${scriptContent}
                             y += (splitThumbnails.length * 7) + 5;
                         }
                     } else {
-                        const content = sectionElement.querySelector('p[contenteditable="true"]').textContent;
+                        // For regular script sections, get content from the editable paragraph
+                        const content = sectionElement.querySelector('.accordion-body p[contenteditable="true"]').textContent;
                         const splitContent = doc.splitTextToSize(content, 180);
                         doc.text(splitContent, 10, y);
                         y += (splitContent.length * 7) + 5;
@@ -2133,15 +2128,24 @@ ${scriptContent}
          * @param {boolean} isDark - True para ativar o modo escuro, false para desativar.
          */
         const setDarkMode = (isDark) => {
+            const moonIcon = document.getElementById('moonIcon');
+            const sunIcon = document.getElementById('sunIcon');
+
+            // Verifica se os ícones existem antes de tentar manipulá-los
+            if (!moonIcon || !sunIcon) {
+                console.error("Ícones de modo escuro (moonIcon/sunIcon) não encontrados no DOM.");
+                return;
+            }
+
             if (isDark) {
                 document.body.classList.add('dark');
-                if (elements.moonIcon) elements.moonIcon.classList.add('hidden');
-                if (elements.sunIcon) elements.sunIcon.classList.remove('hidden');
+                moonIcon.classList.add('hidden');
+                sunIcon.classList.remove('hidden');
                 localStorage.setItem('darkMode', 'enabled');
             } else {
                 document.body.classList.remove('dark');
-                if (elements.moonIcon) elements.moonIcon.classList.remove('hidden');
-                if (elements.sunIcon) elements.sunIcon.classList.add('hidden');
+                moonIcon.classList.remove('hidden');
+                sunIcon.classList.add('hidden');
                 localStorage.setItem('darkMode', 'disabled');
             }
         };
@@ -2184,8 +2188,10 @@ ${scriptContent}
         window.toggleAccordion = (bodyId, arrowId) => {
             const body = document.getElementById(bodyId);
             const arrow = document.getElementById(arrowId);
-            if (body && arrow) {
+            if (body) { // Verifica se o corpo existe
                 body.classList.toggle('open');
+            }
+            if (arrow) { // Verifica se a seta existe
                 arrow.classList.toggle('open');
             }
         };
