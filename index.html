@@ -533,45 +533,32 @@
         /* ========================================================== */
         /* =================== ESTILOS MODO FOCO ==================== */
         /* ========================================================== */
-        .zen-mode-hide {
-            display: none !important; /* Força o elemento a desaparecer */
-        }
-        /* Quando o modo foco está ativo... */
+        /* Quando o modo foco está ativo, esconde esses elementos específicos */
         body.zen-mode .floating-action-bar,
         body.zen-mode .container > h1,
         body.zen-mode .container > p,
-        body.zen-mode .container > .grid,
-        body.zen-mode .container > .progress-bar-container,
-        body.zen-mode .container > .mb-8 {
+        body.zen-mode .container > .grid:first-of-type, /* Esconde apenas o primeiro grid (os inputs) */
+        body.zen-mode .container > #progressBarContainer,
+        body.zen-mode #assetsColumn, /* Esconde a coluna de recursos inteira */
+        body.zen-mode #strategicOutlineCard, /* Esconde o card do esboço */
+        body.zen-mode #scriptGenerationControls { /* Esconde os controles de geração */
             display: none !important;
         }
+
+        /* Ajusta o layout do container e da coluna do roteiro */
         body.zen-mode .container {
-            max-width: 800px; /* Deixa a área de leitura mais confortável */
+            max-width: 800px; /* Largura de leitura confortável */
+            padding-top: 2rem;
+            padding-bottom: 2rem;
             box-shadow: none !important;
             background-color: transparent !important;
-            padding-top: 2rem !important;
-            margin-top: 0 !important;
-        }
-        /* Esconde os botões de modo foco/escuro para não atrapalhar */
-        body.zen-mode .absolute.top-4.right-4 {
-            display: none !important;
         }
 
-        .asset-card-placeholder {
-            border: 2px dashed var(--border-light);
-            color: var(--text-light);
-            height: 100px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 8px;
-            font-size: 0.9rem;
+        body.zen-mode #scriptColumn {
+            max-height: none; /* Remove a altura máxima para ocupar a tela toda */
+            grid-column: span 12 / span 12; /* Faz a coluna do roteiro ocupar 100% da largura */
         }
-        .dark .asset-card-placeholder {
-            border-color: #4b5563;
-            color: #6b7280;
-        }
-
+        
         /* ========================================================== */
         /* Estilos para a coluna de roteiro com controles fixos */
         /* ========================================================== */
@@ -631,7 +618,7 @@
     </div>
 
     <div class="container relative">
-        <div class="absolute top-4 right-4 flex items-center gap-2">
+        <div class="absolute top-4 right-4 flex items-center gap-2 z-[1001]">
             <button id="toggleZenModeBtn" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-500 dark:text-gray-400" title="Modo Foco">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/></svg>
             </button>
@@ -1596,7 +1583,7 @@ The final output MUST be only the JSON code, like this example:
             
             // Logo no início da função
             if (!strategicOutline) {
-                showFullScreenAlert("Por favor, clique em 'Criar Esboço' primeiro. O esboço estratégico é essencial para guiar a IA na criação de um roteiro coeso e impactante.");
+                window.showToast("Crie o Esboço Estratégico primeiro!");
                 return;
             }
 
@@ -2546,7 +2533,7 @@ ${scriptContent}
             if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
             
             // Outros listeners
-            if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
+            if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
             if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
             
             // NOVO CÓDIGO À PROVA DE BALAS PARA O MODO ESCURO
