@@ -1094,47 +1094,27 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         updateButtonStates(); // Chama a função centralizada para reavaliar o estado
     };
     
+    // VERSÃO SIMPLIFICADA E CORRETA
     const markButtonAsCompleted = (buttonId) => {
-        // Encontra o botão original e o atualiza
-        const originalButton = document.getElementById(buttonId);
-        if (originalButton) {
-            originalButton.classList.remove('btn-primary', 'btn-secondary');
-            originalButton.classList.add('btn-success');
-        }
-
-        // Encontra o clone correspondente na barra flutuante e o atualiza também
-        const floatingBar = document.getElementById('floatingActionBar');
-        if (floatingBar) {
-            // A query `[id='${buttonId}']` encontra o clone pelo mesmo ID
-            const clonedButton = floatingBar.querySelector(`[id='${buttonId}']`);
-            if (clonedButton) {
-                clonedButton.classList.remove('btn-primary', 'btn-secondary');
-                clonedButton.classList.add('btn-success');
-            }
+        const button = document.getElementById(buttonId);
+        if (button) {
+            button.classList.remove('btn-primary', 'btn-secondary');
+            button.classList.add('btn-success');
         }
     };
     
+    // VERSÃO SIMPLIFICADA E CORRETA
     const resetCompletionIcons = () => {
-        const floatingBar = document.getElementById('floatingActionBar');
-
         for (const buttonId in buttonCheckmarkMap) {
-            const originalButton = document.getElementById(buttonId);
-            const clonedButton = floatingBar ? floatingBar.querySelector(`[id='${buttonId}']`) : null;
-            
-            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
-            const isPasso1 = passo1_buttons.includes(buttonId);
-
-            // Reseta o botão original
-            if (originalButton) {
-                originalButton.classList.remove('btn-success');
-                originalButton.classList.remove(isPasso1 ? 'btn-secondary' : 'btn-primary');
-                originalButton.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
-            }
-            // Reseta o clone
-            if (clonedButton) {
-                clonedButton.classList.remove('btn-success');
-                clonedButton.classList.remove(isPasso1 ? 'btn-secondary' : 'btn-primary');
-                clonedButton.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
+            const button = document.getElementById(buttonId);
+            if (button) {
+                button.classList.remove('btn-success');
+                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
+                if(passo1_buttons.includes(buttonId)) {
+                    button.classList.add('btn-primary');
+                } else {
+                    button.classList.add('btn-secondary');
+                }
             }
         }
     };
@@ -2647,33 +2627,35 @@ ${scriptContent}
     // ===============================================
     // AS NOVAS FUNÇÕES QUE ADICIONAMOS
     // ===============================================
-    // VERSÃO CONTEXTUAL do populateActionBar
+    // VERSÃO FINAL E REATIVA DO populateActionBar
     window.populateActionBar = () => {
-        // Popula a barra do Passo 1
-        const mainActionBar = document.querySelector('#mainActions');
-        mainActionBar.innerHTML = '<span class="action-bar-title">Passo 1:</span><div class="btn-clone-container"></div>'; // Recria a estrutura
-        const mainButtonsContainer = mainActionBar.querySelector('.btn-clone-container');
+        const mainActionsContainer = document.querySelector('#mainActions .btn-clone-container');
+        const quickActionsContainer = document.querySelector('#quickActions .btn-clone-container');
+
+        if (!mainActionsContainer || !quickActionsContainer) return;
+
+        // Limpa os botões existentes
+        mainActionsContainer.innerHTML = '';
+        quickActionsContainer.innerHTML = '';
+
+        // Clona e adiciona os botões do Passo 1
         ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => {
             const original = document.getElementById(id);
             if (original) {
                 const clone = original.cloneNode(true);
-                const checkIcon = clone.querySelector('.completion-icon');
-                if (checkIcon) checkIcon.style.display = 'none'; // Remove o ícone de check do clone
-                mainButtonsContainer.appendChild(clone);
+                // Remove o spinner do clone, se houver
+                const spinner = clone.querySelector('.loading-spinner');
+                if(spinner) spinner.classList.add('hidden');
+                mainActionsContainer.appendChild(clone);
             }
         });
 
-        // Popula a barra de Ações Rápidas
-        const quickActionBar = document.querySelector('#quickActions');
-        quickActionBar.innerHTML = '<span class="action-bar-title">Ações Rápidas:</span><div class="btn-clone-container"></div>'; // Recria a estrutura
-        const quickButtonsContainer = quickActionBar.querySelector('.btn-clone-container');
+        // Clona e adiciona os botões de Ações Rápidas
         ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => {
             const original = document.getElementById(id);
-            if(original) {
+            if (original) {
                 const clone = original.cloneNode(true);
-                const checkIcon = clone.querySelector('.completion-icon');
-                if (checkIcon) checkIcon.style.display = 'none'; // Remove o ícone de check do clone
-                quickButtonsContainer.appendChild(clone);
+                quickActionsContainer.appendChild(clone);
             }
         });
     };
