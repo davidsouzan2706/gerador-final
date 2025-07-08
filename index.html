@@ -643,12 +643,12 @@
             <!-- Barra para o Passo 1 -->
             <div id="mainActions" class="action-bar-buttons-group">
                 <span class="action-bar-title">Passo 1:</span>
-                <!-- Botões do Passo 1 serão clonados aqui -->
+                <div class="btn-clone-container"></div>
             </div>
             <!-- Barra para os Passos 2 e 3 -->
             <div id="quickActions" class="action-bar-buttons-group hidden">
                 <span class="action-bar-title">Ações Rápidas:</span>
-                <!-- Botões dos Passos 2 e 3 serão clonados aqui -->
+                <div class="btn-clone-container"></div>
             </div>
         </div>
     </div>
@@ -933,11 +933,11 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // const IMAGE_PROMPT_BATCH_SIZE = 2; 
     const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
-**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
-**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
+**Style:** Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real.
 **Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
-**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon
 `;
     const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:', 'es': 'Descripción de la Imagen:' };
 
@@ -1044,14 +1044,18 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // ==========================================================
     // VERSÕES FINAIS E SINCRONIZADAS DAS FUNÇÕES
     // ==========================================================
-    // Popula a barra UMA ÚNICA VEZ, criando os clones com um link de dados.
+    // Popula a barra UMA VEZ, criando um link entre original e clone.
     window.populateActionBar = () => {
         const cloneAndAppend = (id, container) => {
             const original = document.getElementById(id);
             if (original) {
                 const clone = original.cloneNode(true);
-                clone.removeAttribute('id'); // Remove ID duplicado (boa prática)
-                clone.dataset.cloneOf = id;  // Cria um link para o original: data-clone-of="generateIntroBtn"
+                clone.id = ''; // Remove o ID duplicado para evitar conflitos
+                clone.dataset.cloneOf = id; // Adiciona um link: data-clone-of="generateIntroBtn"
+                
+                // Adiciona o listener de clique diretamente no clone
+                clone.addEventListener('click', () => original.click());
+                
                 container.appendChild(clone);
             }
         };
@@ -1069,11 +1073,9 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
 
     // Atualiza o original E o seu clone.
     const markButtonAsCompleted = (buttonId) => {
-        // Pega uma lista com ambos (original e clone)
         const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
-
         buttonsToUpdate.forEach(button => {
-            if(button) {
+            if (button) {
                 button.classList.remove('btn-primary', 'btn-secondary');
                 button.classList.add('btn-success');
             }
@@ -1088,7 +1090,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
             const isPasso1 = passo1_buttons.includes(buttonId);
 
             buttonsToUpdate.forEach(button => {
-                if(button) {
+                if (button) {
                     button.classList.remove('btn-success');
                     if (isPasso1) {
                         button.classList.add('btn-primary');
@@ -1230,7 +1232,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.resetScriptBtn.disabled = false;
 
         // ADICIONADO: Atualiza os botões na barra flutuante
-        // REMOVIDO: window.populateActionBar();
+        // REMOVIDO: window.populateActionBar(); // Esta linha foi removida conforme a instrução.
     };
     
     const getBasePromptContext = () => {
@@ -2617,8 +2619,12 @@ ${scriptContent}
             const original = document.getElementById(id);
             if (original) {
                 const clone = original.cloneNode(true);
-                clone.removeAttribute('id'); // Remove ID duplicado (boa prática)
-                clone.dataset.cloneOf = id;  // Cria um link para o original: data-clone-of="generateIntroBtn"
+                clone.id = ''; // Remove o ID duplicado para evitar conflitos
+                clone.dataset.cloneOf = id; // Adiciona um link: data-clone-of="generateIntroBtn"
+                
+                // Adiciona o listener de clique diretamente no clone
+                clone.addEventListener('click', () => original.click());
+                
                 container.appendChild(clone);
             }
         };
@@ -2682,8 +2688,8 @@ ${scriptContent}
 	// initializeFirebase();
         
 	setupButtonListeners(); // Agora é seguro chamar
-        window.populateActionBar(); // Updated call
-        updateButtonStates(); // Define o estado inicial dos botões
+        populateActionBar(); // Chama UMA VEZ para criar os clones.
+        updateButtonStates(); // Define o estado inicial dos botões.
 
         // Dentro de DOMContentLoaded
         if (localStorage.getItem('darkMode') === 'enabled') {
