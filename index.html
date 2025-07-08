@@ -612,7 +612,7 @@
         .action-bar-buttons-group .action-bar-title {
             white-space: nowrap; /* Impede que o título quebre linha */
         }
-        .action-bar-buttons-group .btn-clone-container {
+        .action-bar-buttons-group .btn-container {
             display: flex;
             gap: 0.75rem;
             justify-content: flex-end; /* Alinha os botões à direita */
@@ -625,10 +625,10 @@
             font-size: 0.875rem;
         }
         /* Correção para o espaçamento dos botões clonados */
-        .action-bar-buttons-group .btn-clone-container .btn {
+        .action-bar-buttons-group .btn-container .btn {
             margin-left: 0.75rem; /* Equivalente ao 'gap' */
         }
-        .action-bar-buttons-group .btn-clone-container .btn:first-child {
+        .action-bar-buttons-group .btn-container .btn:first-child {
             margin-left: 0; /* Remove a margem do primeiro botão */
         }
     </style>
@@ -643,19 +643,23 @@
             <!-- Grupo de Ações Principais -->
             <div id="mainActions" class="action-bar-buttons-group">
                 <span class="action-bar-title">Passo 1:</span>
-                <button id="clone_generateIntroBtn" class="btn btn-primary">Introdução</button>
-                <button id="clone_generateDevelopmentBtn" class="btn btn-primary">Desenvolvimento</button>
-                <button id="clone_generateClimaxBtn" class="btn btn-primary">Clímax</button>
-                <button id="clone_conclusionBtn" class="btn btn-primary">Conclusão</button>
-                <button id="clone_generateCTABtn" class="btn btn-primary">CTA</button>
+                <div class="btn-container">
+                    <button id="float_generateIntroBtn" class="btn btn-primary">Introdução</button>
+                    <button id="float_generateDevelopmentBtn" class="btn btn-primary">Desenvolvimento</button>
+                    <button id="float_climaxBtn" class="btn btn-primary">Clímax</button>
+                    <button id="float_conclusionBtn" class="btn btn-primary">Conclusão</button>
+                    <button id="float_generateCTABtn" class="btn btn-primary">CTA</button>
+                </div>
             </div>
             <!-- Grupo de Ações Rápidas -->
             <div id="quickActions" class="action-bar-buttons-group hidden">
                 <span class="action-bar-title">Ações Rápidas:</span>
-                <button id="clone_generateDescriptionBtn" class="btn btn-secondary">Descrição</button>
-                <button id="clone_generateTitlesAndThumbnailsBtn" class="btn btn-secondary">Títulos</button>
-                <button id="clone_downloadPdfBtn" class="btn btn-secondary">PDF</button>
-                <button id="clone_resetScriptBtn" class="btn btn-secondary">Novo</button>
+                 <div class="btn-container">
+                    <button id="float_generateDescriptionBtn" class="btn btn-secondary">Descrição</button>
+                    <button id="float_generateTitlesAndThumbnailsBtn" class="btn btn-secondary">Títulos</button>
+                    <button id="float_downloadPdfBtn" class="btn btn-secondary">PDF</button>
+                    <button id="float_resetScriptBtn" class="btn btn-secondary">Novo</button>
+                </div>
             </div>
         </div>
     </div>
@@ -838,7 +842,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
                     <span id="developmentCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="developmentSpinner"></div>
                 </button>
-                <button id="generateClimaxBtn" class="btn btn-primary">
+                <button id="climaxBtn" class="btn btn-primary">
                     <span class="button-text">Clímax</span>
                     <span id="climaxCheck" class="completion-icon hidden"><svg fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg></span>
                     <div class="loading-spinner hidden" id="climaxSpinner"></div>
@@ -987,7 +991,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttons = {
         generateIntroBtn: document.getElementById('generateIntroBtn'),
         generateDevelopmentBtn: document.getElementById('generateDevelopmentBtn'),
-        generateClimaxBtn: document.getElementById('generateClimaxBtn'), // CORRIGIDO: ID no HTML agora é generateClimaxBtn
+        climaxBtn: document.getElementById('climaxBtn'), // CORRIGIDO: ID no HTML agora é climaxBtn
         conclusionBtn: document.getElementById('conclusionBtn'),
         generateCTABtn: document.getElementById('generateCTABtn'),
         generateTitlesAndThumbnailsBtn: document.getElementById('generateTitlesAndThumbnailsBtn'),
@@ -1004,7 +1008,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const buttonCheckmarkMap = {
         'generateIntroBtn': 'introCheck',
         'generateDevelopmentBtn': 'developmentCheck',
-        'generateClimaxBtn': 'climaxCheck', // CORRIGIDO: ID no HTML agora é generateClimaxBtn
+        'climaxBtn': 'climaxCheck', // CORRIGIDO: ID no HTML agora é climaxBtn
         'conclusionBtn': 'conclusionCheck',
         'generateCTABtn': 'ctaCheck',
         'generateTitlesAndThumbnailsBtn': 'titlesThumbnailsCheck',
@@ -1049,55 +1053,57 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     };
     
     // ==========================================================
-    // VERSÕES FINAIS E SINCRONIZADAS DAS FUNÇÕES
+    // VERSÕES FINAIS E SIMPLES DAS FUNÇÕES
     // ==========================================================
     // DELETED: window.populateActionBar function
 
-    // VERSÃO FINAL - Marca como concluído e redesenha a barra
-    const markButtonAsCompleted = (buttonId) => {
-        const original = document.getElementById(buttonId);
-        const clone = document.getElementById(`clone_${buttonId}`);
-        if(original) {
-            original.classList.remove('btn-primary', 'btn-secondary');
-            original.classList.add('btn-success');
-        }
-        if(clone) {
-            clone.classList.remove('btn-primary', 'btn-secondary');
-            clone.classList.add('btn-success');
-        }
-    };
+    // VERSÃO FINAL SIMPLES - ATUALIZA OS DOIS BOTÕES
+    const markButtonAsCompleted = (originalId) => {
+        const originalButton = document.getElementById(originalId);
+        const floatButton = document.getElementById(`float_${originalId}`);
 
-    // ==========================================================
-    // VERSÃO XEQUE-MATE do resetCompletionIcons
-    // ==========================================================
-    const resetCompletionIcons = () => {
-        // Lista de todos os botões que podem mudar de cor
-        const allActionButtons = [
-            'generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', // CORRIGIDO
-            'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
-            'generateTitlesAndThumbnailsBtn'
-        ];
-
-        // Lista dos que devem ser azuis (primários)
-        const primaryButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn']; // CORRIGIDO
-
-        allActionButtons.forEach(buttonId => {
-            // Pega o original E o seu clone na barra flutuante de uma só vez
-            const original = document.getElementById(buttonId);
-            const clone = document.getElementById(`clone_${buttonId}`);
-            const isPasso1 = primaryButtons.includes(buttonId);
-            
-            if(original) {
-                original.classList.remove('btn-success'); // Tira o verde
-                original.classList.remove('btn-primary', 'btn-secondary'); // Remove ambos para garantir
-                original.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary'); // Adiciona a correta
-            }
-            if(clone) {
-                clone.classList.remove('btn-success'); // Tira o verde
-                clone.classList.remove('btn-primary', 'btn-secondary'); // Remove ambos para garantir
-                clone.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary'); // Adiciona a correta
+        [originalButton, floatButton].forEach(btn => {
+            if (btn) {
+                btn.classList.remove('btn-primary', 'btn-secondary');
+                btn.classList.add('btn-success');
             }
         });
+    };
+
+    // VERSÃO FINAL SIMPLES - RESETA OS DOIS BOTÕES
+    const resetCompletionIcons = () => {
+        for (const originalId in buttonCheckmarkMap) {
+            const originalButton = document.getElementById(originalId);
+            const floatButton = document.getElementById(`float_${originalId}`);
+            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+            const isPasso1 = passo1_buttons.includes(originalId);
+
+            [originalButton, floatButton].forEach(btn => {
+                if(btn) {
+                    btn.classList.remove('btn-success');
+                    btn.classList.add(isPasso1 ? 'btn-primary' : 'btn-secondary');
+                }
+            });
+        }
+    };
+    
+    // VERSÃO FINAL SIMPLES - HABILITA/DESABILITA OS DOIS BOTÕES
+    const updateButtonStates = () => {
+        const allMainScriptGenerated = isScriptComplete();
+        const hasAnyContent = document.querySelector('#scriptOutput .accordion-item') != null;
+
+        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'].forEach(id => {
+            document.getElementById(id).disabled = !allMainScriptGenerated;
+            document.getElementById(`float_${id}`).disabled = !allMainScriptGenerated;
+        });
+        
+        ['downloadPdfBtn'].forEach(id => {
+             document.getElementById(id).disabled = !hasAnyContent;
+             document.getElementById(`float_${id}`).disabled = !hasAnyContent;
+        });
+
+        document.getElementById('resetScriptBtn').disabled = false;
+        document.getElementById('float_resetScriptBtn').disabled = false;
     };
     
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
@@ -1210,37 +1216,6 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // --- 4. FUNÇÕES DE ESTADO E LÓGICA PRINCIPAL ---
     const isScriptComplete = () => { return ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].every(id => !document.getElementById(id).classList.contains('hidden')); };
 
-    const updateButtonStates = () => {
-        const allMainScriptGenerated = isScriptComplete();
-
-        // Lista de botões a serem atualizados
-        const supportButtons = ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'];
-        supportButtons.forEach(id => {
-            const original = document.getElementById(id);
-            const clone = document.getElementById(`clone_${id}`);
-            if(original) original.disabled = !allMainScriptGenerated;
-            if(clone) clone.disabled = !allMainScriptGenerated;
-        });
-        
-        const hasAnyContent = [
-            ...Array.from(document.querySelectorAll('#scriptOutput > .script-section')),
-            document.getElementById('titlesThumbnailsSection')
-        ].some(el => el && el.innerHTML.trim() !== '');
-
-        const exportButtons = ['downloadPdfBtn'];
-        exportButtons.forEach(id => {
-            const original = document.getElementById(id);
-            const clone = document.getElementById(`clone_${id}`);
-            if(original) original.disabled = !hasAnyContent;
-            if(clone) clone.disabled = !hasAnyContent;
-        });
-
-        const resetBtn = document.getElementById('resetScriptBtn');
-        const cloneResetBtn = document.getElementById('clone_resetScriptBtn');
-        if(resetBtn) resetBtn.disabled = false;
-        if(cloneResetBtn) cloneResetBtn.disabled = false;
-    };
-    
     const getBasePromptContext = () => {
         const channelName = elements.channelName.value.trim();
         const videoTheme = elements.videoTheme.value.trim();
@@ -1656,7 +1631,7 @@ The final output MUST be only the JSON code, like this example:
         const mainButtonIdMap = {
             'intro': 'generateIntroBtn',
             'development': 'generateDevelopmentBtn',
-            'climax': 'generateClimaxBtn', // CORRIGIDO
+            'climax': 'climaxBtn', // CORRIGIDO
             'conclusion': 'conclusionBtn',
             'cta': 'generateCTABtn'
         };
@@ -2272,7 +2247,7 @@ ${scriptContent}
                             switch (elementId) {
                                 case 'intro': markButtonAsCompleted('generateIntroBtn'); break;
                                 case 'development': markButtonAsCompleted('generateDevelopmentBtn'); break;
-                                case 'climax': markButtonAsCompleted('generateClimaxBtn'); break; // CORRIGIDO
+                                case 'climax': markButtonAsCompleted('climaxBtn'); break; // CORRIGIDO
                                 case 'conclusion': markButtonAsCompleted('conclusionBtn'); break;
                                 case 'cta': markButtonAsCompleted('generateCTABtn'); break;
                                 case 'titlesThumbnails': markButtonAsCompleted('generateTitlesAndThumbnailsBtn'); break;
@@ -2476,7 +2451,7 @@ ${scriptContent}
                 // Marca os botões como concluídos se o conteúdo existir
                 if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                 if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
-                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('generateClimaxBtn'); // CORRIGIDO
+                if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn'); // CORRIGIDO
                 if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                 if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
                 if (document.getElementById('videoDescriptionOutputSection').innerHTML.trim()) markButtonAsCompleted('generateDescriptionBtn');
@@ -2503,56 +2478,44 @@ ${scriptContent}
 
     // --- 5. SETUP DE EVENT LISTENERS (Definidos por último) ---
     const setupButtonListeners = () => {
+        // Configura cliques para TODOS os botões
+        const setupClick = (originalId) => {
+            const originalBtn = document.getElementById(originalId);
+            const floatBtn = document.getElementById(`float_${originalId}`);
+            if(originalBtn && floatBtn) {
+                floatBtn.addEventListener('click', () => originalBtn.click());
+            }
+        };
+
+        Object.keys(buttonCheckmarkMap).forEach(id => setupClick(id));
+        setupClick('downloadPdfBtn');
+        setupClick('resetScriptBtn');
+        
+        // Listeners originais que não têm clones diretos
         if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
         if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
-        if (buttons.generateClimaxBtn) buttons.generateClimaxBtn.addEventListener('click', () => handleGenerateSection(buttons.generateClimaxBtn, 'climax', 'Clímax', 'climax')); // CORRIGIDO
+        if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax')); // CORRIGIDO
         if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
         if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
         if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
-        // if (buttons.generateImagePromptsBtn) buttons.generateImagePromptsBtn.addEventListener('click', () => generateImagePrompts(buttons.generateImagePromptsBtn)); // Removido
-        // if (elements.loadMoreImagePromptsBtn) elements.loadMoreImagePromptsBtn.addEventListener('click', displayImagePromptsBatch); // Removido
         if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
+        if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
+        if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
+        
+        // Listeners que não são de botões
         if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
         if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
-        
-        // As linhas abaixo foram removidas conforme sua solicitação
-        // if (buttons.saveScriptBtn) buttons.saveScriptBtn.addEventListener('click', saveScript);
-        // if (buttons.loadLatestScriptBtn) elements.loadLatestScriptBtn.addEventListener('click', loadLatestScript);
-        
-        if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf);
-        if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
-
-        // Dentro de setupButtonListeners
         if (elements.darkModeToggle) {
             elements.darkModeToggle.addEventListener('click', () => {
                 const isDarkMode = document.body.classList.contains('dark');
                 setDarkMode(!isDarkMode);
             });
         }
-        // Conectar o novo botão à função
         if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
-
-        // Lógica de Importação - Garantia de Funcionamento
-        const importBtn = document.getElementById('importProjectBtn');
-        const fileInput = document.getElementById('importFileInput');
-        if (importBtn && fileInput) {
-            importBtn.addEventListener('click', () => {
-                console.log("Botão de Importar Clicado!"); // Para depuração
-                fileInput.click();
-            });
-            fileInput.addEventListener('change', importProject);
+        if (buttons.importProjectBtn) {
+            buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
+            elements.importFileInput.addEventListener('change', importProject);
         }
-
-        // Adiciona listeners para os botões CLONADOS
-        document.getElementById('clone_generateIntroBtn').addEventListener('click', () => document.getElementById('generateIntroBtn').click());
-        document.getElementById('clone_generateDevelopmentBtn').addEventListener('click', () => document.getElementById('generateDevelopmentBtn').click());
-        document.getElementById('clone_generateClimaxBtn').addEventListener('click', () => document.getElementById('generateClimaxBtn').click()); // CORRIGIDO
-        document.getElementById('clone_conclusionBtn').addEventListener('click', () => document.getElementById('conclusionBtn').click());
-        document.getElementById('clone_generateCTABtn').addEventListener('click', () => document.getElementById('generateCTABtn').click());
-        document.getElementById('clone_generateDescriptionBtn').addEventListener('click', () => document.getElementById('generateDescriptionBtn').click());
-        document.getElementById('clone_generateTitlesAndThumbnailsBtn').addEventListener('click', () => document.getElementById('generateTitlesAndThumbnailsBtn').click());
-        document.getElementById('clone_downloadPdfBtn').addEventListener('click', () => document.getElementById('downloadPdfBtn').click());
-        document.getElementById('clone_resetScriptBtn').addEventListener('click', () => document.getElementById('resetScriptBtn').click());
     };
 
     // NOVA FUNÇÃO para análise estratégica
@@ -2678,7 +2641,6 @@ ${scriptContent}
 	// initializeFirebase();
         
 	setupButtonListeners(); // Agora é seguro chamar
-        // populateActionBar(); // Removido, pois a barra agora é estática
         updateButtonStates(); // Define o estado inicial dos botões.
 
         // Dentro de DOMContentLoaded
