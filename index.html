@@ -624,65 +624,12 @@
             padding: 0.5rem 1rem; /* Um pouco menores */
             font-size: 0.875rem;
         }
-        /* ========================================================== */
-        /* ============== ESTILOS PARA O ACORDEÃO ============== */
-        /* ========================================================== */
-        .accordion-item {
-            border: 1px solid #e5e7eb;
-            border-radius: 8px;
-            margin-bottom: 1rem;
-            overflow: hidden; /* Importante para o efeito de abrir/fechar */
-            background-color: #f9fafb;
+        /* Correção para o espaçamento dos botões clonados */
+        .action-bar-buttons-group .btn-clone-container .btn {
+            margin-left: 0.75rem; /* Equivalente ao 'gap' */
         }
-        .dark .accordion-item {
-            border-color: #4b5563;
-            background-color: #374151;
-        }
-        .accordion-header {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 1.5rem;
-            cursor: pointer;
-            user-select: none;
-        }
-        .header-content {
-            display: flex;
-            align-items: center;
-            gap: 0.75rem;
-        }
-        .accordion-arrow {
-            transition: transform 0.3s ease-in-out;
-        }
-        .accordion-arrow.open {
-            transform: rotate(180deg);
-        }
-        .accordion-body {
-            max-height: 0; /* Começa fechado */
-            overflow: hidden;
-            transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
-            padding: 0 1.5rem;
-        }
-        .accordion-body.open {
-            max-height: 5000px; /* Um valor alto para permitir a expansão */
-            padding: 1rem 1.5rem 1.5rem;
-        }
-        /* ========================================================== */
-        /* ========= ESTILO PARA BOTÃO DE SUCESSO (VERDE) ========= */
-        /* ========================================================== */
-        /* Usamos seletores de ID para máxima especificidade */
-        .btn.btn-success {
-            background-color: #10B981 !important; /* Verde vibrante com !important */
-            color: #ffffff !important;
-            box-shadow: 0 2px 5px rgba(16, 185, 129, 0.2);
-        }
-        .btn.btn-success:hover:not(:disabled) {
-            background-color: #059669 !important; /* Verde mais escuro com !important */
-            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
-        }
-        /* Remove o ícone de check, pois não precisamos mais dele */
-        .btn.btn-success .completion-icon {
-            display: none;
+        .action-bar-buttons-group .btn-clone-container .btn:first-child {
+            margin-left: 0; /* Remove a margem do primeiro botão */
         }
     </style>
 </head>
@@ -986,11 +933,11 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     // const IMAGE_PROMPT_BATCH_SIZE = 2; 
     const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-**Style:** Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling.
-**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight.
-**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real.
+**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
 **Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
-**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
 `;
     const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:', 'es': 'Descripción de la Imagen:' };
 
@@ -1094,42 +1041,63 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         updateButtonStates(); // Chama a função centralizada para reavaliar o estado
     };
     
-    // VERSÃO FINAL do markButtonAsCompleted
-    const markButtonAsCompleted = (buttonId) => {
-        const button = document.getElementById(buttonId);
-        if (button) {
-            button.classList.remove('btn-primary', 'btn-secondary');
-            button.classList.add('btn-success');
-            // Força a atualização da barra imediatamente após a mudança
-            window.populateActionBar(); 
-        }
+    // ==========================================================
+    // VERSÕES FINAIS E SINCRONIZADAS DAS FUNÇÕES
+    // ==========================================================
+    // Popula a barra UMA ÚNICA VEZ, criando os clones com um link de dados.
+    window.populateActionBar = () => {
+        const cloneAndAppend = (id, container) => {
+            const original = document.getElementById(id);
+            if (original) {
+                const clone = original.cloneNode(true);
+                clone.removeAttribute('id'); // Remove ID duplicado (boa prática)
+                clone.dataset.cloneOf = id;  // Cria um link para o original: data-clone-of="generateIntroBtn"
+                container.appendChild(clone);
+            }
+        };
+
+        const mainButtonsContainer = document.querySelector('#mainActions .btn-clone-container');
+        const quickButtonsContainer = document.querySelector('#quickActions .btn-clone-container');
+        if (!mainButtonsContainer || !quickButtonsContainer) return;
+
+        mainButtonsContainer.innerHTML = '';
+        quickButtonsContainer.innerHTML = '';
+
+        ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => cloneAndAppend(id, mainButtonsContainer));
+        ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn', 'downloadPdfBtn', 'resetScriptBtn'].forEach(id => cloneAndAppend(id, quickButtonsContainer));
     };
-    
-    // VERSÃO FINAL do resetCompletionIcons
+
+    // Atualiza o original E o seu clone.
+    const markButtonAsCompleted = (buttonId) => {
+        // Pega uma lista com ambos (original e clone)
+        const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
+
+        buttonsToUpdate.forEach(button => {
+            if(button) {
+                button.classList.remove('btn-primary', 'btn-secondary');
+                button.classList.add('btn-success');
+            }
+        });
+    };
+
+    // Reseta o original E o seu clone.
     const resetCompletionIcons = () => {
-        const passo1_buttons_ids = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
-        const passo2_buttons_ids = ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'];
+        for (const buttonId in buttonCheckmarkMap) {
+            const buttonsToUpdate = document.querySelectorAll(`#${buttonId}, [data-clone-of='${buttonId}']`);
+            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
+            const isPasso1 = passo1_buttons.includes(buttonId);
 
-        // Reseta botões do Passo 1
-        passo1_buttons_ids.forEach(id => {
-            const btn = document.getElementById(id);
-            if(btn) {
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-primary');
-            }
-        });
-
-        // Reseta botões do Passo 2
-        passo2_buttons_ids.forEach(id => {
-            const btn = document.getElementById(id);
-            if(btn) {
-                btn.classList.remove('btn-success');
-                btn.classList.add('btn-secondary');
-            }
-        });
-        // Após resetar todos os originais, repopulamos a barra,
-        // garantindo que ela pegue o estado mais recente.
-        window.populateActionBar();
+            buttonsToUpdate.forEach(button => {
+                if(button) {
+                    button.classList.remove('btn-success');
+                    if (isPasso1) {
+                        button.classList.add('btn-primary');
+                    } else {
+                        button.classList.add('btn-secondary');
+                    }
+                }
+            });
+        }
     };
     
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
@@ -1243,6 +1211,9 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
     const isScriptComplete = () => { return ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].every(id => !document.getElementById(id).classList.contains('hidden')); };
 
     const updateButtonStates = () => {
+        // Força o reset antes de qualquer outra atualização
+        resetCompletionIcons();
+
         const anyMainScriptGenerated = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].some(id => !document.getElementById(id).classList.contains('hidden'));
         const allMainScriptGenerated = isScriptComplete();
         
@@ -1259,7 +1230,7 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         buttons.resetScriptBtn.disabled = false;
 
         // ADICIONADO: Atualiza os botões na barra flutuante
-        window.populateActionBar(); // Updated call
+        // REMOVIDO: window.populateActionBar();
     };
     
     const getBasePromptContext = () => {
@@ -2646,8 +2617,8 @@ ${scriptContent}
             const original = document.getElementById(id);
             if (original) {
                 const clone = original.cloneNode(true);
-                // Copia TODAS as classes do original para o clone
-                clone.className = original.className; 
+                clone.removeAttribute('id'); // Remove ID duplicado (boa prática)
+                clone.dataset.cloneOf = id;  // Cria um link para o original: data-clone-of="generateIntroBtn"
                 container.appendChild(clone);
             }
         };
