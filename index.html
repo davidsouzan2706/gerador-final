@@ -414,7 +414,7 @@
         .dark .input-group label { color: #d1d5db; }
         .dark .input-group input,
         .dark .input-group select,
-        .dark .input-group textarea {
+        .input-group textarea {
             background-color: #374151; /* gray-700 */
             border-color: #4b5563; /* gray-600 */
             color: #f9fafb; /* gray-50 */
@@ -830,7 +830,18 @@
                 <div id="assetsColumn" class="lg:col-span-5 space-y-6">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Recursos</h2>
                     
-                    <!-- Cartão: Títulos e Thumbnails -->
+                    <!-- Cartão: Descrição e Hashtags (AGORA PRIMEIRO) -->
+                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Descrição & Hashtags</h3>
+                            <button id="generateDescriptionBtn" class="btn btn-secondary btn-small">Gerar</button>
+                        </div>
+                        <div id="videoDescriptionContent">
+                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver a descrição</div>
+                        </div>
+                    </div>
+
+                    <!-- Cartão: Títulos e Thumbnails (AGORA EM SEGUNDO) -->
                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Títulos & Thumbnails</h3>
@@ -838,17 +849,6 @@
                         </div>
                         <div id="titlesThumbnailsContent">
                              <div class="asset-card-placeholder">Clique em 'Gerar' para ver as sugestões</div>
-                        </div>
-                    </div>
-
-                    <!-- Cartão: Descrição e Hashtags -->
-                     <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Descrição & Hashtags</h3>
-                            <button id="generateDescriptionBtn" class="btn btn-secondary btn-small">Gerar</button>
-                        </div>
-                        <div id="videoDescriptionContent">
-                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver a descrição</div>
                         </div>
                     </div>
 
