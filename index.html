@@ -1103,20 +1103,25 @@ gsk_yyyyyyyyyyyyyyyyyyyyyy)"></textarea>
         }
     };
     
-    // VERSÃO SIMPLIFICADA E CORRETA
     const resetCompletionIcons = () => {
         for (const buttonId in buttonCheckmarkMap) {
-            const button = document.getElementById(buttonId);
-            if (button) {
-                button.classList.remove('btn-success');
-                const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
-                if(passo1_buttons.includes(buttonId)) {
-                    button.classList.add('btn-primary');
+            const originalButton = document.getElementById(buttonId);
+            const passo1_buttons = ['generateIntroBtn', 'generateDevelopmentBtn', 'generateClimaxBtn', 'conclusionBtn', 'generateCTABtn'];
+            const isPasso1 = passo1_buttons.includes(buttonId);
+
+            // Reseta o botão original
+            if (originalButton) {
+                originalButton.classList.remove('btn-success');
+                if (isPasso1) {
+                    originalButton.classList.add('btn-primary');
                 } else {
-                    button.classList.add('btn-secondary');
+                    originalButton.classList.add('btn-secondary');
                 }
             }
         }
+        // Após resetar todos os originais, repopulamos a barra,
+        // garantindo que ela pegue o estado mais recente.
+        window.populateActionBar();
     };
     
     const showFullScreenAlert = (message) => { elements.fullScreenAlertMessage.textContent = message; elements.fullScreenAlertOverlay.classList.add('visible'); };
