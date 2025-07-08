@@ -189,13 +189,13 @@
             max-height: 5000px; /* Valor grande para "abrir" */
             padding: 1rem 1.5rem 1.5rem; /* Padding quando aberto */
         }
-        .accordion-body p[contenteditable="true"] {
+        .accordion-body .generated-content-wrapper[contenteditable="true"] {
             outline: none;
             padding: 0.5rem;
             border-radius: 4px;
             transition: box-shadow 0.2s, background-color 0.2s;
         }
-        .accordion-body p[contenteditable="true"]:focus {
+        .accordion-body .generated-content-wrapper[contenteditable="true"]:focus {
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
             background-color: #eef2ff; /* Fundo levemente azulado ao editar */
         }
@@ -423,7 +423,7 @@
         .dark .text-indigo-800 { color: #a5b4fc !important; }
         .dark .bg-gray-50 { background-color: #374151 !important; }
         .dark .border-gray-200 { border-color: #4b5563 !important; }
-        .dark .accordion-body p[contenteditable="true"]:focus {
+        .dark .accordion-body .generated-content-wrapper[contenteditable="true"]:focus {
             background-color: #4b5563;
         }
         .dark .individual-prompt-block {
@@ -621,7 +621,7 @@
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace">
                         <option value="moderate" selected>Moderado</option>
-                        <option value="slow">Lento</m>
+                        <option value="slow">Lento</option> <!-- CORRIGIDO AQUI -->
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
@@ -920,7 +920,7 @@
         const isScriptComplete = () => {
             return ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'].every(id => {
                 const section = document.getElementById(id);
-                return section && !section.classList.contains('hidden') && section.querySelector('p')?.textContent.trim() !== '';
+                return section && !section.classList.contains('hidden') && section.querySelector('.generated-content-wrapper')?.textContent.trim() !== '';
             });
         };
 
@@ -996,7 +996,7 @@
                 </svg>
             </button>`;
 
-            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('p').textContent)">Copiar</button>`;
+            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('.generated-content-wrapper').textContent)">Copiar</button>`;
             
             // Constrói condicionalmente as seções de prompt e trilha sonora
             const promptsSectionHtml = showPromptsButton ? `
@@ -1035,7 +1035,7 @@
                             </div>
                         </div>
                         <div id="${bodyId}" class="accordion-body">
-                            <p class="whitespace-pre-wrap" contenteditable="true">${content}</p>
+                            <div class="generated-content-wrapper" contenteditable="true">${content.startsWith('<div') ? content : `<p class="whitespace-pre-wrap">${content}</p>`}</div>
                             ${promptsSectionHtml}
                             ${soundtrackSectionHtml}
                         </div>
@@ -1465,7 +1465,7 @@ The final output MUST be only the JSON code, like this example:
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
-            const scriptContentElement = sectionElement.querySelector('p[contenteditable="true"]');
+            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper'); // Updated selector
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
@@ -1578,7 +1578,7 @@ Trecho do roteiro:
          */
         window.suggestSoundtrack = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
-            const scriptContent = sectionElement.querySelector('p[contenteditable="true"]').textContent;
+            const scriptContent = sectionElement.querySelector('.generated-content-wrapper').textContent; // Updated selector
             const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
             
             if (!scriptContent) {
@@ -1690,19 +1690,13 @@ ${scriptContent}
                         </div>
                     `;
                     
-                    // Usa a função de acordeão padrão, passando um conteúdo temporário
+                    // Usa a função de acordeão padrão, passando o HTML complexo diretamente
                     targetSectionElement.innerHTML = generateSectionHtmlContent(
                         'titlesThumbnails', 
                         'Títulos e Thumbnails', 
-                        'Conteúdo temporário', // Conteúdo temporário que será substituído
+                        contentForAccordion, // Passando o HTML complexo diretamente
                         { showPromptsButton: false, showSoundtrackButton: false }
                     );
-                    
-                    // Agora substitui o conteúdo do parágrafo dentro do accordion-body pelo HTML rico
-                    const bodyElement = targetSectionElement.querySelector('#titlesThumbnailsBody p');
-                    if (bodyElement) {
-                        bodyElement.outerHTML = contentForAccordion;
-                    }
                     
                     targetSectionElement.classList.remove('hidden');
                     markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
@@ -1826,29 +1820,26 @@ ${scriptContent}
                     doc.setFontSize(12);
 
                     if (id === 'titlesThumbnails') {
-                        // For titles and thumbnails, we need to extract content differently
-                        const titlesHtmlDiv = sectionElement.querySelector('.p-3:first-of-type');
-                        if (titlesHtmlDiv) {
-                            const titlesText = Array.from(titlesHtmlDiv.querySelectorAll('p')).map(p => p.textContent).join('\n');
+                        const titlesContainer = sectionElement.querySelector('h4:nth-of-type(1) + div');
+                        if (titlesContainer) {
+                            const titlesText = Array.from(titlesContainer.querySelectorAll('p')).map(p => p.textContent).join('\n');
                             const splitTitles = doc.splitTextToSize(`Títulos de Vídeos:\n${titlesText}`, 180);
                             doc.text(splitTitles, 10, y);
-                            y += (splitTitles.length * 7) + 5;
+                            y += (splitTitles.length * 5) + 5;
                         }
 
-                        const thumbnailsHtmlDiv = sectionElement.querySelector('.p-3:last-of-type');
-                        if (thumbnailsHtmlDiv) {
-                            const thumbnailsText = Array.from(thumbnailsHtmlDiv.querySelectorAll('div')).map(div => {
-                                const thumbTitle = div.querySelector('p:first-of-type').textContent;
-                                const thumbDesc = div.querySelector('p:last-of-type').textContent;
-                                return `${thumbTitle}\n${thumbDesc}`;
-                            }).join('\n\n');
+                        const thumbnailsContainer = sectionElement.querySelector('h4:nth-of-type(2) + div');
+                        if (thumbnailsContainer) {
+                            const thumbnailsText = Array.from(thumbnailsContainer.querySelectorAll('div[class*="thumbnail-item-separator"], div:not([class]) p.font-semibold')) // Lógica complexa para pegar todos
+                                .map(el => el.textContent.trim().replace(/\s+/g, ' ')).join('\n\n');
+                            
                             const splitThumbnails = doc.splitTextToSize(`Thumbnails:\n${thumbnailsText}`, 180);
                             doc.text(splitThumbnails, 10, y);
-                            y += (splitThumbnails.length * 7) + 5;
+                            y += (splitThumbnails.length * 5) + 5;
                         }
                     } else {
                         // For regular script sections, get content from the editable paragraph
-                        const content = sectionElement.querySelector('.accordion-body p[contenteditable="true"]').textContent;
+                        const content = sectionElement.querySelector('.generated-content-wrapper').textContent; // Updated selector
                         const splitContent = doc.splitTextToSize(content, 180);
                         doc.text(splitContent, 10, y);
                         y += (splitContent.length * 7) + 5;
