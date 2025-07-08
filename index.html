@@ -61,8 +61,9 @@
             border-radius: 8px;
             font-size: 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
-            background-color: var(--bg-light);
-            color: var(--text-dark);
+            background-color: var(--bg-light); /* Garante fundo claro */
+            color: var(--text-dark); /* Garante texto escuro */
+            border-color: var(--border-light); /* Garante borda clara */
         }
         .input-group input:focus,
         .input-group select:focus,
@@ -414,7 +415,7 @@
         .dark .input-group label { color: #d1d5db; }
         .dark .input-group input,
         .dark .input-group select,
-        .input-group textarea {
+        .dark .input-group textarea {
             background-color: #374151; /* gray-700 */
             border-color: #4b5563; /* gray-600 */
             color: #f9fafb; /* gray-50 */
@@ -817,11 +818,11 @@
                     <div id="scriptGenerationControls" class="p-4 bg-indigo-50 dark:bg-gray-800 border-t-2 border-indigo-200 dark:border-gray-700 rounded-b-lg sticky bottom-0">
                         <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3 text-center">Gerar Seções do Roteiro</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
-                            <button id="generateIntroBtn" class="btn btn-primary btn-small" disabled>Introdução</button>
-                            <button id="generateDevelopmentBtn" class="btn btn-primary btn-small" disabled>Desenvolvimento</button>
-                            <button id="climaxBtn" class="btn btn-primary btn-small" disabled>Clímax</button>
-                            <button id="conclusionBtn" class="btn btn-primary btn-small" disabled>Conclusão</button>
-                            <button id="generateCTABtn" class="btn btn-primary btn-small" disabled>CTA</button>
+                            <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
+                            <button id="generateDevelopmentBtn" class="btn btn-primary btn-small">Desenvolvimento</button>
+                            <button id="climaxBtn" class="btn btn-primary btn-small">Clímax</button>
+                            <button id="conclusionBtn" class="btn btn-primary btn-small">Conclusão</button>
+                            <button id="generateCTABtn" class="btn btn-primary btn-small">CTA</button>
                         </div>
                     </div>
                 </div>
@@ -1089,13 +1090,8 @@
             if (resetBtn) resetBtn.disabled = false; // Ajuste conforme a necessidade de reset
             if (floatResetBtn) floatResetBtn.disabled = false;
 
-            // NEW: Habilitar botões de geração de roteiro se o esboço estiver pronto
-            const outlineContent = elements.outlineContent.textContent.trim();
-            const isOutlineGenerated = outlineContent !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && outlineContent !== "Não foi possível gerar o esboço. Tente novamente." && outlineContent !== "Erro ao gerar o esboço. Tente novamente.";
-            ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'].forEach(id => {
-                const btn = document.getElementById(id);
-                if (btn) btn.disabled = !isOutlineGenerated;
-            });
+            // REMOVIDO: Habilitar botões de geração de roteiro se o esboço estiver pronto
+            // A lógica agora está na função handleGenerateSection para exibir um alerta.
         };
 
         /**
@@ -1598,9 +1594,9 @@ The final output MUST be only the JSON code, like this example:
         const handleGenerateSection = async (button, sectionName, sectionTitle, elementId) => {
             if (!validateInputs()) return;
             
-            // VERIFICAÇÃO DE SEGURANÇA: Garante que o esboço foi gerado primeiro.
+            // Logo no início da função
             if (!strategicOutline) {
-                window.showToast("Por favor, crie o Esboço Estratégico primeiro.");
+                showFullScreenAlert("Por favor, clique em 'Criar Esboço' primeiro. O esboço estratégico é essencial para guiar a IA na criação de um roteiro coeso e impactante.");
                 return;
             }
 
@@ -1984,11 +1980,8 @@ ${scriptContent}
                 outlineHtml += '</ul>';
                 outlineContentDiv.innerHTML = outlineHtml;
 
-                // Habilita os botões de geração de seção
-                const scriptGenButtons = ['generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 'conclusionBtn', 'generateCTABtn'];
-                scriptGenButtons.forEach(id => {
-                    if(buttons[id]) buttons[id].disabled = false;
-                });
+                // REMOVIDO: Habilita os botões de geração de seção
+                // A lógica agora está na função handleGenerateSection para exibir um alerta.
 
                 markButtonAsCompleted(buttons.generateOutlineBtn.id);
 
