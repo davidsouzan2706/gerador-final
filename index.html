@@ -786,15 +786,14 @@
         // Mapeamento de elementos do DOM para acesso fácil
         const elements = {};
         const buttons = {};
-        // Preenche os objetos elements e buttons dinamicamente
+        // Mapeia todos os elementos e botões com ID
         document.querySelectorAll('[id]').forEach(el => {
-            if (el.tagName === 'BUTTON') buttons[el.id] = el;
-            else elements[el.id] = el;
+            if (el.tagName === 'BUTTON') {
+                buttons[el.id] = el;
+            } else {
+                elements[el.id] = el;
+            }
         });
-
-        // ADICIONADO: Mapeamento manual para os ícones de modo escuro
-        elements.moonIcon = document.getElementById('moonIcon');
-        elements.sunIcon = document.getElementById('sunIcon');
 
         // ==========================================================
         // ================== FUNÇÕES DE UTILIDADE ==================
@@ -1645,17 +1644,19 @@ ${scriptContent}
                         generatedTitlesAndThumbnails = parsedContent;
                     }
                 } catch (e) {
-                    console.error("Falha ao analisar o JSON da IA:", e);
-                    console.error("Texto problemático:", cleanedResult);
+                    console.error("Falha ao analisar o JSON da IA:", e, cleanedResult);
                     window.showToast("Erro: A IA retornou um formato de título/thumbnail inválido.");
                     generatedTitlesAndThumbnails = null;
                 }
                 
+                // === INÍCIO DA MUDANÇA PRINCIPAL ===
+                
                 const targetSectionElement = document.getElementById('titlesThumbnailsSection');
                 if (targetSectionElement) {
+                    // 1. Monta o conteúdo interno (o corpo do acordeão)
                     let titlesListHtml = '<p class="text-red-500">Não foi possível extrair os títulos.</p>';
                     if (parsedContent.titles && parsedContent.titles.length > 0) {
-                        titlesListHtml = parsedContent.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                        titlesListHtml = parsedContent.titles.map((title, index) => `<p class="text-gray-700 dark:text-gray-300">${index + 1}. ${title}</p>`).join('');
                     }
                     
                     let thumbnailsListHtml = '<p class="text-red-500">Não foi possível extrair as thumbnails.</p>';
@@ -1664,47 +1665,55 @@ ${scriptContent}
                             const itemClasses = index === 0 ? '' : 'thumbnail-item-separator';
                             return `
                                 <div class="${itemClasses}"> 
-                                    <p class="font-semibold text-gray-800 dark:text-gray-200 mb-0.5">"${thumb.title}"</p>
-                                    <p class="text-sm text-gray-600 dark:text-gray-300 leading-tight">Descrição: ${thumb.description}</p>
+                                    <p class="font-semibold text-gray-800 dark:text-gray-100 mb-0.5">"${thumb.title}"</p>
+                                    <p class="text-sm text-gray-600 dark:text-gray-400 leading-tight">Descrição: ${thumb.description}</p>
                                 </div>
                             `;
                         }).join('\n');
                     }
                     
-                    const fullInnerHtml = `
-                        <div class="whitespace-normal">
-                            <div class="section-header">
-                                <h3 class="text-gray-800 dark:text-gray-100">Títulos e Thumbnails</h3>
-                                <div class="header-buttons">
-                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('titlesThumbnailsSection').textContent)">Copiar</button>
+                    const contentForAccordion = `
+                        <div class="mt-4 space-y-6">
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Títulos de Vídeos:</h4>
+                                <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm space-y-2">
+                                    ${titlesListHtml}
+                                </div>
+                                <div class="mt-4">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">
+                                        Analisar Potencial de Clique (CTR)
+                                    </button>
+                                    <div id="ctrAnalysisResult" class="mt-4"></div>
                                 </div>
                             </div>
-                            
-                            <div class="mt-4 space-y-6">
-                                <div>
-                                    <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Títulos de Vídeos:</h4>
-                                    <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm space-y-2 text-gray-700 dark:text-gray-300">
-                                        ${titlesListHtml}
-                                    </div>
-                                    <div class="mt-4">
-                                        <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">
-                                            Analisar Potencial de Clique (CTR)
-                                        </button>
-                                        <div id="ctrAnalysisResult" class="mt-4"></div>
-                                    </div>
-                                </div>
-                                <div>
-                                    <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Thumbnails:</h4>
-                                    <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm text-gray-700 dark:text-gray-300">${thumbnailsListHtml}</div>
-                                </div>
+                            <div>
+                                <h4 class="font-bold text-lg text-gray-700 dark:text-gray-200 mb-2">Thumbnails:</h4>
+                                <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-gray-50 dark:bg-gray-800 shadow-sm">${thumbnailsListHtml}</div>
                             </div>
                         </div>
                     `;
                     
-                    targetSectionElement.innerHTML = fullInnerHtml;
+                    // 2. USA a nossa função de acordeão padrão!
+                    // Hack: Criamos um conteúdo de placeholder e depois o substituímos.
+                    targetSectionElement.innerHTML = generateSectionHtmlContent(
+                        'titlesThumbnails', 
+                        'Títulos e Thumbnails', 
+                        'PLACEHOLDER_CONTENT',
+                        { showPromptsButton: false, showSoundtrackButton: false }
+                    );
+                    
+                    // Agora substituímos o placeholder pelo nosso HTML rico.
+                    const bodyElement = targetSectionElement.querySelector('#titlesThumbnailsBody p');
+                    if (bodyElement) {
+                        bodyElement.outerHTML = contentForAccordion;
+                    }
+                    
                     targetSectionElement.classList.remove('hidden');
                     markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
                 }
+                
+                // === FIM DA MUDANÇA PRINCIPAL ===
+                
                 updateButtonStates();
             } catch (error) {
                 window.showToast(`Falha ao gerar Títulos e Thumbnails: ${error.message}`);
@@ -1823,6 +1832,7 @@ ${scriptContent}
                     doc.setFontSize(12);
 
                     if (id === 'titlesThumbnails') {
+                        // For titles and thumbnails, we need to extract content differently
                         const titlesHtmlDiv = sectionElement.querySelector('.p-3:first-of-type');
                         if (titlesHtmlDiv) {
                             const titlesText = Array.from(titlesHtmlDiv.querySelectorAll('p')).map(p => p.textContent).join('\n');
