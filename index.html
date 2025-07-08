@@ -537,8 +537,8 @@
         body.zen-mode .floating-action-bar,
         body.zen-mode .container > h1,
         body.zen-mode .container > p,
-        body.zen-mode .container > .grid:first-of-type, /* Esconde apenas o primeiro grid (os inputs) */
-        body.zen-mode .container > #progressBarContainer,
+        body.zen-mode #mainInputsGrid, /* Esconde a área de inputs pelo seu ID */
+        body.zen-mode #progressBarContainer,
         body.zen-mode #assetsColumn, /* Esconde a coluna de recursos inteira */
         body.zen-mode #strategicOutlineCard, /* Esconde o card do esboço */
         body.zen-mode #scriptGenerationControls { /* Esconde os controles de geração */
@@ -632,7 +632,7 @@
         <p class="text-center text-gray-500 dark:text-gray-400 mb-8">O seu painel de controle para conteúdo de alto impacto.</p>
         
         <!-- Seção de Inputs da Aplicação -->
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div id="mainInputsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="input-group">
                 <label for="channelName">Nome do Canal:</label>
                 <input type="text" id="channelName" placeholder="Ex: The Biblical Unveiling" value="The Biblical Unveiling">
@@ -1206,41 +1206,42 @@
             if (!text) return null;
 
             if (expectJson) {
-                // Procura o início do JSON, seja ele um objeto '{' ou um array '['
-                const startIndex = text.indexOf('{');
-                const startBracket = text.indexOf('[');
-                
-                let jsonStartIndex = -1;
+                // Encontra o primeiro colchete de abertura ou chave
+                const firstBracket = text.indexOf('[');
+                const firstBrace = text.indexOf('{');
+                let startIndex = -1;
 
-                if (startIndex > -1 && startBracket > -1) {
-                    jsonStartIndex = Math.min(startIndex, startBracket);
-                } else if (startIndex > -1) {
-                    jsonStartIndex = startIndex;
+                if (firstBracket !== -1 && firstBrace !== -1) {
+                    startIndex = Math.min(firstBracket, firstBrace);
                 } else {
-                    jsonStartIndex = startBracket;
+                    startIndex = Math.max(firstBracket, firstBrace);
                 }
-
-                if (jsonStartIndex === -1) {
-                    console.error("cleanGeneratedText: Não foi possível encontrar um início de JSON ('{' ou '[') na resposta.", text);
+                
+                if (startIndex === -1) {
+                    console.error("Não foi possível encontrar um início de JSON ('{' ou '[') na resposta.", text);
                     return null;
                 }
 
-                const potentialJson = text.substring(jsonStartIndex);
-                let jsonString = '';
-                if (potentialJson.startsWith('{')) {
-                    const endIndex = potentialJson.lastIndexOf('}');
-                    jsonString = potentialJson.substring(0, endIndex + 1);
-                } else {
-                    const endIndex = potentialJson.lastIndexOf(']');
-                    jsonString = potentialJson.substring(0, endIndex + 1);
+                // Determina o caractere de fechamento correspondente
+                const startChar = text[startIndex];
+                const endChar = startChar === '[' ? ']' : '}';
+
+                // Encontra o último caractere de fechamento correspondente
+                const endIndex = text.lastIndexOf(endChar);
+
+                if (endIndex === -1) {
+                    console.error(`JSON incompleto: caractere de fechamento '${endChar}' não encontrado.`, text);
+                    return null;
                 }
-                
+
+                const jsonString = text.substring(startIndex, endIndex + 1);
+
                 try {
-                    JSON.parse(jsonString); // Apenas para validar
+                    JSON.parse(jsonString); // Valida o JSON
                     return jsonString;
                 } catch (e) {
                     console.error("O JSON extraído é inválido.", e.message, jsonString);
-                    return null;
+                    return null; // Retorna nulo se a validação falhar
                 }
             }
             
