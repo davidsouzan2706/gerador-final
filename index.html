@@ -646,7 +646,7 @@
             </div>
             <div class="input-group md:col-span-2">
                 <label for="centralQuestion">Pergunta Central (Opcional):</label>
-                <textarea id="centralQuestion" rows="2" placeholder="Ex: A Arca da Aliança era uma arma ou um meio de comunicação?"></textarea>
+                <textarea id="centralQuestion" rows="2" placeholder="Ex: A Arca da Aliança Foi Encontrada?"></textarea>
             </div>
             <div class="input-group md:col-span-2">
                 <label for="emotionalArc">Arco Emocional Desejado (Opcional):</label>
@@ -2124,33 +2124,6 @@ ${scriptContent}
         };
 
         /**
-         * Ativa/desativa o modo escuro da aplicação.
-         * @param {boolean} isDark - True para ativar o modo escuro, false para desativar.
-         */
-        const setDarkMode = (isDark) => {
-            const moonIcon = document.getElementById('moonIcon');
-            const sunIcon = document.getElementById('sunIcon');
-
-            // Verifica se os ícones existem antes de tentar manipulá-los
-            if (!moonIcon || !sunIcon) {
-                console.error("Ícones de modo escuro (moonIcon/sunIcon) não encontrados no DOM.");
-                return;
-            }
-
-            if (isDark) {
-                document.body.classList.add('dark');
-                moonIcon.classList.add('hidden');
-                sunIcon.classList.remove('hidden');
-                localStorage.setItem('darkMode', 'enabled');
-            } else {
-                document.body.classList.remove('dark');
-                moonIcon.classList.remove('hidden');
-                sunIcon.classList.add('hidden');
-                localStorage.setItem('darkMode', 'disabled');
-            }
-        };
-
-        /**
          * Controla a visibilidade e o conteúdo da barra de ações flutuante com base na rolagem.
          */
         window.handleFloatingActionBar = () => {
@@ -2277,23 +2250,48 @@ ${scriptContent}
             // Outros listeners
             if (elements.fullScreenAlertCloseBtn) elements.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert);
             if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
-            if (elements.darkModeToggle) {
-                elements.darkModeToggle.addEventListener('click', () => {
-                    const isDarkMode = document.body.classList.contains('dark');
-                    setDarkMode(!isDarkMode);
+            
+            // NOVO CÓDIGO À PROVA DE BALAS PARA O MODO ESCURO
+            const darkModeButton = document.getElementById('darkModeToggle');
+            if (darkModeButton) {
+                darkModeButton.addEventListener('click', () => {
+                    const moonIcon = document.getElementById('moonIcon');
+                    const sunIcon = document.getElementById('sunIcon');
+                    
+                    // Alterna a classe 'dark' no body
+                    document.body.classList.toggle('dark');
+
+                    // Verifica se o modo escuro está ATIVO agora
+                    if (document.body.classList.contains('dark')) {
+                        // Se SIM, esconde a lua, mostra o sol, e salva no localStorage
+                        moonIcon.classList.add('hidden');
+                        sunIcon.classList.remove('hidden');
+                        localStorage.setItem('darkMode', 'enabled');
+                    } else {
+                        // Se NÃO, esconde o sol, mostra a lua, e salva no localStorage
+                        moonIcon.classList.remove('hidden');
+                        sunIcon.classList.add('hidden');
+                        localStorage.setItem('darkMode', 'disabled');
+                    }
                 });
             }
+            // Adicione esta linha dentro do DOMContentLoaded, fora de qualquer listener
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                const moonIcon = document.getElementById('moonIcon');
+                const sunIcon = document.getElementById('sunIcon');
+                document.body.classList.add('dark');
+                if (moonIcon) moonIcon.classList.add('hidden');
+                if (sunIcon) sunIcon.classList.remove('hidden');
+            }
+
             if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
             if (buttons.importProjectBtn) {
                 buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
                 elements.importFileInput.addEventListener('change', importProject);
             }
 
-            // Define o estado inicial dos botões e do modo escuro
+            // Define o estado inicial dos botões
             updateButtonStates();
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                setDarkMode(true);
-            }
             // Adiciona o listener de rolagem para a barra flutuante
             window.addEventListener('scroll', window.handleFloatingActionBar);
             updateProgressBar(); // <-- ADICIONADO AQUI
