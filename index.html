@@ -35,23 +35,23 @@
 
         body {
             font-family: 'Carlito', sans-serif;
-            background-color: #f0f2f5 !important; /* Fundo padrão para modo claro */
-            color: var(--text-dark) !important;
+            background-color: #f0f2f5; /* Cinza bem claro */
+            color: var(--text-dark); /* Cor de texto padrão para modo claro */
         }
         .dark body {
-            background-color: #111827 !important; /* Fundo para modo escuro */
-            color: #d1d5db !important; /* Cor de texto para modo escuro */
+            background-color: #111827; /* Cinza 900 */
+            color: #d1d5db; /* Cor de texto padrão para modo escuro */
         }
         .container {
             max-width: 1024px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: #ffffff !important;
+            background-color: #ffffff; /* Branco */
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
         .dark .container {
-            background-color: #1f2937 !important; /* gray-800 */
+            background-color: #1f2937; /* Cinza 800 */
         }
         .input-group label {
             font-weight: 600;
@@ -62,13 +62,20 @@
         /* ========================================================== */
         /* ======== ESTILIZAÇÃO DEFINITIVA DE INPUTS E FORMS ======== */
         /* ========================================================== */
+        /* Classe Mestra para Fundos de Componentes */
+        .card-background {
+            background-color: #ffffff; /* Padrão (Claro) */
+            border: 1px solid var(--border-light);
+        }
+        .dark .card-background {
+            background-color: #1f2937; /* Escuro */
+            border: 1px solid #4b5563;
+        }
+
         /* --- ESTADO PADRÃO (MODO CLARO) --- */
         .input-group input,
         .input-group select,
         .input-group textarea {
-            background-color: var(--bg-light) !important;
-            border: 1.5px solid var(--border-light) !important;
-            color: var(--text-dark) !important;
             width: 100%;
             padding: 0.75rem;
             border-radius: 8px;
@@ -81,16 +88,9 @@
             outline: none !important;
             border-color: var(--primary-color) !important;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
-            background-color: #ffffff !important;
+            background-color: #ffffff !important; /* Explicitly white on focus in light mode */
         }
         /* --- ESTADO MODO ESCURO --- */
-        .dark .input-group input,
-        .dark .input-group select,
-        .dark .input-group textarea {
-            background-color: #374151 !important; /* gray-700 */
-            border-color: #4b5563 !important; /* gray-600 */
-            color: #f9fafb !important; /* gray-50 */
-        }
         .dark .input-group input:focus,
         .dark .input-group select:focus,
         .dark .input-group textarea:focus {
@@ -103,6 +103,15 @@
         .dark .input-group textarea::placeholder {
             color: #9ca3af; /* gray-400 */
         }
+        /* Cor de texto para elementos no modo escuro */
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark label {
+            color: #f3f4f6;
+        }
+        .dark .input-group input, .dark .input-group select, .dark .input-group textarea {
+            color: #f9fafb;
+        }
+
+
         .btn {
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
@@ -284,11 +293,10 @@
             margin: 1rem auto;
         }
         .individual-prompt-block {
-            border: 1px solid var(--border-light);
+            /* Removido background-color e border para usar .card-background */
             border-radius: 8px;
             padding: 1rem;
             margin-bottom: 1rem;
-            background-color: #ffffff;
             display: flex;
             flex-direction: column;
             gap: 0.5rem;
@@ -362,7 +370,8 @@
         }
         #fullScreenAlertOverlay.visible { visibility: visible; opacity: 1; }
         #fullScreenAlertBox {
-            background-color: #ffffff; padding: 2.5rem; border-radius: 12px;
+            /* Removido background-color e border para usar .card-background */
+            padding: 2.5rem; border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); text-align: center; max-width: 500px;
             width: 90%; position: relative; transform: translateY(-20px);
             transition: transform 0.3s ease-out;
@@ -431,18 +440,17 @@
         /* ==================== MODO ESCURO ======================= */
         /* ========================================================== */
         body.dark {
-            background-color: #111827; /* gray-900 */
-            color: #d1d5db; /* gray-300 */
+            /* background-color e color já definidos acima */
         }
         .dark .container, .dark .accordion-item {
-            background-color: #1f2937; /* gray-800 */
+            /* background-color já definido acima */
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
         }
         .dark .accordion-item { border-color: #4b5563; }
         .dark .floating-action-bar { background-color: rgba(31, 41, 55, 0.9); }
-        .dark .action-bar-title, .dark h3, .dark h4, .dark label, .dark p { color: #f3f4f6; }
+        .dark .action-bar-title, .dark h3, .dark h4, .dark label, .dark p { /* color já definido acima */ }
         .dark .text-gray-500 { color: #9ca3af; }
-        .dark .input-group label { color: #d1d5db; }
+        .dark .input-group label { /* color já definido acima */ }
         /* As regras para .dark .input-group input, select, textarea já estão no bloco definitivo acima */
         .dark .bg-indigo-50 { background-color: #374151 !important; }
         .dark .border-indigo-200 { border-color: #4b5563 !important; }
@@ -453,8 +461,7 @@
             background-color: #4b5563;
         }
         .dark .individual-prompt-block {
-            background-color: #1f2937;
-            border-color: #374151;
+            /* background-color e border já definidos por .card-background */
         }
         .dark .prompt-phrase { color: #f3f4f6; }
         .dark .prompt-description-label { color: #9ca3af; }
@@ -477,7 +484,8 @@
             color: #4338ca; /* Indigo-700 */
             font-weight: bold;
             font-size: 0.8rem;
-            border: 1px solid #c7d2fe;
+            /* Removido border para usar .card-background, mas manteremos o border-color para a borda específica do tooltip */
+            border-color: #c7d2fe;
         }
         .dark .tooltip {
             background-color: #4b5563; /* Gray-600 */
@@ -698,15 +706,15 @@
         <div id="mainInputsGrid" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
             <div class="input-group">
                 <label for="channelName">Nome do Canal:</label>
-                <input type="text" id="channelName" placeholder="Ex: The Biblical Unveiling" value="The Biblical Unveiling">
+                <input type="text" id="channelName" class="card-background" placeholder="Ex: The Biblical Unveiling" value="The Biblical Unveiling">
             </div>
             <div class="input-group">
                 <label for="videoTheme">Tema do Vídeo:</label>
-                <input type="text" id="videoTheme" placeholder="Ex: A Arca da Aliança Foi Encontrada?">
+                <input type="text" id="videoTheme" class="card-background" placeholder="Ex: A Arca da Aliança Foi Encontrada?">
             </div>
              <div class="input-group md:col-span-2">
                 <label for="videoDescription">Descrição do Vídeo (para inspiração):</label>
-                <textarea id="videoDescription" rows="4" placeholder="Cole uma breve descrição do vídeo aqui para que a IA possa usar como inspiração para o roteiro."></textarea>
+                <textarea id="videoDescription" rows="4" class="card-background" placeholder="Cole uma breve descrição do vídeo aqui para que a IA possa usar como inspiração para o roteiro."></textarea>
             </div>
 
             <!-- Botão de Estratégia Automática com IA -->
@@ -721,11 +729,11 @@
             <!-- Campos de Estratégia Preenchidos pela IA -->
             <div class="input-group md:col-span-2">
                 <label for="targetAudience">Público-Alvo:</label>
-                <input type="text" id="targetAudience" value="Pessoas Interessadas em Arqueologia Bíblica e História Antiga, Cristãos e Pessoas de Fé, Entusiastas de Ciência e Ceticismo (com mente aberta), Curiosos em Geral e Amantes de Mistérios." readonly>
+                <input type="text" id="targetAudience" class="card-background" value="Pessoas Interessadas em Arqueologia Bíblica e História Antiga, Cristãos e Pessoas de Fé, Entusiastas de Ciência e Ceticismo (com mente aberta), Curiosos em Geral e Amantes de Mistérios." readonly>
             </div>
             <div class="input-group">
                 <label for="languageSelect">Idioma do Roteiro:</label>
-                <select id="languageSelect">
+                <select id="languageSelect" class="card-background">
                     <option value="pt-br">Português (Brasil)</option>
                     <option value="pt-pt">Português (Portugal)</option>
                     <option value="en" selected>English</option>
@@ -734,7 +742,7 @@
             </div>
             <div class="input-group">
                 <label for="languageStyle">Estilo de Linguagem:</label>
-                <select id="languageStyle">
+                <select id="languageStyle" class="card-background">
                     <option value="formal">Formal</option>
                     <option value="informal">Informar</option>
                     <option value="emocional">Emocional</option>
@@ -745,7 +753,7 @@
             </div>
             <div class="input-group md:col-span-2">
                 <label for="videoObjective">Objetivo do Vídeo:</label>
-                <select id="videoObjective">
+                <select id="videoObjective" class="card-background">
                     <option value="informar" selected>Informar</option>
                     <option value="emocionar">Emocionar</option>
                     <option value="evangelizar">Evangelizar (criar defensores)</option>
@@ -756,7 +764,7 @@
             <div class="md:col-span-2 grid grid-cols-1 md:grid-cols-2 gap-6 p-4 bg-gray-50 border border-gray-200 rounded-lg">
                 <div class="input-group">
                     <label for="videoDuration">Duração Desejada:</label>
-                    <select id="videoDuration">
+                    <select id="videoDuration" class="card-background">
                         <option value="">-- Selecione a Duração --</option>
                         <option value="short">Curto (~1-3 min)</option>
                         <option value="medium">Médio (~4-7 min)</option>
@@ -765,7 +773,7 @@
                 </div>
                 <div class="input-group">
                     <label for="speakingPace">Ritmo de Fala:</label>
-                    <select id="speakingPace">
+                    <select id="speakingPace" class="card-background">
                         <option value="moderate" selected>Moderado</option>
                         <option value="slow">Lento</option> <!-- CORRIGIDO AQUI -->
                         <option value="fast">Rápido</option>
@@ -775,13 +783,13 @@
             <div class="input-group md:col-span-2">
                 <div class="flex items-center gap-2">
                     <label for="narrativeStyle">Estilo da Narrativa:</label>
-                    <span class="tooltip"
+                    <span class="tooltip card-background"
                         data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para documentários.&#10;&#10;Jornada do Herói: Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.&#10;&#10;Mistério (Loop Aberto): Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.&#10;&#10;Problema-Agitação-Solução (PAS): Foca em um problema que o público tem e apresenta a solução. Perfeito para vídeos de marketing e tutoriais.&#10;&#10;Antes-Depois-Ponte (BAB): Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá.&#10;&#10;Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revelação surpreendente no final."
                     >
                         (?)
                     </span>
                 </div>
-                <select id="narrativeStyle">
+                <select id="narrativeStyle" class="card-background">
                     <option value="direct" selected>Direto e Informativo (Padrão)</option>
                     <option value="heros_journey">Jornada do Herói (Clássico)</option>
                     <option value="mystery_loop">Mistério (com Loop Aberto)</option>
@@ -792,23 +800,23 @@
             </div>
             <div class="input-group md:col-span-2">
                 <label for="centralQuestion">Pergunta Central (Opcional):</label>
-                <textarea id="centralQuestion" rows="2" placeholder="Ex: A Arca da Aliança Foi Encontrada?"></textarea>
+                <textarea id="centralQuestion" rows="2" class="card-background" placeholder="Ex: A Arca da Aliança Foi Encontrada?"></textarea>
             </div>
             <div class="input-group md:col-span-2">
                 <label for="emotionalArc">Arco Emocional Desejado (Opcional):</label>
-                <textarea id="emotionalArc" rows="2" placeholder="Ex: Começar com curiosidade, construir para admiração, e terminar com inspiração."></textarea>
+                <textarea id="emotionalArc" rows="2" class="card-background" placeholder="Ex: Começar com curiosidade, construir para admiração, e terminar com inspiração."></textarea>
             </div>
             <div class="input-group md:col-span-2">
                 <label for="viralElements">Elementos Virais/Tendências (Opcional):</label>
-                <textarea id="viralElements" rows="2" placeholder="Insira memes, frases, tendências ou palavras-chave em alta. Ex: 'o hype é real', 'chocado', 'plot twist'"></textarea>
+                <textarea id="viralElements" rows="2" class="card-background" placeholder="Insira memes, frases, tendências ou palavras-chave em alta. Ex: 'o hype é real', 'chocado', 'plot twist'"></textarea>
             </div>
             <div class="input-group md:col-span-2">
                 <label for="imageDescriptionEngine">Motor de Descrição de Imagem:</label>
-                <textarea id="imageDescriptionEngine" rows="2" placeholder="Ex: 'alta resolução', 'detalhado', 'fotorrealista', 'cores vibrantes'"></textarea>
+                <textarea id="imageDescriptionEngine" rows="2" class="card-background" placeholder="Ex: 'alta resolução', 'detalhado', 'fotorrealista', 'cores vibrantes'"></textarea>
             </div>
             <div class="input-group md:col-span-2">
                 <label for="imageStyleSelect">Motor de Qualidade de Imagem:</label>
-                <select id="imageStyleSelect">
+                <select id="imageStyleSelect" class="card-background">
                     <option value="cinematic" selected>Cinematográfico</option>
                     <option value="custom">Personalizado</option>
                     <option value="none">Nenhum</option>
@@ -816,7 +824,7 @@
             </div>
             <div class="input-group md:col-span-2" id="customImageStyleContainer" style="display: none;">
                 <label for="customImageStyle">Estilo Visual Personalizado:</label>
-                <textarea id="customImageStyle" rows="5" placeholder="Cole aqui o seu bloco de estilo personalizado (ex: para cartoon, anime, etc.)."></textarea>
+                <textarea id="customImageStyle" rows="5" class="card-background" placeholder="Cole aqui o seu bloco de estilo personalizado (ex: para cartoon, anime, etc.)."></textarea>
             </div>
         </div>
 
@@ -845,7 +853,7 @@
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Roteiro Principal</h2>
 
                     <!-- Cartão do Esboço Estratégico (permanece no topo) -->
-                    <div id="strategicOutlineCard" class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div id="strategicOutlineCard" class="card-background p-4 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Esboço Estratégico</h3>
                             <button id="generateOutlineBtn" class="btn btn-secondary btn-small">Criar Esboço</button>
@@ -865,7 +873,7 @@
                     </div>
                     
                     <!-- Controles de Geração, agora fixos no final da coluna -->
-                    <div id="scriptGenerationControls" class="p-4 bg-indigo-50 dark:bg-gray-800 border-t-2 border-indigo-200 dark:border-gray-700 rounded-b-lg sticky bottom-0">
+                    <div id="scriptGenerationControls" class="card-background p-4 border-t-2 border-indigo-200 dark:border-gray-700 rounded-b-lg sticky bottom-0">
                         <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3 text-center">Gerar Seções do Roteiro</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
@@ -882,7 +890,7 @@
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Recursos</h2>
                     
                     <!-- Cartão: Descrição e Hashtags (AGORA PRIMEIRO) -->
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="card-background p-4 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Descrição & Hashtags</h3>
                             <button id="generateDescriptionBtn" class="btn btn-secondary btn-small">Gerar</button>
@@ -893,7 +901,7 @@
                     </div>
 
                     <!-- Cartão: Títulos e Thumbnails (AGORA EM SEGUNDO) -->
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="card-background p-4 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
                             <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Títulos & Thumbnails</h3>
                             <button id="generateTitlesAndThumbnailsBtn" class="btn btn-secondary btn-small">Gerar</button>
@@ -907,7 +915,7 @@
                     <div id="storyboardContent" style="display: none;"></div>
                     
                     <!-- Cartão: Salvar e Exportar -->
-                    <div class="p-4 bg-white dark:bg-gray-800 rounded-lg shadow-md">
+                    <div class="card-background p-4 rounded-lg shadow-md">
                          <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Finalizar Projeto</h3>
                          <div class="grid grid-cols-2 gap-3">
                             <button id="exportProjectBtn" class="btn btn-secondary">Exportar</button>
@@ -930,7 +938,7 @@
     <!-- Elementos de Feedback (Toast e Alerta) -->
     <div id="toastNotification" class="toast-notification"></div>
     <div id="fullScreenAlertOverlay">
-        <div id="fullScreenAlertBox">
+        <div id="fullScreenAlertBox" class="card-background">
             <p id="fullScreenAlertMessage"></p>
             <button id="fullScreenAlertCloseBtn">Entendi</button>
         </div>
@@ -1808,7 +1816,7 @@ Trecho do roteiro:
                     allImagePrompts[sectionElementId].forEach(promptData => {
                         const styleBlockContent = promptData.styleBlock || '';
                         const promptHtml = `
-                            <div class="individual-prompt-block">
+                            <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                                     <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
@@ -1918,7 +1926,7 @@ ${scriptContent}
                         <div class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
                             <div>
                                 <h4 class="font-bold text-base mb-2">Sugestões de Títulos:</h4>
-                                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md space-y-2">${titlesListHtml}</div>
+                                <div class="p-3 card-background rounded-md space-y-2">${titlesListHtml}</div>
                                 <div class="mt-3">
                                     <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">Analisar CTR</button>
                                     <div id="ctrAnalysisResult" class="mt-3"></div>
@@ -1926,7 +1934,7 @@ ${scriptContent}
                             </div>
                             <div>
                                 <h4 class="font-bold text-base mb-2">Ideias de Thumbnail:</h4>
-                                <div class="p-3 bg-gray-50 dark:bg-gray-700/50 rounded-md space-y-3">${thumbnailsListHtml}</div>
+                                <div class="p-3 card-background rounded-md space-y-3">${thumbnailsListHtml}</div>
                                 <div class="mt-3">
                                     <button class="btn btn-secondary btn-small" onclick="window.analyzeThumbnails()">Analisar Thumbnails</button>
                                     <div id="thumbnailAnalysisResult" class="mt-3"></div>
@@ -1976,7 +1984,7 @@ ${scriptContent}
                 let analysisHtml = '<div class="space-y-4">';
                 analysis.forEach(item => {
                     analysisHtml += `
-                        <div class="p-3 border border-gray-200 rounded-md dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm">
+                        <div class="p-3 card-background rounded-md shadow-sm">
                             <p class="font-semibold text-gray-800 dark:text-gray-200">${item.titulo_original}</p>
                             <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Nota de CTR:</strong> <span class="text-indigo-500 font-bold">${item.nota_ctr} / 10</span></p>
                             <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Sugestão:</strong> ${item.sugestao_melhora}</p>
@@ -2022,7 +2030,7 @@ ${scriptContent}
                 let analysisHtml = '<div class="space-y-4">';
                 analysis.forEach(item => {
                     analysisHtml += `
-                        <div class="p-3 border border-gray-200 dark:border-gray-700 rounded-md bg-white dark:bg-gray-800 shadow-sm">
+                        <div class="p-3 card-background rounded-md shadow-sm">
                             <p class="font-semibold text-gray-800 dark:text-gray-200">${item.ideia_original}</p>
                             <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Nota de Potencial Visual:</strong> <span class="text-indigo-500 font-bold">${item.nota_visual} / 10</span></p>
                             <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Sugestão:</strong> ${item.sugestao_melhora}</p>
@@ -2050,7 +2058,7 @@ ${scriptContent}
                 
                 const targetContentElement = document.getElementById('videoDescriptionContent');
                 if (targetContentElement) {
-                    targetContentElement.innerHTML = `<div class="p-3 text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-700/50 rounded-md whitespace-pre-wrap">${result}</div>`;
+                    targetContentElement.innerHTML = `<div class="p-3 text-sm text-gray-700 dark:text-gray-300 card-background rounded-md whitespace-pre-wrap">${result}</div>`;
                     markButtonAsCompleted(buttons.generateDescriptionBtn.id);
                 }
             } catch (error) {
@@ -2285,7 +2293,7 @@ ${scriptContent}
                 promptsData.forEach(promptData => {
                     const styleBlockContent = promptData.styleBlock || '';
                     const promptHtml = `
-                        <div class="individual-prompt-block">
+                        <div class="individual-prompt-block card-background">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                                 <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
