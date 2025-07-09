@@ -1007,11 +1007,11 @@
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
-**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
-**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
+**Style:** Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real.
 **Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
-**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon
 `;
         // Labels para descrição de imagem em diferentes idiomas
         const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
@@ -1866,16 +1866,18 @@ Trecho do roteiro:
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
                     allImagePrompts[sectionElementId].forEach(promptData => {
                         const styleBlockContent = promptData.styleBlock || '';
+                        
+                        // ABAIXO ESTÁ A LINHA DE HTML CORRIGIDA:
                         const promptHtml = `
-                            <div class="individual-prompt-block bg-white dark:bg-gray-800 card-background">
+                            <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                                     <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
-                            </div>
+                                </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
                                 <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                                <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                                <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
                             </div>
                         `;
                         promptContainer.innerHTML += promptHtml;
@@ -2344,7 +2346,7 @@ ${scriptContent}
                 promptsData.forEach(promptData => {
                     const styleBlockContent = promptData.styleBlock || '';
                     const promptHtml = `
-                        <div class="individual-prompt-block bg-white dark:bg-gray-800 card-background">
+                        <div class="individual-prompt-block card-background">
                             <div class="flex items-center justify-between mb-2">
                                 <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
                                 <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
@@ -2352,7 +2354,7 @@ ${scriptContent}
                             <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                             <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
                             <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                            <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                            <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
                         </div>
                     `;
                     promptContainer.innerHTML += promptHtml;
