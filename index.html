@@ -15,9 +15,8 @@
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <style>
         /* ========================================================== */
-        /* ==================== ESTILOS GERAIS ==================== */
+        /* ==================== FUNDAMENTOS E VARIÁVEIS ============= */
         /* ========================================================== */
-        /* Variáveis CSS para cores consistentes e fácil manutenção */
         :root {
             --primary-color: #4f46e5; /* Indigo-600 */
             --primary-hover: #4338ca; /* Indigo-700 */
@@ -28,90 +27,141 @@
             --success-hover: #059669; /* Green-600 */
             --text-dark: #1f2937; /* Gray-800 */
             --text-medium: #4b5563; /* Gray-600 */
-            --text-light: #6b7280; /* Gray-500 */
+            --text-light: #d1d5db; /* gray-300 */
             --bg-light: #f9fafb; /* Gray-50 */
+            --bg-dark: #1f2937; /* Gray-800 */
             --border-light: #e5e7eb; /* Gray-200 */
+            --border-dark: #4b5563; /* Gray-600 */
         }
 
+        /* ========================================================== */
+        /* ==================== ESTILOS GLOBAIS (MODO CLARO) ======== */
+        /* ========================================================== */
         body {
             font-family: 'Carlito', sans-serif;
-            background-color: #f0f2f5; /* Cinza bem claro */
-            color: var(--text-dark); /* Cor de texto padrão para modo claro */
-        }
-        .dark body {
-            background-color: #111827; /* Cinza 900 */
-            color: #d1d5db; /* Cor de texto padrão para modo escuro */
+            background-color: #f0f2f5; /* Fundo geral da página */
+            color: var(--text-dark);
         }
         .container {
             max-width: 1024px;
             margin: 2rem auto;
             padding: 2rem;
-            background-color: #ffffff; /* Branco */
+            background-color: #ffffff;
             border-radius: 12px;
             box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
         }
-        .dark .container {
-            background-color: #1f2937; /* Cinza 800 */
-        }
-        .input-group label {
-            font-weight: 600;
+        h1, h2, h3, h4, label {
             color: var(--text-dark);
-            margin-bottom: 0.5rem;
-            display: block;
         }
-        /* ========================================================== */
-        /* ======== ESTILIZAÇÃO DEFINITIVA DE INPUTS E FORMS ======== */
-        /* ========================================================== */
-        /* Classe Mestra para Fundos de Componentes */
-        .card-background {
-            background-color: #ffffff; /* Padrão (Claro) */
-            border: 1px solid var(--border-light);
-        }
-        .dark .card-background {
-            background-color: #1f2937; /* Escuro */
-            border: 1px solid #4b5563;
-        }
-
-        /* --- ESTADO PADRÃO (MODO CLARO) --- */
         .input-group input,
         .input-group select,
         .input-group textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border-radius: 8px;
-            font-size: 1rem;
+            background-color: var(--bg-light);
+            border: 1.5px solid var(--border-light);
+            color: var(--text-dark);
+            width: 100%; padding: 0.75rem; border-radius: 8px; font-size: 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
         .input-group input:focus,
         .input-group select:focus,
         .input-group textarea:focus {
-            outline: none !important;
-            border-color: var(--primary-color) !important;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
-            background-color: #ffffff !important; /* Explicitly white on focus in light mode */
+            outline: none;
+            border-color: var(--primary-color);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            background-color: #ffffff;
         }
-        /* --- ESTADO MODO ESCURO --- */
-        .dark .input-group input:focus,
-        .dark .input-group select:focus,
-        .dark .input-group textarea:focus {
-            border-color: #6366f1 !important; /* indigo-500 */
-            background-color: #4b5563 !important; /* gray-600 */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+        .individual-prompt-block {
+            background-color: #ffffff;
+            border: 1px solid var(--border-light);
         }
-        /* --- CORREÇÃO PARA O PLACEHOLDER --- */
-        .dark .input-group input::placeholder,
-        .dark .input-group textarea::placeholder {
-            color: #9ca3af; /* gray-400 */
+        .individual-prompt-block pre {
+            background-color: var(--bg-light);
+            color: var(--text-medium);
         }
-        /* Cor de texto para elementos no modo escuro */
+        .prompt-phrase {
+            color: var(--text-dark);
+        }
+        .prompt-description-label {
+            color: var(--text-medium);
+        }
+        .prompt-description-content {
+            color: var(--text-dark);
+        }
+        .soundtrack-list {
+            color: var(--text-dark);
+        }
+        .asset-card-placeholder {
+            color: #6b7280;
+        }
+
+
+        /* ========================================================== */
+        /* ==================== MODO ESCURO ======================= */
+        /* ========================================================== */
+        .dark body {
+            background-color: #111827;
+            color: var(--text-light);
+        }
+        .dark .container {
+            background-color: var(--bg-dark);
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
+        }
         .dark h1, .dark h2, .dark h3, .dark h4, .dark label {
             color: #f3f4f6;
         }
-        .dark .input-group input, .dark .input-group select, .dark .input-group textarea {
-            color: #f9fafb;
+        .dark .input-group input,
+        .dark .input-group select,
+        .dark .input-group textarea {
+            background-color: #374151;
+            border-color: var(--border-dark);
+            color: var(--text-light);
+        }
+        .dark .input-group input:focus,
+        .dark .input-group select:focus,
+        .dark .input-group textarea:focus {
+            border-color: var(--primary-color);
+            background-color: #4b5563;
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
+        }
+        .dark .individual-prompt-block {
+            background-color: var(--bg-dark);
+            border-color: var(--border-dark);
+        }
+        .dark .individual-prompt-block pre {
+            background-color: #374151;
+            color: var(--text-light);
+        }
+        .dark .accordion-item {
+            background-color: var(--bg-dark);
+            border-color: var(--border-dark);
+        }
+        .dark .asset-card-placeholder {
+            border-color: var(--border-dark);
+            color: #6b7280;
+        }
+        .dark .prompt-phrase,
+        .dark .prompt-description-content {
+            color: #d1d5db !important; /* gray-300 */
+        }
+        .dark .prompt-description-label {
+            color: #9ca3af;
+        }
+        .dark .soundtrack-list {
+            color: #d1d5db;
+        }
+        .dark .text-gray-500 {
+            color: #9ca3af;
         }
 
 
+        /* ========================================================== */
+        /* ==================== COMPONENTES (GERAL) ================ */
+        /* ========================================================== */
+        .input-group label {
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
         .btn {
             padding: 0.75rem 1.5rem;
             border-radius: 8px;
@@ -119,12 +169,12 @@
             cursor: pointer;
             transition: all 0.2s ease-in-out;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
-            display: inline-flex; /* Para alinhar texto e spinner/ícone */
+            display: inline-flex;
             align-items: center;
             justify-content: center;
             gap: 0.5rem;
             border: none;
-            white-space: nowrap; /* Evita que o texto do botão quebre linha */
+            white-space: nowrap;
         }
         .btn:disabled {
             cursor: not-allowed;
@@ -149,14 +199,12 @@
             box-shadow: 0 4px 12px rgba(79, 70, 229, 0.15);
         }
         .btn-success {
-            background-color: var(--success-color) !important; /* !important para sobrescrever */
+            background-color: var(--success-color) !important;
             color: #ffffff !important;
         }
         .btn-success:hover:not(:disabled) {
             background-color: var(--success-hover) !important;
         }
-
-        /* Loading Spinner */
         .loading-spinner {
             border: 4px solid rgba(255, 255, 255, 0.3);
             border-left-color: #ffffff;
@@ -171,25 +219,15 @@
         }
         .loading-spinner.hidden { display: none; }
         .button-text.hidden { display: none; }
-
         @keyframes spin {
             0% { transform: rotate(0deg); }
             100% { transform: rotate(360deg); }
         }
-
-        /* Icone de Conclusão */
-        /* REMOVIDO: .completion-icon { ... } */
-        /* REMOVIDO: .completion-icon.hidden { display: none; } */
-
-        /* ========================================================== */
-        /* ==================== UI MELHORADA ====================== */
-        /* ========================================================== */
         .accordion-item {
-            border: 1px solid var(--border-light);
             border-radius: 8px;
             margin-bottom: 1rem;
-            overflow: hidden; /* Garante que o conteúdo escondido não vaze */
-            background-color: var(--bg-light);
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
         .accordion-header {
             display: flex;
@@ -197,9 +235,8 @@
             align-items: center;
             padding: 1rem 1.5rem;
             cursor: pointer;
-            user-select: none; /* Impede seleção de texto ao clicar */
+            user-select: none;
         }
-        /* Estilo para o cabeçalho do acordeão ativo */
         .accordion-header.active {
             background-color: var(--secondary-bg);
         }
@@ -213,13 +250,12 @@
         }
         .header-buttons {
             display: flex;
-            gap: 0.5rem; /* Espaçamento entre os botões de ação */
+            gap: 0.5rem;
         }
         .accordion-header h3 {
-            margin-bottom: 0; /* Remove a margem padrão do h3 */
+            margin-bottom: 0;
             font-size: 1.25rem;
             font-weight: 700;
-            color: var(--text-dark);
         }
         .accordion-arrow {
             transition: transform 0.3s ease-in-out;
@@ -228,14 +264,14 @@
             transform: rotate(180deg);
         }
         .accordion-body {
-            max-height: 0; /* Escondido por padrão */
+            max-height: 0;
             overflow: hidden;
             transition: max-height 0.4s ease-in-out, padding 0.4s ease-in-out;
-            padding: 0 1.5rem; /* Padding vertical zero quando fechado */
+            padding: 0 1.5rem;
         }
         .accordion-body.open {
-            max-height: 5000px; /* Valor grande para "abrir" */
-            padding: 1rem 1.5rem 1.5rem; /* Padding quando aberto */
+            max-height: 5000px;
+            padding: 1rem 1.5rem 1.5rem;
         }
         .accordion-body .generated-content-wrapper[contenteditable="true"] {
             outline: none;
@@ -245,10 +281,11 @@
         }
         .accordion-body .generated-content-wrapper[contenteditable="true"]:focus {
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-            background-color: #eef2ff; /* Fundo levemente azulado ao editar */
+            background-color: #eef2ff;
         }
-
-        /* Botões de Copiar e Re-gerar dentro das seções */
+        .dark .accordion-body .generated-content-wrapper[contenteditable="true"]:focus {
+            background-color: #4b5563;
+        }
         .copy-btn, .regenerate-btn {
             padding: 0.4rem 0.8rem;
             font-size: 0.8rem;
@@ -272,12 +309,13 @@
         .regenerate-btn:hover {
             background-color: var(--secondary-hover);
         }
-        
-        /* Seções de Prompts e Trilha Sonora */
         .section-prompts, .section-soundtrack {
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 1px dashed #d1d5db;
+        }
+        .dark .section-prompts, .dark .section-soundtrack {
+            border-top-color: var(--border-dark);
         }
         .btn-small {
             padding: 0.25rem 0.75rem;
@@ -306,61 +344,28 @@
             color: var(--primary-color);
             font-weight: 700;
         }
-        .prompt-phrase {
-            font-size: 0.875rem;
-            color: var(--text-dark);
-            font-weight: 700;
-            line-height: 1.4;
-        }
-        .prompt-description-label {
-            font-size: 0.875rem;
-            font-weight: 600;
-            color: var(--text-medium);
-            margin-top: 0.5rem;
-            border-top: 1px dashed var(--border-light);
-            padding-top: 0.5rem;
-        }
-        .prompt-description-content {
-            font-size: 0.9rem;
-            color: var(--text-dark);
-            line-height: 1.5;
-        }
         pre {
-            background-color: var(--bg-light);
             border-radius: 4px;
             padding: 0.75rem;
             font-size: 0.75rem;
-            color: var(--text-medium);
-            overflow-x: auto; /* Para lidar com blocos de estilo longos */
-            white-space: pre-wrap; /* Quebra linhas longas */
-            word-break: break-all; /* Quebra palavras longas */
-        }
-        .soundtrack-list {
-            list-style-type: disc;
-            padding-left: 20px;
-            font-size: 0.9rem;
-            color: var(--text-dark);
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
         }
         .soundtrack-list li { margin-bottom: 0.5rem; }
-
-        /* Separador para Thumbnails */
         .thumbnail-item-separator {
             margin-top: 1.5rem;
             padding-top: 1.5rem;
             border-top: 1px solid var(--border-light);
         }
-
-        /* Toast Notification */
-        #toastNotification {
+        .toast-notification {
             position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%);
             background-color: rgba(0, 0, 0, 0.7); color: #fff; padding: 10px 20px;
             border-radius: 8px; font-size: 0.9rem; opacity: 0; visibility: hidden;
             transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
             z-index: 1001; white-space: nowrap;
         }
-        #toastNotification.toast-visible { opacity: 1; visibility: visible; }
-
-        /* Alerta Full-Screen */
+        .toast-notification.toast-visible { opacity: 1; visibility: visible; }
         #fullScreenAlertOverlay {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.6); display: flex; justify-content: center;
@@ -369,23 +374,18 @@
         }
         #fullScreenAlertOverlay.visible { visibility: visible; opacity: 1; }
         #fullScreenAlertBox {
-            /* Removido background-color e border para usar .card-background */
             padding: 2.5rem; border-radius: 12px;
             box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2); text-align: center; max-width: 500px;
             width: 90%; position: relative; transform: translateY(-20px);
             transition: transform 0.3s ease-out;
         }
         #fullScreenAlertOverlay.visible #fullScreenAlertBox { transform: translateY(0); }
-        #fullScreenAlertBox p { font-size: 1.1rem; color: var(--text-dark); margin-bottom: 1.5rem; line-height: 1.6; }
+        #fullScreenAlertBox p { font-size: 1.1rem; margin-bottom: 1.5rem; line-height: 1.6; }
         #fullScreenAlertBox button {
             background-color: var(--primary-color); color: #ffffff; padding: 0.75rem 1.5rem;
             border-radius: 8px; font-weight: 600; cursor: pointer; transition: background-color 0.2s; border: none;
         }
         #fullScreenAlertBox button:hover { background-color: var(--primary-hover); }
-
-        /* ========================================================== */
-        /* ================= BARRA FLUTUANTE ====================== */
-        /* ========================================================== */
         .floating-action-bar {
             position: fixed; top: 0; left: 0; width: 100%;
             background-color: rgba(255, 255, 255, 0.9);
@@ -395,6 +395,9 @@
             transform: translateY(-100%); opacity: 0; visibility: hidden;
             transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
         }
+        .dark .floating-action-bar {
+            background-color: rgba(31, 41, 55, 0.9);
+        }
         .floating-action-bar.visible { transform: translateY(0); opacity: 1; visibility: visible; }
         .action-bar-content {
             max-width: 1024px; margin: 0 auto; padding: 0 2rem;
@@ -402,90 +405,26 @@
         }
         .action-bar-buttons-group {
             display: flex; align-items: center; gap: 0.75rem;
-            width: 100%; /* Garante que o grupo ocupe o espaço */
+            width: 100%;
         }
         .action-bar-buttons-group.hidden { display: none; }
         .action-bar-buttons-group .action-bar-title {
-            white-space: nowrap; /* Impede que o título quebre linha */
+            white-space: nowrap;
             font-weight: 600;
-            color: var(--text-dark);
         }
         .action-bar-buttons-group .btn-container {
             display: flex; gap: 0.75rem; justify-content: flex-end; width: 100%;
         }
         .btn-container .btn {
-            padding: 0.5rem 1rem; /* Um pouco menores */
+            padding: 0.5rem 1rem;
             font-size: 0.875rem;
         }
-        /* Correção para o espaçamento dos botões clonados */
         .action-bar-buttons-group .btn-container .btn { margin-left: 0.75rem; }
         .action-bar-buttons-group .btn-container .btn:first-child { margin-left: 0; }
-
-        /* ========================================================== */
-        /* ======== ESTILOS PARA A BARRA DE PROGRESO ========= */
-        /* ========================================================== */
         #progressBar {
-            transition: width 0.5s ease-in-out; /* Animação suave do crescimento da barra */
-            background-color: var(--success-color); /* Usa a nossa cor de sucesso verde! */
+            transition: width 0.5s ease-in-out;
+            background-color: var(--success-color);
         }
-
-        /* ========================================================== */
-        /* ===== CORREÇÃO DE COR DE TEXTO PARA MODO CLARO ===== */
-        /* ========================================================== */
-        /* REMOVIDO: body:not(.dark) #titlesThumbnailsSection .p-3 p { color: #374151; } */
-        /* REMOVIDO: body:not(.dark) #titlesThumbnailsSection .font-semibold { color: #1f2937; } */
-
-        /* ========================================================== */
-        /* ==================== MODO ESCURO ======================= */
-        /* ========================================================== */
-        body.dark {
-            /* background-color e color já definidos acima */
-        }
-        .dark .container, .dark .accordion-item {
-            /* background-color já definido acima */
-            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.4);
-        }
-        .dark .accordion-item { border-color: #4b5563; }
-        .dark .floating-action-bar { background-color: rgba(31, 41, 55, 0.9); }
-        .dark .action-bar-title, .dark h3, .dark h4, .dark label, .dark p { /* color já definido acima */ }
-        .dark .text-gray-500 { color: #9ca3af; }
-        .dark .input-group label { /* color já definido acima */ }
-        /* As regras para .dark .input-group input, select, textarea já estão no bloco definitivo acima */
-        .dark .bg-indigo-50 { background-color: #374151 !important; }
-        .dark .border-indigo-200 { border-color: #4b5563 !important; }
-        .dark .text-indigo-800 { color: #a5b4fc !important; }
-        .dark .bg-gray-50 { background-color: #374151 !important; }
-        .dark .border-gray-200 { border-color: #4b5563 !important; }
-        .dark .accordion-body .generated-content-wrapper[contenteditable="true"]:focus {
-            background-color: #4b5563;
-        }
-        .dark .individual-prompt-block {
-            /* background-color e border já definidos por .card-background */
-        }
-        .dark .prompt-phrase { color: #f3f4f6; }
-        .dark .prompt-description-label { color: #9ca3af; }
-        .dark .prompt-description-content { color: #d1d5db; }
-        .dark pre { background-color: #374151 !important; color: #d1d5db; }
-        .dark #darkModeToggle { color: #9ca3af; }
-
-        /* Correção Específica para Modo Escuro */
-        /* Garante que o input do tema siga as regras */
-        .dark #videoTheme.card-background {
-            background-color: #374151 !important; 
-            border-color: #4b5563 !important; 
-        }
-        /* Garante que o container dos botões de geração siga as regras */
-        .dark #scriptGenerationControls.card-background {
-            background-color: #1f2937 !important; /* Cinza 800 */
-            border-top: 1px solid #4b5563 !important; /* Adiciona uma borda superior para separar */
-            border-left: none !important;
-            border-right: none !important;
-            border-bottom: none !important;
-        }
-
-        /* ========================================================== */
-        /* ==================== ESTILOS TOOLTIP ===================== */
-        /* ========================================================== */
         .tooltip {
             position: relative;
             cursor: help;
@@ -495,67 +434,58 @@
             width: 20px;
             height: 20px;
             border-radius: 50%;
-            background-color: #e0e7ff; /* Indigo-100 */
-            color: #4338ca; /* Indigo-700 */
+            background-color: #e0e7ff;
+            color: #4338ca;
             font-weight: bold;
             font-size: 0.8rem;
-            /* Removido border para usar .card-background, mas manteremos o border-color para a borda específica do tooltip */
             border-color: #c7d2fe;
         }
         .dark .tooltip {
-            background-color: #4b5563; /* Gray-600 */
-            color: #e5e7eb; /* Gray-200 */
-            border-color: #374151; /* Gray-700 */
+            background-color: #4b5563;
+            color: #e5e7eb;
+            border-color: #374151;
         }
-        /* Esconde o tooltip por padrão */
         .tooltip::before, .tooltip::after {
             visibility: hidden;
             opacity: 0;
             transition: opacity 0.2s ease-in-out, transform 0.2s ease-in-out;
             position: absolute;
-            bottom: 150%; /* Posiciona acima do (?) */
+            bottom: 150%;
             left: 50%;
-            transform: translateX(-50%) translateY(10px); /* Começa um pouco abaixo */
+            transform: translateX(-50%) translateY(10px);
             z-index: 10;
         }
-        /* Mostra o tooltip no hover */
         .tooltip:hover::before, .tooltip:hover::after {
             visibility: visible;
             opacity: 1;
-            transform: translateX(-50%) translateY(0); /* Sube para a posição final */
+            transform: translateX(-50%) translateY(0);
         }
-        /* Estilo da caixa de texto do tooltip */
         .tooltip::before {
-            content: attr(data-tooltip); /* Pega o texto do atributo! */
-            background-color: #1f2937; /* Gray-800 */
-            color: #f9fafb; /* Gray-50 */
+            content: attr(data-tooltip);
+            background-color: #1f2937;
+            color: #f9fafb;
             padding: 0.75rem;
             border-radius: 8px;
-            width: 300px; /* Largura do tooltip */
+            width: 300px;
             text-align: left;
-            white-space: pre-wrap; /* Respeita as quebras de linha do atributo */
+            white-space: pre-wrap;
             font-size: 0.85rem;
             line-height: 1.5;
             font-weight: normal;
         }
         .dark .tooltip::before {
-            background-color: #374151; /* Gray-700 */
+            background-color: #374151;
         }
-        /* Estilo da setinha do tooltip */
         .tooltip::after {
             content: '';
             border-width: 6px;
             border-style: solid;
-            border-color: #1f2937 transparent transparent transparent; /* Seta aponta para baixo */
-            margin-left: -6px; /* Centraliza a seta */
+            border-color: #1f2937 transparent transparent transparent;
+            margin-left: -6px;
         }
         .dark .tooltip::after {
             border-color: #374151 transparent transparent transparent;
         }
-        .dark .section-prompts, .dark .section-soundtrack { border-top-color: #4b5563; }
-        .dark .soundtrack-list { color: #d1d5db; }
-
-        /* Animação para surgimento suave das seções */
         @keyframes fadeInSlideUp {
             from {
                 opacity: 0;
@@ -569,94 +499,67 @@
         .animate-fade-in {
             animation: fadeInSlideUp 0.5s ease-out forwards;
         }
-
-        /* ========================================================== */
-        /* ============ ESTILOS MODO FOCO - VERSÃO FINAL ============ */
-        /* ========================================================== */
-        /* Quando o modo foco está ativo... */
-        /* 1. Esconde os elementos que não queremos ver */
         body.zen-mode .floating-action-bar,
         body.zen-mode #mainInputsGrid,
         body.zen-mode #progressBarContainer,
         body.zen-mode #assetsColumn,
-        body.zen-mode .absolute.top-4.right-4, /* Esconde os botões do canto */
+        body.zen-mode .absolute.top-4.right-4,
         body.zen-mode .container > h1,
         body.zen-mode .container > p {
             display: none !important;
         }
-
-        /* 2. Ajusta o container e o grid principal */
         body.zen-mode .container {
             max-width: 100%;
             padding: 1rem;
         }
-
         body.zen-mode #projectDashboard .grid {
-            display: block; /* Faz o grid se comportar como um bloco normal */
+            display: block;
         }
-
-        /* 3. Expande a coluna do roteiro para ocupar todo o espaço */
         body.zen-mode #scriptColumn {
-            max-height: none; 
-            grid-column: auto; /* Reseta as regras de coluna do grid */
+            max-height: none;
+            grid-column: auto;
         }
-        /* Mostra o botão de sair apenas no Modo Foco */
         body.zen-mode #exitZenModeBtn {
             display: inline-flex;
         }
-        
-        /* ========================================================== */
-        /* Estilos para a coluna de roteiro com controles fixos */
-        /* ========================================================== */
         #scriptColumn {
-            /* Define uma altura máxima para a coluna, para que a rolagem interna funcione */
-            /* 'vh' é a altura da viewport (tela visível) */
-            max-height: 90vh; 
+            max-height: 90vh;
         }
         #scriptSectionsContainer {
-            /* Permite que este contêiner de acordeões ocupe todo o espaço disponível e role */
             flex-grow: 1;
             overflow-y: auto;
         }
         #scriptGenerationControls {
-            /* Garante que os controles fiquem "colados" na parte inferior da coluna */
             position: sticky;
             bottom: 0;
-            /* Fundo com transparência para um efeito mais elegante ao rolar */
-            background-color: rgba(238, 242, 255, 0.95); /* Indigo-50 com transparência */
+            background-color: rgba(238, 242, 255, 0.95);
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
-            z-index: 10; /* Garante que fique acima do conteúdo que rola */
+            z-index: 10;
+            border-top: 2px solid var(--border-light); /* Adjusted for new variable */
+            border-radius: 0 0 12px 12px; /* Keep bottom rounded corners */
         }
         .dark #scriptGenerationControls {
-            /* background-color e border-top já definidos acima */
+            background-color: rgba(31, 41, 55, 0.95); /* Darker background for dark mode */
+            border-top-color: var(--border-dark); /* Adjusted for new variable */
         }
-
-        /* ========================================================== */
-        /* =============== ESTILOS DE IMPRESSÃO (PDF) =============== */
-        /* ========================================================== */
         @media print {
-            /* Esconde tudo que não está no nosso container de impressão */
             body > *:not(#print-container) {
                 display: none !important;
             }
-
-            /* Regras para o container de impressão */
             #print-container, #print-container * {
-                visibility: visible; /* Garante que ele e TODOS os seus filhos sejam visíveis */
-                color: #000 !important; /* FORÇA tudo dentro dele a ser preto */
-                background-color: #fff !important; /* Garante fundo branco */
+                visibility: visible;
+                color: #000 !important;
+                background-color: #fff !important;
             }
-
             #print-container {
                 position: absolute;
                 left: 0;
                 top: 0;
                 width: 100%;
-                padding: 1.5cm; /* Margens de documento */
+                padding: 1.5cm;
                 font-size: 11pt;
             }
-
             .print-section-title {
                 font-size: 16pt;
                 font-weight: bold;
@@ -665,47 +568,10 @@
                 border-bottom: 1px solid #ccc;
                 padding-bottom: 4px;
             }
-
             .print-section-content {
                 line-height: 1.6;
-                white-space: pre-wrap; /* Respeita as quebras de linha */
+                white-space: pre-wrap;
             }
-        }
-
-        /* ========================================================== */
-        /* ========= CORREÇÕES FINAIS PARA MODO ESCURO ========== */
-        /* ========================================================== */
-        /* Garante que o input focado no modo escuro tenha o fundo correto */
-        .dark .input-group input:focus {
-            background-color: #4b5563 !important; /* gray-600 */
-        }
-        /* Garante que os blocos de prompt individuais fiquem escuros */
-        .dark .individual-prompt-block {
-            background-color: #1f2937 !important; /* gray-800 */
-            border-color: #4b5563 !important; /* gray-600 */
-        }
-        /* Garante que o texto dentro dos prompts fique claro */
-        .dark .prompt-phrase,
-        .dark .prompt-description-content {
-            color: #d1d5db !important; /* gray-300 */
-        }
-        /* Garante que o fundo do <pre> também fique escuro */
-        .dark .individual-prompt-block pre {
-            background-color: #374151 !important; /* gray-700 */
-        }
-
-        /* ========================================================== */
-        /* ========= CORREÇÕES FINAIS PARA MODO CLARO ========== */
-        /* ========================================================== */
-        /* Define a cor padrão (Modo Claro) para os títulos do dashboard */
-        #projectDashboard h2,
-        #projectDashboard h3 {
-            color: var(--text-dark) !important;
-        }
-        /* Define a cor para o Modo Escuro, garantindo que ela sobrescreva o padrão */
-        .dark #projectDashboard h2,
-        .dark #projectDashboard h3 {
-            color: #f3f4f6 !important; /* Cor de texto clara */
         }
     </style>
 </head>
