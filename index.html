@@ -753,9 +753,12 @@
         }
 
         /* ========================================================== */
-        /* ==== BLINDAGEM FINAL DE TEXTOS PARA O PAINEL (AMBAS COLUNAS) ==== */
+        /* ==== BLINDAGEM FINAL DE TEXTOS PARA O PAINEL (AMBAS COLUNAS) - CORRIGIDO ==== */
         /* ========================================================== */
         /* Define a cor de texto padrão (MODO CLARO) para o conteúdo dos painéis */
+        /* MODIFICADO: Adicionamos os IDs dos containers de conteúdo gerado */
+        #projectDashboard #videoDescriptionContent,
+        #projectDashboard #titlesThumbnailsContent,
         #projectDashboard .card-background p,
         #projectDashboard .card-background li,
         #projectDashboard .card-background strong,
@@ -763,7 +766,11 @@
         #projectDashboard .list-disc {
             color: var(--text-dark) !important;
         }
+
         /* Define a cor de texto (MODO ESCURO) para o conteúdo dos painéis */
+        /* MODIFICADO: Adicionamos os IDs dos containers de conteúdo gerado */
+        .dark #projectDashboard #videoDescriptionContent,
+        .dark #projectDashboard #titlesThumbnailsContent,
         .dark #projectDashboard .card-background p,
         .dark #projectDashboard .card-background li,
         .dark #projectDashboard .card-background strong,
@@ -771,6 +778,7 @@
         .dark #projectDashboard .list-disc {
             color: #d1d5db !important;
         }
+
         /* Ajuste específico para os títulos H3 e H4 dentro do painel */
         #projectDashboard h3, #projectDashboard h4 {
             color: var(--text-dark) !important;
@@ -2334,7 +2342,7 @@ ${scriptContent}
                 sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
             // Limpar o cartão do esboço
-            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder text-sm text-gray-400 dark:text-gray-600">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
             strategicOutline = null; // Reseta o esboço estratégico
 
             // Limpar os cartões de recursos e restaurar os placeholders
