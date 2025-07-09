@@ -981,7 +981,7 @@
                             <button id="generateOutlineBtn" class="btn btn-secondary btn-small">Criar Esboço</button>
                         </div>
                         <div id="outlineContent">
-                             <div class="asset-card-placeholder text-sm text-gray-400 dark:text-gray-600">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>
+                             <div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>
                         </div>
                     </div>
 
@@ -1018,7 +1018,7 @@
                             <button id="generateDescriptionBtn" class="btn btn-secondary btn-small">Gerar</button>
                         </div>
                         <div id="videoDescriptionContent">
-                             <div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em 'Gerar' para ver a descrição</div>
+                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver a descrição</div>
                         </div>
                     </div>
 
@@ -1029,7 +1029,7 @@
                             <button id="generateTitlesAndThumbnailsBtn" class="btn btn-secondary btn-small">Gerar</button>
                         </div>
                         <div id="titlesThumbnailsContent">
-                             <div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em 'Gerar' para ver as sugestões</div>
+                             <div class="asset-card-placeholder">Clique em 'Gerar' para ver as sugestões</div>
                         </div>
                     </div>
 
@@ -2338,8 +2338,8 @@ ${scriptContent}
             strategicOutline = null; // Reseta o esboço estratégico
 
             // Limpar os cartões de recursos e restaurar os placeholders
-            document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em \'Gerar\' para ver as sugestões</div>';
-            document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em \'Gerar\' para ver a descrição</div>';
+            document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
+            document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
             // Removed storyboardContent reset
 
             allImagePrompts = {}; // Limpa todos os prompts de imagem
@@ -2507,8 +2507,8 @@ ${scriptContent}
                     if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                     if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
                     // Asset buttons (check if content is not placeholder)
-                    if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
-                    if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder text-gray-400 dark:text-gray-600">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+                    if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
+                    if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
                     // Removed storyboardContent check for completion
 
 
