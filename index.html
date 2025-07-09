@@ -634,32 +634,44 @@
             flex-grow: 1;
             overflow-y: auto;
         }
-        /* Localize e substitua este bloco por completo */
+        /* ========================================================== */
+        /* ====== PAINEL DE BOTÕES STICKY - DESIGN FINAL ELEGANTE ===== */
+        /* ========================================================== */
         #scriptGenerationControls {
             position: sticky;
             bottom: 0;
-            
-            /* RESTAURANDO O DESIGN ORIGINAL PARA O MODO CLARO */
-            background-color: rgba(255, 255, 255, 0.9); /* Fundo de vidro branco */
-            border-top: 2px solid var(--secondary-bg);  /* Borda superior indigo-100 */
-            padding: 1rem; /* Adiciona o espaçamento interno de volta! */
-
-            backdrop-filter: blur(4px);
-            -webkit-backdrop-filter: blur(4px);
             z-index: 10;
+            padding: 1rem 1.5rem; /* Espaçamento interno consistente */
+
+            /* MANTIDO: O efeito de vidro fosco */
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+
+            /* ADICIONADO: Sombra sutil para o efeito flutuante */
+            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.08);
+
+            /* Garante que o painel ocupe a largura da coluna e tenha as bordas inferiores arredondadas */
+            border-bottom-left-radius: 0.5rem; /* 8px */
+            border-bottom-right-radius: 0.5rem; /* 8px */
             
-            /* Garante que o card em si não tenha bordas laterais/inferiores */
-            border-left: none !important;
-            border-right: none !important;
-            border-bottom: none !important;
-            /* Garante que os cantos inferiores fiquem arredondados junto com a coluna */
-            border-bottom-left-radius: 0.5rem; 
-            border-bottom-right-radius: 0.5rem;
+            /* --- Estilos para MODO CLARO --- */
+            background-color: rgba(255, 255, 255, 0.75); /* Fundo branco com mais transparência */
+            border-top: 1px solid rgba(0, 0, 0, 0.07); /* Borda superior muito sutil */
         }
+        
         .dark #scriptGenerationControls {
-            /* MODO ESCURO */
-            background-color: rgba(31, 41, 55, 0.85); /* Fundo Cinza-800 com transparência */
-            border-top-color: #4b5563; /* Borda superior cinza-600 */
+            /* --- Estilos para MODO ESCURO --- */
+            background-color: rgba(31, 41, 55, 0.75); /* Fundo cinza-800 com mais transparência */
+            border-top-color: rgba(255, 255, 255, 0.1); /* Borda superior clara e sutil */
+            box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.2); /* Sombra um pouco mais forte para o modo escuro */
+        }
+
+        /* Ajuste fino no título "Gerar Seções do Roteiro" dentro do painel */
+        #scriptGenerationControls h3 {
+            color: var(--text-dark) !important;
+        }
+        .dark #scriptGenerationControls h3 {
+            color: #f3f4f6 !important;
         }
 
         /* ========================================================== */
@@ -1021,7 +1033,7 @@
                     </div>
                     
                     <!-- Controles de Geração, agora fixos no final da coluna -->
-                    <div id="scriptGenerationControls" class="card-background p-4 border-t-2 border-indigo-200 dark:border-gray-700 rounded-b-lg sticky bottom-0">
+                    <div id="scriptGenerationControls" class="rounded-b-lg sticky bottom-0">
                         <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3 text-center">Gerar Seções do Roteiro</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
