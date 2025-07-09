@@ -241,6 +241,14 @@
         .dark .accordion-body {
             background-color: #1f2937; /* Mesmo fundo do container (Cinza 800) */
         }
+        /* Garante a cor de texto correta para o conteúdo gerado */
+        .generated-content-wrapper {
+            color: var(--text-dark); /* Garante texto escuro no modo claro */
+            line-height: 1.6; /* Melhora a legibilidade */
+        }
+        .dark .generated-content-wrapper {
+            color: #d1d5db; /* Garante texto claro no modo escuro (Gray-300) */
+        }
         .accordion-body.open {
             max-height: 5000px; /* Valor grande para "abrir" */
             padding: 1rem 1.5rem 1.5rem; /* Padding quando aberto */
