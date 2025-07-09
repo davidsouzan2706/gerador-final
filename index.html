@@ -1555,7 +1555,7 @@
         };
 
         /**
-         * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
+	 * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
          * @param {string} sectionName - O nome da seção (ex: 'intro', 'titles_thumbnails').
          * @param {string} sectionTitle - O título da seção para o prompt.
          * @param {string|null} outlineDirective - Uma diretriz específica do esboço estratégico para esta seção.
@@ -1754,3 +1754,1112 @@ The final output MUST be only the JSON code, like this example:
             }
             return { prompt, maxTokens };
         };
+
+        /**
+         * Faz uma chamada à API Groq através de uma função Netlify.
+         * @param {string} prompt - O prompt a ser enviado para a IA.
+         * @param {number} maxTokens - O número máximo de tokens para a resposta.
+         * @returns {Promise<string>} A resposta bruta da IA.
+         * @throws {Error} Se a chamada à API falhar.
+         */
+        const callGroqAPI = async (prompt, maxTokens) => {
+            const proxyUrl = "/.netlify/functions/groq"; // Endpoint do proxy
+
+            const payload = {
+                prompt: prompt,
+                maxTokens: maxTokens
+            };
+
+            const request = {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            };
+
+            try {
+                const response = await fetch(proxyUrl, request);
+                if (!response.ok) {
+                    const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
+                    throw new Error(`Erro na API via Proxy: ${errorData.error?.message || 'Erro do servidor'}`);
+                }
+                const result = await response.json();
+                const rawContent = result.choices?.[0]?.message?.content;
+                if (rawContent) { return rawContent; }
+                else { throw new Error("Resposta inesperada da API Groq."); }
+            } catch (error) {
+                console.error("Fetch da API via Netlify Function falhou:", error);
+                window.showToast(`Falha na API: ${error.message}`);
+                throw error;
+           }
+        };
+
+        /**
+         * Valida os inputs essenciais antes de gerar conteúdo.
+         * @returns {boolean} True se os inputs são válidos, caso contrário, false.
+         */
+        const validateInputs = () => {
+            if (!elements.channelName.value.trim()) {
+                window.showToast("Por favor, insira o nome do canal.");
+                return false;
+            }
+            if (!elements.videoTheme.value.trim()) {
+                window.showToast("Por favor, insira o tema do vídeo.");
+                return false;
+            }
+            if (!elements.videoDescription.value.trim()) {
+                window.showToast("Por favor, insira a descrição do vídeo (para inspiração).");
+                return false;
+            }
+            if (!elements.videoDuration.value || elements.videoDuration.value === "") {
+                window.showToast("Por favor, selecione a Duração Desejada do vídeo.");
+                return false;
+            }
+            return true;
+        };
+
+        // ==========================================================
+        // ================== FUNÇÕES PRINCIPAIS ====================
+        // ==========================================================
+
+        /**
+         * Lida com a geração de uma seção específica do roteiro.
+         * @param {HTMLElement} button - O botão que acionou a geração.
+         * @param {string} sectionName - O nome da seção (ex: 'intro').
+         * @param {string} sectionTitle - O título da seção para exibição.
+         * @param {string} elementId - O ID do elemento HTML onde o conteúdo será inserido (ex: 'intro').
+         */
+        const handleGenerateSection = async (button, sectionName, sectionTitle, elementId) => {
+            if (!validateInputs()) return;
+            
+            // Logo no início da função
+            if (!strategicOutline) {
+                window.showToast("Crie o Esboço Estratégico primeiro!");
+                return;
+            }
+
+            showLoading(button);
+            try {
+                // Pega a diretriz específica para esta seção do nosso esboço global
+                const directive = strategicOutline[sectionName]; 
+                
+                const { prompt, maxTokens } = constructScriptPrompt(sectionName, sectionTitle, directive);
+                let result = await callGroqAPI(prompt, maxTokens);
+                
+                // Limpeza específica de metadados da IA
+                result = result.replace(/^Here's (?:the|a potential) \*\*[\w\s]+\*\* (?:section of the video script|for the video script):\s*\n*\s*$/gm, '');
+                result = result.replace(/^(?:Host|Narrator)(?:\s*\(.*?\))?:\s*/gm, '');
+                result = result.replace(/^\*\*[\w\s]+\*\*$/gm, '');
+                result = result.replace(/^\s*(?:\*\*?\[.*?\]\*\*?|\(.*?\))\s*$/gm, '');
+                result = result.replace(/^\s*[\r\n]+/gm, '');
+
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result);
+
+                const targetSectionElement = document.getElementById(`${elementId}Section`);
+                if (targetSectionElement) {
+                    const sectionHtml = generateSectionHtmlContent(elementId, sectionTitle, result);
+                    targetSectionElement.innerHTML = sectionHtml;
+                    const accordionItem = targetSectionElement.querySelector('.accordion-item');
+                    if(accordionItem) accordionItem.classList.add('animate-fade-in');
+                } else {
+                    console.error(`Target section element with ID '${elementId}Section' not found.`);
+                    window.showToast("Erro interno: Seção do roteiro não encontrada.");
+                    return;
+                }
+                
+                markButtonAsCompleted(button.id);
+                updateButtonStates();
+
+            } catch (error) {
+                window.showToast(`Falha ao gerar ${sectionTitle}: ${error.message}`);
+                console.error(`Error generating ${sectionTitle}.`, error);
+            } finally {
+                hideLoading(button);
+            }
+        };
+
+        /**
+         * Re-gera o conteúdo de uma seção específica do roteiro.
+         * Chamada pelos botões "Re-gerar" dentro das seções.
+         * @param {string} sectionName - O nome da seção (ex: 'intro').
+         * @param {string} sectionTitle - O título da seção.
+         * @param {string} elementId - O ID do elemento HTML da seção.
+         */
+        window.regenerateSection = (sectionName, sectionTitle, elementId) => {
+            const mainButtonIdMap = {
+                'intro': 'generateIntroBtn',
+                'development': 'generateDevelopmentBtn',
+                'climax': 'climaxBtn',
+                'conclusion': 'conclusionBtn',
+                'cta': 'generateCTABtn'
+            };
+            const buttonId = mainButtonIdMap[sectionName];
+            if (buttonId) {
+                const button = document.getElementById(buttonId);
+                handleGenerateSection(button, sectionName, sectionTitle, elementId);
+            }
+        };
+
+        /**
+         * Gera prompts de imagem para uma seção específica do roteiro.
+         * @param {string} sectionElementId - O ID do elemento HTML da seção (ex: 'introSection').
+         */
+        window.generatePromptsForSection = async (sectionElementId) => {
+            const sectionElement = document.getElementById(sectionElementId);
+            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper'); // Updated selector
+            const promptContainer = sectionElement.querySelector('.prompt-container');
+            
+            if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
+                window.showToast("Por favor, gere o conteúdo do roteiro desta seção primeiro.");
+                return;
+            }
+
+            const scriptContent = scriptContentElement.textContent;
+            
+            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+
+            const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
+            const imageStyleSelect = elements.imageStyleSelect.value;
+            const customImageStyle = elements.customImageStyle.value.trim();
+            let selectedStyleBlock = '';
+
+            let prompt = `Você é um diretor de vídeo. Sua tarefa é ler o trecho de roteiro a seguir e criar prompts de imagem.
+
+**SUA REGRA MAIS IMPORTANTE é manter um ritmo dinâmico.** Não crie uma imagem para cada frase. O objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso significa que você deve LER várias frases, entender o tempo de narração e só então escolher o momento mais impactante DENTRO desse bloco de tempo para criar UM prompt.
+
+**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt de imagem que você criar **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do trecho do roteiro. Sem exceções. O vídeo precisa de um impacto visual imediato.
+
+Encontre os pontos de virada ou as imagens mentais mais fortes dentro desses intervalos de tempo.
+
+Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription").
+
+Trecho do roteiro:
+---${scriptContent}
+---`;
+            
+            if (imageDescriptionEngine) {
+                prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
+            }
+
+            if (imageStyleSelect === 'cinematic') {
+                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: hyper-realistic, masterful cinematography, Arri Alexa 65, vintage anamorphic lenses, deliberate composition, dramatic naturalistic lighting, strong chiaroscuro, extreme attention to micro-details, hyper-realistic textures (skin pores, fabric weaves, material imperfections), rich cinematic color grading, immersive and evocative mood. Avoid cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon.`;
+                prompt += `\n\n${cinematicPromptPart}`;
+                selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
+            } else if (imageStyleSelect === 'custom' && customImageStyle) {
+                prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
+                selectedStyleBlock = customImageStyle;
+            }
+
+            try {
+                const rawResult = await callGroqAPI(prompt, 4000); // Aumentado para 4000 tokens para prompts de imagem
+                const cleanedText = cleanGeneratedText(rawResult, true);
+                let prompts = [];
+                if (cleanedText) {
+                    try {
+                        prompts = JSON.parse(cleanedText);
+                        if (!Array.isArray(prompts)) {
+                            console.warn("AI returned non-array JSON, attempting to convert.");
+                            prompts = [prompts];
+                        }
+                    } catch (e) {
+                        window.showToast("Erro ao analisar JSON de prompts de imagem. Verifique o console.");
+                        console.error("Erro ao analisar JSON de prompts de imagem:", e);
+                        prompts = [];
+                    }
+                } else {
+                    window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
+                }
+
+                // Armazena os prompts gerados na estrutura global
+                let accumulatedTimeSeconds = 1; // Reinicia para cada seção para cálculo de tempo
+                allImagePrompts[sectionElementId] = prompts.map((p, i) => {
+                    const time = accumulatedTimeSeconds;
+                    accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
+                    const mins = Math.floor(time / 60);
+                    const secs = Math.floor(time % 60);
+                    return { 
+                        ...p, 
+                        time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, 
+                        sequence: String(i + 1).padStart(2, '0'),
+                        styleBlock: selectedStyleBlock
+                    };
+                });
+
+                promptContainer.innerHTML = ''; // Limpa o spinner
+                if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
+                    allImagePrompts[sectionElementId].forEach(promptData => {
+                        const styleBlockContent = promptData.styleBlock || '';
+                        
+                        // ABAIXO ESTÁ A LINHA DE HTML CORRIGIDA:
+                        const promptHtml = `
+                            <div class="individual-prompt-block card-background">
+                                <div class="flex items-center justify-between mb-2">
+                                    <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                                </div>
+                                <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                                <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
+                                <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                                <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                            </div>
+                        `;
+                        promptContainer.innerHTML += promptHtml;
+                    });
+                } else {
+                    promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
+                }
+                updateButtonStates(); // Atualiza o estado dos botões após gerar prompts
+            } catch (error) {
+                promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
+                console.error(`Error generating prompts for section ${sectionElementId}.`, error);
+            }
+        };
+
+        /**
+         * Sugere trilhas sonoras para uma seção específica do roteiro.
+         * @param {string} sectionId - O ID do elemento HTML da seção (ex: 'introSection').
+         */
+        window.suggestSoundtrack = async (sectionId) => {
+            const sectionElement = document.getElementById(sectionId);
+            const scriptContent = sectionElement.querySelector('.generated-content-wrapper').textContent; // Updated selector
+            const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
+            
+            if (!scriptContent) {
+                window.showToast("Gere o roteiro para esta seção primeiro.");
+                return;
+            }
+
+            soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+
+            const prompt = `Você é um especialista em prompts para IAs de geração de música (como Suno/Udio). Sua tarefa é analisar o seguinte trecho de roteiro e criar 3 prompts de texto distintos e detalhados.
+
+**REGRAS DE FORMATAÇÃO (NÃO NEGOCIÁVEIS):**1.  Sua resposta DEVE SER um array JSON válido.2.  O array deve conter EXATAMENTE 3 strings.3.  CADA string deve ser um parágrafo único, bem escrito e descritivo, pronto para ser colado em uma IA de música. NÃO use chaves, colchetes ou qualquer outra sintaxe de objeto DENTRO da string do prompt.
+
+**EXEMPLO DE RESPOSTA PERFEITA:**
+["Generate an epic, cinematic orchestral piece in the style of Hans Zimmer... No vocals or percussion, focus on the emotional intensity of the strings and piano.","Create a contemplative, melancholic ambient track with a slow, mournful tempo... No bright or cheerful notes, focus on the darker, more introspective tones.","Craft an uplifting, inspirational electronic piece with a moderate tempo... avoid any jarring or harsh sounds, focusing on the soaring, inspirational quality of the melody."
+]
+
+Agora, use o roteiro abaixo como inspiração para criar 3 prompts seguindo EXATAMENTE este formato.
+
+Trecho do roteiro para analisar:
+---
+${scriptContent}
+---`;
+            
+            try {
+                const rawResult = await callGroqAPI(prompt, 500);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const suggestions = JSON.parse(cleanedResult);
+
+                // Adiciona tratamento de erro para garantir que suggestions é um array de strings
+                if (!Array.isArray(suggestions) || !suggestions.every(s => typeof s === 'string')) {
+                    throw new Error("A IA retornou um formato de trilha sonora inesperado. Esperava um array de strings.");
+                }
+
+                soundtrackContainer.innerHTML = ''; // Limpa o spinner
+                if (suggestions && suggestions.length > 0) {
+                    // --- INÍCIO DA MUDANÇA PRINCIPAL ---
+                    // Agora envolvemos a lista em um div com as classes corretas para ter um fundo e padding.
+                    let suggestionsHtml = '<div class="card-background p-4 rounded-lg shadow-inner">';
+                    suggestionsHtml += '<ul class="soundtrack-list">';
+                    suggestions.forEach(suggestion => {
+                        suggestionsHtml += `<li>${suggestion}</li>`;
+                    });
+                    suggestionsHtml += '</ul>';
+                    suggestionsHtml += '</div>'; // Fecha o novo div
+                    // --- FIM DA MUDANÇA PRINCIPAL ---
+
+                    soundtrackContainer.innerHTML = suggestionsHtml;
+                } else {
+                    soundtrackContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma sugestão de trilha sonora foi gerada.</p>';
+                }
+            } catch (error) {
+                soundtrackContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar sugestões: ${error.message}</p>`;
+            }
+        };
+
+        /**
+         * Gera títulos de vídeo e ideias de thumbnail.
+         */
+        const generateTitlesAndThumbnails = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateTitlesAndThumbnailsBtn);
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('titles_thumbnails');
+                const result = await callGroqAPI(prompt, maxTokens);
+                const cleanedResult = cleanGeneratedText(result, true);
+                
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido.");
+                
+                const parsedContent = JSON.parse(cleanedResult);
+                generatedTitlesAndThumbnails = parsedContent;
+
+                const targetContentElement = document.getElementById('titlesThumbnailsContent');
+                if (targetContentElement) {
+                    const titlesListHtml = parsedContent.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                    const thumbnailsListHtml = parsedContent.thumbnails.map((thumb, index) => `
+                        <div class="${index === 0 ? '' : 'thumbnail-item-separator'}"> 
+                            <p class="font-semibold">"${thumb.title}"</p>
+                            <p class="text-sm leading-tight">Descrição: ${thumb.description}</p>
+                        </div>
+                    `).join('');
+
+                    targetContentElement.innerHTML = `
+                        <div class="space-y-4 text-sm">
+                            <div>
+                                <h4 class="font-bold text-base mb-2">Sugestões de Títulos:</h4>
+                                <div class="p-3 card-background rounded-md space-y-2">${titlesListHtml}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">Analisar CTR</button>
+                                    <div id="ctrAnalysisResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base mb-2">Ideias de Thumbnail:</h4>
+                                <div class="p-3 card-background rounded-md space-y-3">${thumbnailsListHtml}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeThumbnails()">Analisar Thumbnails</button>
+                                    <div id="thumbnailAnalysisResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Títulos: ${error.message}`);
+                console.error("Error generating Titles/Thumbnails.", error);
+            } finally {
+                hideLoading(buttons.generateTitlesAndThumbnailsBtn);
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Analisa o potencial de clique (CTR) dos títulos gerados.
+         */
+        window.analyzeTitles = async () => {
+            if (!generatedTitlesAndThumbnails || !generatedTitlesAndThumbnails.titles || generatedTitlesAndThumbnails.titles.length === 0) {
+                window.showToast("Gere os títulos primeiro!");
+                return;
+            }
+
+            const resultContainer = document.getElementById('ctrAnalysisResult');
+            resultContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
+
+            const titlesString = generatedTitlesAndThumbnails.titles.join('\n');
+            
+            const prompt = `Você é um especialista em marketing de conteúdo para o YouTube. Analise a seguinte lista de títulos de vídeo. Para cada um, forneça uma "nota de CTR" de 0 a 10 (onde 10 é um clique quase garantido) e uma sugestão curta e objetiva para melhorá-lo, focando em curiosidade, urgência e benefício claro.
+
+            Responda APENAS com um array JSON. Cada objeto no array deve ter as chaves "titulo_original", "nota_ctr" e "sugestao_melhora".
+
+            Títulos para analisar:
+            ---
+            ${titlesString}
+            ---`;
+
+            try {
+                const rawResult = await callGroqAPI(prompt, 2000);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const analysis = JSON.parse(cleanedResult);
+
+                let analysisHtml = '<div class="space-y-4">';
+                analysis.forEach(item => {
+                    analysisHtml += `
+                        <div class="p-3 card-background rounded-md shadow-sm">
+                            <p class="font-semibold text-gray-800 dark:text-gray-200">${item.titulo_original}</p>
+                            <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Nota de CTR:</strong> <span class="text-indigo-500 font-bold">${item.nota_ctr} / 10</span></p>
+                            <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Sugestão:</strong> ${item.sugestao_melhora}</p>
+                        </div>
+                    `;
+                });
+                analysisHtml += '</div>';
+                resultContainer.innerHTML = analysisHtml;
+
+            } catch (error) {
+                resultContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar os títulos: ${error.message}</p>`;
+            }
+        };
+
+        /**
+         * Analisa o potencial de clique (CTR) das ideias de thumbnail geradas.
+         */
+        window.analyzeThumbnails = async () => {
+            if (!generatedTitlesAndThumbnails || !generatedTitlesAndThumbnails.thumbnails || generatedTitlesAndThumbnails.thumbnails.length === 0) {
+                window.showToast("Gere as ideias de thumbnail primeiro!");
+                return;
+            }
+
+            const resultContainer = document.getElementById('thumbnailAnalysisResult');
+            resultContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
+
+            const thumbnailsString = generatedTitlesAndThumbnails.thumbnails.map(t => `Título: ${t.title}, Descrição: ${t.description}`).join('\n---\n');
+            
+            // --- INÍCIO DA CORREÇÃO NO PROMPT ---
+            const prompt = `Você é um Diretor de Arte e especialista em YouTube. Analise a seguinte lista de ideias para thumbnails. Para cada uma, forneça uma "nota de potencial visual" de 0 a 10 (onde 10 é uma imagem irresistível) e uma sugestão curta para maximizar o impacto visual, focando em contraste, emoção facial, clareza e curiosidade.
+
+            Responda APENAS com um array JSON. Cada objeto no array deve ter as chaves "titulo", "nota_visual" e "sugestao_melhora". A chave "titulo" DEVE conter o título original da ideia que você analisou.
+
+            Ideias para analisar:
+            ---
+            ${thumbnailsString}
+            ---`;
+            // --- FIM DA CORREÇÃO NO PROMPT ---
+
+            try {
+                const rawResult = await callGroqAPI(prompt, 2500);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const analysis = JSON.parse(cleanedResult);
+
+                let analysisHtml = '<div class="space-y-4">';
+                analysis.forEach(item => {
+                    // --- INÍCIO DA CORREÇÃO NA RENDERIZAÇÃO ---
+                    analysisHtml += `
+                        <div class="p-3 card-background rounded-md shadow-sm">
+                            <p class="font-semibold text-gray-800 dark:text-gray-200">"${item.titulo || 'Ideia Sem Título'}"</p>
+                            <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Nota de Potencial Visual:</strong> <span class="text-indigo-500 font-bold">${item.nota_visual} / 10</span></p>
+                            <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Sugestão:</strong> ${item.sugestao_melhora}</p>
+                        </div>
+                    `;
+                    // --- FIM DA CORREÇÃO NA RENDERIZAÇÃO ---
+                });
+                analysisHtml += '</div>';
+                resultContainer.innerHTML = analysisHtml;
+
+            } catch (error) {
+                resultContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar as thumbnails: ${error.message}</p>`;
+            }
+        };
+        /**
+         * Gera a descrição do vídeo e hashtags.
+         */
+        const generateVideoDescription = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateDescriptionBtn);
+            try {
+                let result = await callGroqAPI(constructScriptPrompt('description').prompt, constructScriptPrompt('description').maxTokens);
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result); // <-- REINTRODUZIMOS A LIMPEZA!
+                
+                const targetContentElement = document.getElementById('videoDescriptionContent');
+                if (targetContentElement) {
+                    targetContentElement.innerHTML = `<div class="p-3 text-sm card-background rounded-md whitespace-pre-wrap">${result}</div>`;
+                    markButtonAsCompleted(buttons.generateDescriptionBtn.id);
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Descrição: ${error.message}`);
+                console.error("Error generating Video Description.", error);
+            } finally {
+                hideLoading(buttons.generateDescriptionBtn);
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Gera o esboço estratégico do roteiro.
+         */
+        const generateStrategicOutline = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateOutlineBtn);
+            const outlineContentDiv = elements.outlineContent;
+            outlineContentDiv.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('outline', 'Esboço Estratégico');
+                const result = await callGroqAPI(prompt, maxTokens); // Use maxTokens from constructScriptPrompt
+                const cleanedResult = cleanGeneratedText(result, true);
+
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para o esboço.");
+
+                strategicOutline = JSON.parse(cleanedResult); // Armazena o esboço globalmente
+                
+                // Formata o esboço para exibição
+                let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm">';
+                for (const key in strategicOutline) {
+                    outlineHtml += `<li><strong class="font-semibold capitalize">${key}:</strong> ${strategicOutline[key]}</li>`;
+                }
+                outlineHtml += '</ul>';
+                outlineContentDiv.innerHTML = outlineHtml;
+
+                // REMOVIDO: Habilita os botões de geração de seção
+                // A lógica agora está na função handleGenerateSection para exibir um alerta.
+
+                markButtonAsCompleted(buttons.generateOutlineBtn.id);
+
+            } catch (error) {
+                window.showToast(`Falha ao gerar Esboço: ${error.message}`);
+                console.error("Error generating Outline.", error);
+                outlineContentDiv.innerHTML = `<div class="asset-card-placeholder text-red-500">Erro ao gerar o esboço. Tente novamente.</div>`;
+            } finally {
+                hideLoading(buttons.generateOutlineBtn);
+                updateButtonStates();
+            }
+        };
+
+
+        /**
+         * Realiza o download do roteiro como PDF.
+         */
+        const downloadPdf = async () => {
+            // 1. Criar um container temporário para a impressão
+            let printContainer = document.createElement('div');
+            printContainer.id = 'print-container';
+
+            // 2. Coletar e formatar TODO o conteúdo que queremos imprimir
+            let htmlToPrint = `<h1 style="text-align: center; font-size: 22pt; margin-bottom: 24px;">${elements.videoTheme.value}</h1>`;
+
+            // Adicionar o esboço estratégico
+            if (strategicOutline) {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Esboço Estratégico</div>
+                        <div class="print-section-content">
+                            <ul style="list-style-type: disc; padding-left: 20px;">`;
+                for (const key in strategicOutline) {
+                    htmlToPrint += `<li><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> ${strategicOutline[key]}</li>`;
+                }
+                htmlToPrint += `</ul></div></div>`;
+            }
+
+            // Adicionar o roteiro principal
+            document.querySelectorAll('#scriptSectionsContainer .accordion-item').forEach(item => {
+                const title = item.querySelector('h3')?.textContent;
+                const content = item.querySelector('.generated-content-wrapper')?.textContent;
+                if (title && content) {
+                    htmlToPrint += `
+                        <div class="print-section">
+                            <div class="print-section-title">${title}</div>
+                            <div class="print-section-content"><pre>${content}</pre></div>
+                        </div>`;
+                }
+            });
+            
+            // Adicionar Descrição e Hashtags
+            const videoDescriptionContent = document.getElementById('videoDescriptionContent');
+            if (videoDescriptionContent && videoDescriptionContent.textContent.trim() !== 'Clique em \'Gerar\' para ver a descrição') {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Descrição & Hashtags</div>
+                        <div class="print-section-content">${videoDescriptionContent.innerHTML}</div>
+                    </div>`;
+            }
+
+            // Adicionar Títulos e Thumbnails
+            const titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent');
+            if (titlesThumbnailsContent && titlesThumbnailsContent.textContent.trim() !== 'Clique em \'Gerar\' para ver as sugestões') {
+                htmlToPrint += `
+                    <div class="print-section">
+                        <div class="print-section-title">Títulos & Thumbnails</div>
+                        <div class="print-section-content">${titlesThumbnailsContent.innerHTML}</div>
+                    </div>`;
+            }
+
+            // 3. Injetar o HTML no container e adicioná-lo ao body
+            printContainer.innerHTML = htmlToPrint;
+            document.body.appendChild(printContainer);
+
+            // 4. Chamar a impressão
+            window.print();
+
+            // 5. Remover o container temporário após a impressão (com um pequeno atraso para garantir a renderização)
+            setTimeout(() => {
+                document.body.removeChild(printContainer);
+            }, 500); // 500ms de atraso
+        };
+
+        /**
+         * Reseta o estado da aplicação para um novo roteiro.
+         */
+        const resetApplicationState = () => {
+            elements.videoTheme.value = '';
+            elements.videoDescription.value = '';
+            elements.centralQuestion.value = '';
+            elements.emotionalArc.value = '';
+            elements.viralElements.value = '';
+            elements.imageDescriptionEngine.value = '';
+            elements.imageStyleSelect.value = 'cinematic';
+            elements.customImageStyle.value = '';
+            toggleCustomImageStyleVisibility();
+            elements.narrativeStyle.value = 'direct';
+            elements.videoDuration.value = '';
+
+            // Limpar a coluna de roteiro
+            document.querySelectorAll('#scriptColumn > .script-section').forEach(sec => {
+                sec.innerHTML = '';
+                sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
+            });
+            // Limpar o cartão do esboço
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
+            strategicOutline = null; // Reseta o esboço estratégico
+
+            // Limpar os cartões de recursos e restaurar os placeholders
+            document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
+            document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
+            // Removed storyboardContent reset
+
+            allImagePrompts = {}; // Limpa todos os prompts de imagem
+            generatedTitlesAndThumbnails = null;
+            
+            resetCompletionIcons();
+            updateButtonStates();
+            updateProgressBar(); 
+
+            // Esconder o dashboard até que um novo conteúdo seja gerado
+            elements.projectDashboard.classList.add('hidden');
+
+            window.showToast("Pronto para um novo roteiro!");
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        };
+
+        /**
+         * Exporta o estado atual do projeto para um arquivo JSON.
+         */
+        const exportProject = () => {
+            const projectData = {
+                inputs: {},
+                outputs: {},
+                memory: {
+                    allImagePrompts: allImagePrompts,
+                    generatedTitlesAndThumbnails: generatedTitlesAndThumbnails,
+                    strategicOutline: strategicOutline // Exporta o esboço
+                }
+            };
+
+            // Salva o estado dos inputs
+            for (const key in elements) {
+                if (elements[key] && typeof elements[key].value !== 'undefined') {
+                    projectData.inputs[key] = elements[key].value;
+                }
+            }
+            // Salva o conteúdo gerado (HTML interno das seções)
+            const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            scriptSectionIds.forEach(id => {
+                const sectionElement = document.getElementById(id);
+                if (sectionElement) {
+                    projectData.outputs[id] = sectionElement.innerHTML;
+                }
+            });
+
+            // Salva o conteúdo do esboço
+            projectData.outputs.strategicOutlineContent = elements.outlineContent.innerHTML;
+
+            // Salva o conteúdo dos cartões de recursos
+            projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
+            projectData.outputs.videoDescriptionContent = document.getElementById('videoDescriptionContent').innerHTML;
+            // Removed storyboardContent export
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            const fileName = elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro_viral';
+            downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            window.showToast("Projeto exportado com sucesso!");
+        };
+
+        /**
+         * Renderiza os prompts de imagem para uma seção específica na UI.
+         * Usado após carregar um projeto.
+         * @param {string} sectionElementId - O ID do elemento HTML da seção.
+         */
+        const renderImagePromptsForSection = (sectionElementId) => {
+            const sectionElement = document.getElementById(sectionElementId);
+            if (!sectionElement) return;
+
+            const promptContainer = sectionElement.querySelector('.prompt-container');
+            if (!promptContainer) return;
+
+            promptContainer.innerHTML = ''; // Limpa prompts existentes
+
+            const promptsData = allImagePrompts[sectionElementId];
+            if (promptsData && promptsData.length > 0) {
+                promptsData.forEach(promptData => {
+                    const styleBlockContent = promptData.styleBlock || '';
+                    const promptHtml = `
+                        <div class="individual-prompt-block card-background">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
+                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                            </div>
+                            <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                            <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
+                            <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
+                            <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                        </div>
+                    `;
+                    promptContainer.innerHTML += promptHtml;
+                });
+            } else {
+                promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
+            }
+        };
+
+        /**
+         * Importa um projeto de um arquivo JSON.
+         * @param {Event} event - O evento de mudança do input de arquivo.
+         */
+        const importProject = (event) => {
+            const file = event.target.files[0];
+            if (!file) { return; }
+
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    const projectData = JSON.parse(e.target.result);
+                    
+                    resetApplicationState(); // Limpa o estado atual antes de importar
+
+                    // Restaura os inputs
+                    for (const key in projectData.inputs) {
+                        if (elements[key] && typeof elements[key].value !== 'undefined') {
+                            elements[key].value = projectData.inputs[key];
+                        }
+                    }
+
+                    // Restaura o conteúdo gerado nas seções do roteiro
+                    const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+                    scriptSectionIds.forEach(id => {
+                        const sectionElement = document.getElementById(id);
+                        if (sectionElement && projectData.outputs[id]) {
+                            sectionElement.innerHTML = projectData.outputs[id];
+                            sectionElement.classList.remove('hidden'); // Ensure it's visible if it has content
+                            sectionElement.classList.add('animate-fade-in');
+                        }
+                    });
+
+                    // Restore strategic outline content
+                    if (projectData.outputs.strategicOutlineContent) {
+                        elements.outlineContent.innerHTML = projectData.outputs.strategicOutlineContent;
+                    }
+                    strategicOutline = projectData.memory.strategicOutline || null; // Importa o esboço
+
+                    // Restore content of the asset cards
+                    if (projectData.outputs.titlesThumbnailsContent) {
+                        document.getElementById('titlesThumbnailsContent').innerHTML = projectData.outputs.titlesThumbnailsContent;
+                    }
+                    if (projectData.outputs.videoDescriptionContent) {
+                        document.getElementById('videoDescriptionContent').innerHTML = projectData.outputs.videoDescriptionContent;
+                    }
+                    // Removed storyboardContent import
+
+                    // Restaura as variáveis de memória
+                    allImagePrompts = projectData.memory.allImagePrompts || {};
+                    generatedTitlesAndThumbnails = projectData.memory.generatedTitlesAndThumbnails || null;
+
+                    updateButtonStates();
+                    
+                    // Marca os botões como concluídos se o conteúdo existir
+                    // Strategic Outline button
+                    if (elements.outlineContent.textContent.trim() !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && elements.outlineContent.textContent.trim() !== "Não foi possível gerar o esboço. Tente novamente." && elements.outlineContent.textContent.trim() !== "Erro ao gerar.") {
+                        markButtonAsCompleted('generateOutlineBtn');
+                    }
+                    // Script sections
+                    if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
+                    if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
+                    if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn');
+                    if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
+                    if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
+                    // Asset buttons (check if content is not placeholder)
+                    if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
+                    if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
+                    // Removed storyboardContent check for completion
+
+
+                    // Re-renderiza os prompts de imagem para todas as seções
+                    for (const sectionId in allImagePrompts) {
+                        if (allImagePrompts.hasOwnProperty(sectionId)) {
+                            renderImagePromptsForSection(sectionId);
+                        }
+                    }
+                    updateProgressBar(); 
+                    // Show dashboard after import
+                    elements.projectDashboard.classList.remove('hidden');
+                    window.showToast("Projeto importado com sucesso!");
+
+                } catch (err) {
+                    window.showToast("Erro: Arquivo de projeto inválido ou corrompido.");
+                    console.error("Erro ao importar projeto:", err);
+                }
+            };
+            reader.readAsText(file);
+            event.target.value = ''; // Limpa o input para permitir importar o mesmo arquivo novamente
+        };
+
+        /**
+         * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
+         */
+        const analyzeAndSetStrategy = async () => {
+            const theme = elements.videoTheme.value.trim();
+            const description = elements.videoDescription.value.trim();
+
+            if (!theme || !description) {
+                window.showToast("Por favor, preencha o Tema e a Descrição do Vídeo.");
+                return;
+            }
+
+            const button = buttons.analyzeStrategyBtn;
+            showLoading(button);
+
+            // Opções válidas para cada campo (precisamos disso para a IA)
+            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
+            const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
+            const narrativeStyleOptions = Array.from(elements.narrativeStyle.options).map(o => o.value).join(', ');
+
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Sua tarefa é analisar o tema e a descrição de um vídeo e definir a melhor estratégia de conteúdo para ele.
+
+            Tema do Vídeo: "${theme}"
+            Descrição do Vídeo: "${description}"
+
+            Com base nisso, preencha os seguintes campos. Responda APENAS com um objeto JSON válido.
+
+            O objeto JSON deve ter as seguintes chaves:
+            1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
+            2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
+            3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções: [${videoObjectiveOptions}].
+            4.  "narrative_style": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStyleOptions}].
+            5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
+            6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
+
+            Analise profundamente o tema e a descrição para fazer as escolhas mais coesas e eficazes.`;
+
+            try {
+                const rawResult = await callGroqAPI(prompt, 1000);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const strategy = JSON.parse(cleanedResult);
+
+                // Preenche os campos da interface com a resposta da IA
+                if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
+                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
+                
+                if (strategy.video_objective) {
+                    const objectiveSelect = elements.videoObjective;
+                    const returnedValue = strategy.video_objective;
+                    
+                    // Cria um array com todos os valores válidos das opções
+                    const validOptions = Array.from(objectiveSelect.options).map(opt => opt.value);
+                    
+                    // Verifica se o valor retornado pela IA está na nossa lista de opções válidas
+                    if (validOptions.includes(returnedValue)) {
+                        objectiveSelect.value = returnedValue;
+                    } else {
+                        // Se não for válido, define um padrão seguro (ex: 'informar')
+                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
+                        objectiveSelect.value = 'informar'; 
+                    }
+                }
+
+                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style; // CORRIGIDO AQUI
+                if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
+                if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
+
+                window.showToast("Estratégia definida com sucesso!");
+                elements.projectDashboard.classList.remove('hidden'); // Show dashboard after strategy is set
+
+            } catch (error) {
+                window.showToast(`Falha ao definir estratégia: ${error.message}`);
+                console.error("Erro na análise estratégica:", error);
+            } finally {
+                hideLoading(button);
+            }
+        };
+
+        /**
+         * Controla a visibilidade e o conteúdo da barra de ações flutuante com base na rolagem.
+         */
+        window.handleFloatingActionBar = () => {
+            const mainActions = document.getElementById('mainActions');
+            const quickActions = document.getElementById('quickActions');
+            const projectDashboard = document.getElementById('projectDashboard'); // Changed from scriptOutput
+            
+            if (!projectDashboard) return;
+
+            const actionBar = elements.floatingActionBar;
+            // Ponto de gatilho para a barra flutuante (um pouco antes da área de output)
+            const triggerPoint = projectDashboard.offsetTop - actionBar.offsetHeight - 50; // 50px de buffer
+
+            if (window.scrollY > triggerPoint) {
+                // Se rolou para a área de resultados, mostra a barra e as Ações Rápidas
+                actionBar.classList.add('visible');
+                mainActions.classList.add('hidden');
+                quickActions.classList.remove('hidden');
+            } else if (window.scrollY > 150) { // Um pequeno buffer para não aparecer imediatamente no topo
+                // Se rolou um pouco, mas não chegou nos resultados, mostra a barra com as Ações Principais
+                actionBar.classList.add('visible');
+                mainActions.classList.remove('hidden');
+                quickActions.classList.add('hidden');
+            } else {
+                // Se está no topo, esconde a barra
+                actionBar.classList.remove('visible');
+            }
+        };
+
+        /**
+         * Alterna o estado de um acordeão (abrir/fechar).
+         * @param {string} bodyId - O ID do corpo do acordeão.
+         * @param {string} arrowId - O ID do ícone de seta do acordeão.
+         */
+        window.toggleAccordion = (bodyId, arrowId) => {
+            const body = document.getElementById(bodyId);
+            const arrow = document.getElementById(arrowId);
+            if (body && arrow) {
+                body.classList.toggle('open');
+                arrow.classList.toggle('open');
+                // Adiciona ou remove a classe 'active' no elemento pai do cabeçalho
+                arrow.closest('.accordion-header').classList.toggle('active');
+            }
+        };
+
+        // ==========================================================
+        // NOVA FUNÇÃO PARA ATUALIZAR A BARRA DE PROGRESO
+        // ==========================================================
+        const updateProgressBar = () => {
+            // Lista de todas as tarefas que contam para o progresso
+            const taskButtonIds = [
+                'generateOutlineBtn', // Added outline button
+                'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
+                'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
+                'generateTitlesAndThumbnailsBtn' 
+            ];
+            const totalTasks = taskButtonIds.length;
+
+            let completedTasks = 0;
+            taskButtonIds.forEach(id => {
+                const button = document.getElementById(id);
+                // Check if the button is marked as success (meaning content was generated)
+                if (button && button.classList.contains('btn-success')) {
+                    completedTasks++;
+                }
+            });
+
+            const percentage = Math.round((completedTasks / totalTasks) * 100);
+
+            // Atualiza a UI
+            if (elements.progressBar && elements.progressText) {
+                elements.progressBar.style.width = `${percentage}%`;
+                elements.progressText.textContent = `${percentage}%`;
+
+                if (percentage === 100) {
+                    elements.progressBar.textContent = "Projeto Pronto!"; // Atualiza o texto diretamente na barra
+                    elements.progressBar.style.backgroundColor = 'var(--primary-color)';
+                } else {
+                     // Garante que a cor volte ao verde se não for 100%
+                    elements.progressBar.style.backgroundColor = 'var(--success-color)';
+                }
+            }
+        };
+
+        // ==========================================================
+        // ================== INICIALIZAÇÃO =======================
+        // ==========================================================
+        document.addEventListener('DOMContentLoaded', () => {
+            console.log("DOM Content Loaded. Initializing app."); 
+            
+            // Adiciona as novas referências de elementos
+            elements.progressBar = document.getElementById('progressBar');
+            elements.progressText = document.getElementById('progressText');
+            elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
+            elements.outlineContent = document.getElementById('outlineContent'); // New reference for outline content
+
+            // Configura os event listeners para os botões
+            const setupClick = (originalId) => {
+                const floatBtn = document.getElementById(`float_${originalId}`);
+                if (floatBtn) {
+                    floatBtn.addEventListener('click', () => {
+                        document.getElementById(originalId).click();
+                    });
+                }
+            };
+
+            // Conecta os botões flutuantes aos originais
+            // Iterar sobre todos os botões que têm um flutuante correspondente
+            const allButtonIds = Object.keys(buttons);
+            allButtonIds.forEach(id => {
+                // Exclui o botão do modo zen da barra flutuante, pois ele foi movido
+                if (id.startsWith('generate') || id.startsWith('climax') || id.startsWith('conclusion') || id.startsWith('cta') || id.startsWith('download') || id.startsWith('reset') || id.startsWith('export') || id.startsWith('import')) {
+                    setupClick(id);
+                }
+            });
+            
+            // Adiciona os listeners de ação aos botões originais
+            if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); // New listener for outline
+            if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
+            if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
+            if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
+            if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
+            if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
+            if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
+            if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
+            // Removed storyboard button listener
+            if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
+            if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); // Changed to window.print()
+            if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
+            
+            // Outros listeners
+            if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
+            if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
+            
+            // NOVO CÓDIGO À PROVA DE BALAS PARA O MODO ESCURO
+            const darkModeButton = document.getElementById('darkModeToggle');
+            if (darkModeButton) {
+                darkModeButton.addEventListener('click', () => {
+                    const moonIcon = document.getElementById('moonIcon');
+                    const sunIcon = document.getElementById('sunIcon');
+                    
+                    // Alterna a classe 'dark' no body
+                    document.body.classList.toggle('dark');
+
+                    // Verifica se o modo escuro está ATIVO agora
+                    if (document.body.classList.contains('dark')) {
+                        // Se SIM, esconde a lua, mostra o sol, e salva no localStorage
+                        if (moonIcon) moonIcon.classList.add('hidden');
+                        if (sunIcon) sunIcon.classList.remove('hidden');
+                        localStorage.setItem('darkMode', 'enabled');
+                    } else {
+                        // Se NÃO, esconde o sol, mostra a lua, e salva no localStorage
+                        if (moonIcon) moonIcon.classList.remove('hidden');
+                        if (sunIcon) sunIcon.classList.add('hidden');
+                        localStorage.setItem('darkMode', 'disabled');
+                    }
+                });
+            }
+            // Adicione esta linha dentro do DOMContentLoaded, fora de qualquer listener
+            if (localStorage.getItem('darkMode') === 'enabled') {
+                const moonIcon = document.getElementById('moonIcon');
+                const sunIcon = document.getElementById('sunIcon');
+                document.body.classList.add('dark');
+                if (moonIcon) moonIcon.classList.add('hidden');
+                if (sunIcon) sunIcon.classList.remove('hidden');
+            }
+
+            if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
+            if (buttons.importProjectBtn) {
+                buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
+                elements.importFileInput.addEventListener('change', importProject);
+            }
+
+            // Lógica para o Modo Zen
+            const zenModeBtn = document.getElementById('toggleZenModeBtn');
+            if (zenModeBtn) {
+                zenModeBtn.addEventListener('click', () => {
+                    document.body.classList.toggle('zen-mode');
+                });
+            }
+
+            const exitZenModeBtn = document.getElementById('exitZenModeBtn');
+            if (exitZenModeBtn) {
+                exitZenModeBtn.addEventListener('click', () => {
+                    document.body.classList.remove('zen-mode');
+                });
+            }
+
+            // Define o estado inicial dos botões
+            updateButtonStates();
+            // Adiciona o listener de rolagem para a barra flutuante
+            window.addEventListener('scroll', window.handleFloatingActionBar);
+            updateProgressBar(); 
+        });
+    </script>
+</body>
+</html>
