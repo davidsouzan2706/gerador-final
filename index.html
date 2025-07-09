@@ -59,12 +59,15 @@
             margin-bottom: 0.5rem;
             display: block;
         }
-        /* Correção Explícita para Inputs no Modo Claro */
+        /* ========================================================== */
+        /* ======== ESTILIZAÇÃO DEFINITIVA DE INPUTS E FORMS ======== */
+        /* ========================================================== */
+        /* --- ESTADO PADRÃO (MODO CLARO) --- */
         .input-group input,
         .input-group select,
         .input-group textarea {
             background-color: var(--bg-light) !important;
-            border-color: var(--border-light) !important;
+            border: 1.5px solid var(--border-light) !important;
             color: var(--text-dark) !important;
             width: 100%;
             padding: 0.75rem;
@@ -72,14 +75,33 @@
             font-size: 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
         }
-        /* Garante que os estilos de foco também funcionem corretamente no modo claro */
         .input-group input:focus,
         .input-group select:focus,
         .input-group textarea:focus {
-            outline: none;
-            background-color: #ffffff !important;
+            outline: none !important;
             border-color: var(--primary-color) !important;
-            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
+            box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2) !important;
+            background-color: #ffffff !important;
+        }
+        /* --- ESTADO MODO ESCURO --- */
+        .dark .input-group input,
+        .dark .input-group select,
+        .dark .input-group textarea {
+            background-color: #374151 !important; /* gray-700 */
+            border-color: #4b5563 !important; /* gray-600 */
+            color: #f9fafb !important; /* gray-50 */
+        }
+        .dark .input-group input:focus,
+        .dark .input-group select:focus,
+        .dark .input-group textarea:focus {
+            border-color: #6366f1 !important; /* indigo-500 */
+            background-color: #4b5563 !important; /* gray-600 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+        }
+        /* --- CORREÇÃO PARA O PLACEHOLDER --- */
+        .dark .input-group input::placeholder,
+        .dark .input-group textarea::placeholder {
+            color: #9ca3af; /* gray-400 */
         }
         .btn {
             padding: 0.75rem 1.5rem;
@@ -421,20 +443,7 @@
         .dark .action-bar-title, .dark h3, .dark h4, .dark label, .dark p { color: #f3f4f6; }
         .dark .text-gray-500 { color: #9ca3af; }
         .dark .input-group label { color: #d1d5db; }
-        .dark .input-group input,
-        .dark .input-group select,
-        .dark .input-group textarea {
-            background-color: #374151; /* gray-700 */
-            border-color: #4b5563; /* gray-600 */
-            color: #f9fafb; /* gray-50 */
-        }
-        .dark .input-group input:focus,
-        .dark .input-group select:focus,
-        .dark .input-group textarea:focus {
-            border-color: #6366f1; /* indigo-500 */
-            background-color: #4b5563; /* gray-600 */
-            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3);
-        }
+        /* As regras para .dark .input-group input, select, textarea já estão no bloco definitivo acima */
         .dark .bg-indigo-50 { background-color: #374151 !important; }
         .dark .border-indigo-200 { border-color: #4b5563 !important; }
         .dark .text-indigo-800 { color: #a5b4fc !important; }
