@@ -707,6 +707,20 @@
         .dark #projectDashboard h3 {
             color: #f3f4f6 !important; /* Cor de texto clara */
         }
+
+        /* ========================================================== */
+        /* ========= BLINDAGEM DE ESTILO PARA PROMPTS ========== */
+        /* ========================================================== */
+        /* Estilo para o <pre> em MODO CLARO dentro do prompt */
+        .individual-prompt-block pre {
+            background-color: var(--bg-light) !important; /* Ex: #f9fafb (cinza 50) */
+            color: var(--text-medium) !important; /* Ex: #4b5563 (cinza 600) */
+        }
+        /* Estilo para o <pre> em MODO ESCURO dentro do prompt */
+        .dark .individual-prompt-block pre {
+            background-color: #374151 !important; /* Cinza 700 */
+            color: #d1d5db !important; /* Cinza 300 */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1935,11 +1949,17 @@ ${scriptContent}
 
                 soundtrackContainer.innerHTML = ''; // Limpa o spinner
                 if (suggestions && suggestions.length > 0) {
-                    let suggestionsHtml = '<ul class="soundtrack-list">';
+                    // --- INÍCIO DA MUDANÇA PRINCIPAL ---
+                    // Agora envolvemos a lista em um div com as classes corretas para ter um fundo e padding.
+                    let suggestionsHtml = '<div class="card-background p-4 rounded-lg shadow-inner">';
+                    suggestionsHtml += '<ul class="soundtrack-list">';
                     suggestions.forEach(suggestion => {
                         suggestionsHtml += `<li>${suggestion}</li>`;
                     });
                     suggestionsHtml += '</ul>';
+                    suggestionsHtml += '</div>'; // Fecha o novo div
+                    // --- FIM DA MUDANÇA PRINCIPAL ---
+
                     soundtrackContainer.innerHTML = suggestionsHtml;
                 } else {
                     soundtrackContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhuma sugestão de trilha sonora foi gerada.</p>';
