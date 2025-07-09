@@ -634,18 +634,27 @@
             flex-grow: 1;
             overflow-y: auto;
         }
+        /* Localize esta regra no seu CSS e substitua-a por completo */
         #scriptGenerationControls {
             /* Garante que os controles fiquem "colados" na parte inferior da coluna */
             position: sticky;
             bottom: 0;
-            /* Fundo com transparência para um efeito mais elegante ao rolar */
-            background-color: rgba(255, 255, 255, 0.9); /* Branco semi-transparente para um efeito de vidro neutro */
+            
+            /* MODO CLARO (Restaurando o fundo original que você gostava) */
+            background-color: rgba(238, 242, 255, 0.95); /* Indigo-50 com transparência */
+            
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             z-index: 10; /* Garante que fique acima do conteúdo que rola */
+            
+            /* Adiciona a borda superior para um acabamento mais limpo */
+            border-top: 1px solid var(--border-light);
         }
+        /* ESTA É A NOVA REGRA CRÍTICA PARA O MODO ESCURO */
         .dark #scriptGenerationControls {
-            /* background-color e border-top já definidos acima */
+            /* Define o fundo e a borda específicos para o modo escuro */
+            background-color: rgba(31, 41, 55, 0.85); /* Fundo Cinza-800 com transparência */
+            border-top-color: #4b5563; /* Borda Cinza-600 */
         }
 
         /* ========================================================== */
@@ -736,6 +745,31 @@
         .dark .individual-prompt-block pre {
             background-color: #374151 !important; /* Cinza 700 */
             color: #d1d5db !important; /* Cinza 300 */
+        }
+
+        /* ========================================================== */
+        /* ==== CORREÇÃO DEFINITIVA P/ TEXTOS DA COLUNA DE RECURSOS ==== */
+        /* ========================================================== */
+        /* Define a cor de texto padrão (MODO CLARO) para o conteúdo dos cards */
+        #assetsColumn .card-background,
+        #assetsColumn .card-background p,
+        #assetsColumn .card-background li,
+        #assetsColumn .card-background strong {
+            color: var(--text-dark) !important; /* Força o texto escuro */
+        }
+        /* Define a cor de texto (MODO ESCURO) para o conteúdo dos cards */
+        .dark #assetsColumn .card-background,
+        .dark #assetsColumn .card-background p,
+        .dark #assetsColumn .card-background li,
+        .dark #assetsColumn .card-background strong {
+            color: #d1d5db !important; /* Força o texto cinza claro */
+        }
+        /* Ajuste específico para os títulos dentro dos cards de recursos */
+        #assetsColumn h4 {
+            color: var(--text-dark) !important;
+        }
+        .dark #assetsColumn h4 {
+            color: #f3f4f6 !important;
         }
     </style>
 </head>
