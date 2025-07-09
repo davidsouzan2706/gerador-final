@@ -639,7 +639,7 @@
             position: sticky;
             bottom: 0;
             /* Fundo com transparência para um efeito mais elegante ao rolar */
-            background-color: rgba(238, 242, 255, 0.95); /* Indigo-50 com transparência */
+            background-color: rgba(255, 255, 255, 0.9); /* Branco semi-transparente para um efeito de vidro neutro */
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
             z-index: 10; /* Garante que fique acima do conteúdo que rola */
@@ -2012,7 +2012,7 @@ ${scriptContent}
                     `).join('');
 
                     targetContentElement.innerHTML = `
-                        <div class="space-y-4 text-sm text-gray-700 dark:text-gray-300">
+                        <div class="space-y-4 text-sm">
                             <div>
                                 <h4 class="font-bold text-base mb-2">Sugestões de Títulos:</h4>
                                 <div class="p-3 card-background rounded-md space-y-2">${titlesListHtml}</div>
@@ -2147,7 +2147,7 @@ ${scriptContent}
                 
                 const targetContentElement = document.getElementById('videoDescriptionContent');
                 if (targetContentElement) {
-                    targetContentElement.innerHTML = `<div class="p-3 text-sm text-gray-700 dark:text-gray-300 card-background rounded-md whitespace-pre-wrap">${result}</div>`;
+                    targetContentElement.innerHTML = `<div class="p-3 text-sm card-background rounded-md whitespace-pre-wrap">${result}</div>`;
                     markButtonAsCompleted(buttons.generateDescriptionBtn.id);
                 }
             } catch (error) {
@@ -2178,9 +2178,9 @@ ${scriptContent}
                 strategicOutline = JSON.parse(cleanedResult); // Armazena o esboço globalmente
                 
                 // Formata o esboço para exibição
-                let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm text-gray-700 dark:text-gray-300">';
+                let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm">';
                 for (const key in strategicOutline) {
-                    outlineHtml += `<li><strong class="font-semibold text-gray-800 dark:text-gray-200 capitalize">${key}:</strong> ${strategicOutline[key]}</li>`;
+                    outlineHtml += `<li><strong class="font-semibold capitalize">${key}:</strong> ${strategicOutline[key]}</li>`;
                 }
                 outlineHtml += '</ul>';
                 outlineContentDiv.innerHTML = outlineHtml;
