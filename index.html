@@ -1906,7 +1906,7 @@ The final output MUST be only the JSON code, like this example:
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
-            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper'); // Updated selector
+            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper');
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
@@ -1916,26 +1916,31 @@ The final output MUST be only the JSON code, like this example:
 
             const scriptContent = scriptContentElement.textContent;
             
-            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
 
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            let prompt = `Você é um diretor de vídeo. Sua tarefa é ler o trecho de roteiro a seguir e criar prompts de imagem.
+            // --- INÍCIO DA MUDANÇA PRINCIPAL NO PROMPT ---
+            let prompt = `Você é um **Diretor de Arte e Artista de Storyboard**. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
 
-**SUA REGRA MAIS IMPORTANTE é manter um ritmo dinâmico.** Não crie uma imagem para cada frase. O objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso significa que você deve LER várias frases, entender o tempo de narração e só então escolher o momento mais impactante DENTRO desse bloco de tempo para criar UM prompt.
+**REGRA ABSOLUTA: NÃO descreva movimentos de câmera, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.**
 
-**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt de imagem que você criar **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do trecho do roteiro. Sem exceções. O vídeo precisa de um impacto visual imediato.
+**RITMO DINÂMICO:** O seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Leia várias frases, entenda o tempo, e só então escolha o momento mais impactante para criar UM prompt.
 
-Encontre os pontos de virada ou as imagens mentais mais fortes dentro desses intervalos de tempo.
+**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do roteiro.
+
+Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
 
 Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription").
 
 Trecho do roteiro:
----${scriptContent}
+---
+${scriptContent}
 ---`;
+            // --- FIM DA MUDANÇA PRINCIPAL NO PROMPT ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
@@ -1951,7 +1956,7 @@ Trecho do roteiro:
             }
 
             try {
-                const rawResult = await callGroqAPI(prompt, 4000); // Aumentado para 4000 tokens para prompts de imagem
+                const rawResult = await callGroqAPI(prompt, 4000);
                 const cleanedText = cleanGeneratedText(rawResult, true);
                 let prompts = [];
                 if (cleanedText) {
@@ -1970,11 +1975,10 @@ Trecho do roteiro:
                     window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
                 }
 
-                // Armazena os prompts gerados na estrutura global
-                let accumulatedTimeSeconds = 1; // Reinicia para cada seção para cálculo de tempo
+                let accumulatedTimeSeconds = 1; 
                 allImagePrompts[sectionElementId] = prompts.map((p, i) => {
                     const time = accumulatedTimeSeconds;
-                    accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
+                    accumulatedTimeSeconds += 20;
                     const mins = Math.floor(time / 60);
                     const secs = Math.floor(time % 60);
                     return { 
@@ -1985,12 +1989,10 @@ Trecho do roteiro:
                     };
                 });
 
-                promptContainer.innerHTML = ''; // Limpa o spinner
+                promptContainer.innerHTML = '';
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
                     allImagePrompts[sectionElementId].forEach(promptData => {
                         const styleBlockContent = promptData.styleBlock || '';
-                        
-                        // ABAIXO ESTÁ A LINHA DE HTML CORRIGIDA:
                         const promptHtml = `
                             <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
@@ -2008,7 +2010,7 @@ Trecho do roteiro:
                 } else {
                     promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
                 }
-                updateButtonStates(); // Atualiza o estado dos botões após gerar prompts
+                updateButtonStates();
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
                 console.error(`Error generating prompts for section ${sectionElementId}.`, error);
