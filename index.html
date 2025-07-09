@@ -634,27 +634,32 @@
             flex-grow: 1;
             overflow-y: auto;
         }
-        /* Localize esta regra no seu CSS e substitua-a por completo */
+        /* Localize e substitua este bloco por completo */
         #scriptGenerationControls {
-            /* Garante que os controles fiquem "colados" na parte inferior da coluna */
             position: sticky;
             bottom: 0;
             
-            /* MODO CLARO (Restaurando o fundo original que você gostava) */
-            background-color: rgba(238, 242, 255, 0.95); /* Indigo-50 com transparência */
-            
+            /* RESTAURANDO O DESIGN ORIGINAL PARA O MODO CLARO */
+            background-color: rgba(255, 255, 255, 0.9); /* Fundo de vidro branco */
+            border-top: 2px solid var(--secondary-bg);  /* Borda superior indigo-100 */
+            padding: 1rem; /* Adiciona o espaçamento interno de volta! */
+
             backdrop-filter: blur(4px);
             -webkit-backdrop-filter: blur(4px);
-            z-index: 10; /* Garante que fique acima do conteúdo que rola */
+            z-index: 10;
             
-            /* Adiciona a borda superior para um acabamento mais limpo */
-            border-top: 1px solid var(--border-light);
+            /* Garante que o card em si não tenha bordas laterais/inferiores */
+            border-left: none !important;
+            border-right: none !important;
+            border-bottom: none !important;
+            /* Garante que os cantos inferiores fiquem arredondados junto com a coluna */
+            border-bottom-left-radius: 0.5rem; 
+            border-bottom-right-radius: 0.5rem;
         }
-        /* ESTA É A NOVA REGRA CRÍTICA PARA O MODO ESCURO */
         .dark #scriptGenerationControls {
-            /* Define o fundo e a borda específicos para o modo escuro */
+            /* MODO ESCURO */
             background-color: rgba(31, 41, 55, 0.85); /* Fundo Cinza-800 com transparência */
-            border-top-color: #4b5563; /* Borda Cinza-600 */
+            border-top-color: #4b5563; /* Borda superior cinza-600 */
         }
 
         /* ========================================================== */
@@ -748,27 +753,29 @@
         }
 
         /* ========================================================== */
-        /* ==== CORREÇÃO DEFINITIVA P/ TEXTOS DA COLUNA DE RECURSOS ==== */
+        /* ==== BLINDAGEM FINAL DE TEXTOS PARA O PAINEL (AMBAS COLUNAS) ==== */
         /* ========================================================== */
-        /* Define a cor de texto padrão (MODO CLARO) para o conteúdo dos cards */
-        #assetsColumn .card-background,
-        #assetsColumn .card-background p,
-        #assetsColumn .card-background li,
-        #assetsColumn .card-background strong {
-            color: var(--text-dark) !important; /* Força o texto escuro */
-        }
-        /* Define a cor de texto (MODO ESCURO) para o conteúdo dos cards */
-        .dark #assetsColumn .card-background,
-        .dark #assetsColumn .card-background p,
-        .dark #assetsColumn .card-background li,
-        .dark #assetsColumn .card-background strong {
-            color: #d1d5db !important; /* Força o texto cinza claro */
-        }
-        /* Ajuste específico para os títulos dentro dos cards de recursos */
-        #assetsColumn h4 {
+        /* Define a cor de texto padrão (MODO CLARO) para o conteúdo dos painéis */
+        #projectDashboard .card-background p,
+        #projectDashboard .card-background li,
+        #projectDashboard .card-background strong,
+        #projectDashboard .asset-card-placeholder,
+        #projectDashboard .list-disc {
             color: var(--text-dark) !important;
         }
-        .dark #assetsColumn h4 {
+        /* Define a cor de texto (MODO ESCURO) para o conteúdo dos painéis */
+        .dark #projectDashboard .card-background p,
+        .dark #projectDashboard .card-background li,
+        .dark #projectDashboard .card-background strong,
+        .dark #projectDashboard .asset-card-placeholder,
+        .dark #projectDashboard .list-disc {
+            color: #d1d5db !important;
+        }
+        /* Ajuste específico para os títulos H3 e H4 dentro do painel */
+        #projectDashboard h3, #projectDashboard h4 {
+            color: var(--text-dark) !important;
+        }
+        .dark #projectDashboard h3, .dark #projectDashboard h4 {
             color: #f3f4f6 !important;
         }
     </style>
