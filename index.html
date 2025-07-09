@@ -59,26 +59,27 @@
             margin-bottom: 0.5rem;
             display: block;
         }
+        /* Correção Explícita para Inputs no Modo Claro */
         .input-group input,
         .input-group select,
         .input-group textarea {
+            background-color: var(--bg-light) !important;
+            border-color: var(--border-light) !important;
+            color: var(--text-dark) !important;
             width: 100%;
             padding: 0.75rem;
-            border: 1.5px solid var(--border-light);
             border-radius: 8px;
             font-size: 1rem;
             transition: border-color 0.2s, box-shadow 0.2s;
-            background-color: var(--bg-light); /* Garante fundo claro */
-            color: var(--text-dark); /* Garante texto escuro */
-            border-color: var(--border-light); /* Garante borda clara */
         }
+        /* Garante que os estilos de foco também funcionem corretamente no modo claro */
         .input-group input:focus,
         .input-group select:focus,
         .input-group textarea:focus {
             outline: none;
-            border-color: var(--primary-color);
+            background-color: #ffffff !important;
+            border-color: var(--primary-color) !important;
             box-shadow: 0 0 0 3px rgba(79, 70, 229, 0.2);
-            background-color: #ffffff;
         }
         .btn {
             padding: 0.75rem 1.5rem;
@@ -422,7 +423,7 @@
         .dark .input-group label { color: #d1d5db; }
         .dark .input-group input,
         .dark .input-group select,
-        .input-group textarea {
+        .dark .input-group textarea {
             background-color: #374151; /* gray-700 */
             border-color: #4b5563; /* gray-600 */
             color: #f9fafb; /* gray-50 */
@@ -1315,10 +1316,13 @@
          */
         const removeMetaComments = (text) => {
             if (!text) return text;
-            let cleanedText = text;
-            // Remove frases como "Here's the **Section** section..." ou "Here is a compelling..."
-            const introPattern = /^(Here's|Here is)\s.*?\n/gim;
-            cleanedText = cleanedText.replace(introPattern, '');
+            // Padrão para remover "Here is/are..." ou "Sure, here is..." etc.
+            const introPattern = /^(Sure, |Of course, )?(here is|here's|here are|below is|certainly, here is) .*?:\s*\n?/im;
+            let cleanedText = text.replace(introPattern, '');
+            
+            // Remove linhas que começam com "Description:" ou "Hashtags:" se a IA as adicionar
+            cleanedText = cleanedText.replace(/^(Description:|Hashtags:)\s*\n?/gim, '');
+
             return cleanedText.trim();
         };
 
@@ -2031,8 +2035,9 @@ ${scriptContent}
             if (!validateInputs()) return;
             showLoading(buttons.generateDescriptionBtn);
             try {
-                const { prompt, maxTokens } = constructScriptPrompt('description');
-                const result = cleanGeneratedText(await callGroqAPI(prompt, maxTokens), false);
+                let result = await callGroqAPI(constructScriptPrompt('description').prompt, constructScriptPrompt('description').maxTokens);
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result); // <-- REINTRODUZIMOS A LIMPEZA!
                 
                 const targetContentElement = document.getElementById('videoDescriptionContent');
                 if (targetContentElement) {
