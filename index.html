@@ -786,6 +786,24 @@
         .dark #projectDashboard h3, .dark #projectDashboard h4 {
             color: #f3f4f6 !important;
         }
+        /* ========================================================== */
+        /* ====== CORREÇÃO FINAL DE CORES DE TÍTULOS (MODO CLARO) ===== */
+        /* ========================================================== */
+
+        /* Garante que o H1 principal e os textos da barra de progresso
+           tenham a cor correta no MODO CLARO, sem afetar o modo escuro. */
+        .container > h1,
+        #progressBarContainer .flex > span {
+            color: var(--text-dark); /* Cor escura padrão para o Modo Claro */
+        }
+
+        /* Garante que eles voltem a ser claros no MODO ESCURO para sobrescrever o padrão */
+        .dark .container > h1 {
+             color: #f3f4f6; /* Cinza 100 - Bem claro para o título principal */
+        }
+        .dark #progressBarContainer .flex > span {
+            color: #d1d5db; /* Cinza 300 - Padrão de texto do modo escuro */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
