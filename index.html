@@ -415,7 +415,7 @@
         .dark .input-group label { color: #d1d5db; }
         .dark .input-group input,
         .dark .input-group select,
-        .dark .input-group textarea {
+        .input-group textarea {
             background-color: #374151; /* gray-700 */
             border-color: #4b5563; /* gray-600 */
             color: #f9fafb; /* gray-50 */
@@ -559,6 +559,10 @@
         body.zen-mode #scriptColumn {
             max-height: none; 
             grid-column: auto; /* Reseta as regras de coluna do grid */
+        }
+        /* Mostra o botão de sair apenas no Modo Foco */
+        body.zen-mode #exitZenModeBtn {
+            display: inline-flex;
         }
         
         /* ========================================================== */
@@ -901,6 +905,11 @@
         </div>
     </div>
 
+    <!-- Botão para Sair do Modo Foco (começa escondido) -->
+    <button id="exitZenModeBtn" class="hidden fixed top-5 right-5 z-[2001] bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+        <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/><path d="M3 14.5a1.5 1.5 0 0 1-1.5-1.5V3a1.5 1.5 0 0 1 1.5-1.5h10A1.5 1.5 0 0 1 14.5 3v10a1.5 1.5 0 0 1-1.5 1.5H3zM4 3v10h8V3H4z"/></svg>
+    </button>
+    
     <!-- Elementos de Feedback (Toast e Alerta) -->
     <div id="toastNotification" class="toast-notification"></div>
     <div id="fullScreenAlertOverlay">
@@ -2571,6 +2580,13 @@ ${scriptContent}
             if (zenModeBtn) {
                 zenModeBtn.addEventListener('click', () => {
                     document.body.classList.toggle('zen-mode');
+                });
+            }
+
+            const exitZenModeBtn = document.getElementById('exitZenModeBtn');
+            if (exitZenModeBtn) {
+                exitZenModeBtn.addEventListener('click', () => {
+                    document.body.classList.remove('zen-mode');
                 });
             }
 
