@@ -672,6 +672,42 @@
                 white-space: pre-wrap; /* Respeita as quebras de linha */
             }
         }
+
+        /* ========================================================== */
+        /* ========= CORREÇÕES FINAIS PARA MODO ESCURO ========== */
+        /* ========================================================== */
+        /* Garante que o input focado no modo escuro tenha o fundo correto */
+        .dark .input-group input:focus {
+            background-color: #4b5563 !important; /* gray-600 */
+        }
+        /* Garante que os blocos de prompt individuais fiquem escuros */
+        .dark .individual-prompt-block {
+            background-color: #1f2937 !important; /* gray-800 */
+            border-color: #4b5563 !important; /* gray-600 */
+        }
+        /* Garante que o texto dentro dos prompts fique claro */
+        .dark .prompt-phrase,
+        .dark .prompt-description-content {
+            color: #d1d5db !important; /* gray-300 */
+        }
+        /* Garante que o fundo do <pre> também fique escuro */
+        .dark .individual-prompt-block pre {
+            background-color: #374151 !important; /* gray-700 */
+        }
+
+        /* ========================================================== */
+        /* ========= CORREÇÕES FINAIS PARA MODO CLARO ========== */
+        /* ========================================================== */
+        /* Define a cor padrão (Modo Claro) para os títulos do dashboard */
+        #projectDashboard h2,
+        #projectDashboard h3 {
+            color: var(--text-dark) !important;
+        }
+        /* Define a cor para o Modo Escuro, garantindo que ela sobrescreva o padrão */
+        .dark #projectDashboard h2,
+        .dark #projectDashboard h3 {
+            color: #f3f4f6 !important; /* Cor de texto clara */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
