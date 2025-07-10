@@ -2138,11 +2138,21 @@ ${scriptContent}
             if (!validateInputs()) return;
             showLoading(buttons.generateTitlesAndThumbnailsBtn);
             try {
+                // --- INÍCIO DA CORREÇÃO NO PROMPT ---
                 const { prompt, maxTokens } = constructScriptPrompt('titles_thumbnails');
-                const result = await callGroqAPI(prompt, maxTokens);
+                // Adicionamos uma instrução extra para garantir a validade do JSON
+                const finalPrompt = prompt + `\n\nCRITICAL RULE: Inside the 'description' strings, you MUST use single quotes ('') for any internal quotes, or properly escape double quotes (\\\"). Failure to do so will result in an invalid JSON. Example: "A text overlay that says 'Hope is Here'".`;
+                
+                const result = await callGroqAPI(finalPrompt, maxTokens);
+                // --- FIM DA CORREÇÃO NO PROMPT ---
+
                 const cleanedResult = cleanGeneratedText(result, true);
                 
-                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido.");
+                if (!cleanedResult) {
+                    // Adiciona um log mais detalhado em caso de falha
+                    console.error("Falha ao limpar ou validar o JSON retornado pela IA.", result);
+                    throw new Error("A IA não retornou um JSON válido.");
+                }
                 
                 const parsedContent = JSON.parse(cleanedResult);
                 generatedTitlesAndThumbnails = parsedContent;
