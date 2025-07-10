@@ -2236,7 +2236,7 @@ ${scriptContent}
 
         /**
          * Copia a transcrição completa para a área de transferência e
-         * inicia o download de um arquivo .docx contendo a mesma transcrição.
+         * inicia o download de um arquivo .rtf (Rich Text Format) contendo a mesma transcrição.
          */
         const handleCopyAndDownloadTranscript = () => {
             const transcriptText = getTranscriptOnly();
@@ -2246,18 +2246,29 @@ ${scriptContent}
                 return;
             }
 
-            // Ação 1: Copiar para a área de transferência
+            // Ação 1: Copiar para a área de transferência (permanece igual)
             copyTextToClipboard(transcriptText);
-            // O showToast já está dentro do copyTextToClipboard, mas podemos adicionar um mais específico.
             window.showToast("Transcrição copiada e download iniciado!");
 
-            // Ação 2: Gerar e baixar o arquivo .docx
-            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.docx';
+            // --- INÍCIO DA MUDANÇA PARA .RTF ---
+            // Ação 2: Gerar e baixar o arquivo .rtf
+            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.rtf';
             
-            // Converte o texto plano em HTML simples, preservando as quebras de linha
-            const htmlContent = `<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body>${transcriptText.replace(/\n/g, '<br>')}</body></html>`;
-            
-            const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            // Cria o conteúdo no formato Rich Text.
+            // \pard -> Inicia um parágrafo
+            // \par -> Quebra de linha (fim do parágrafo)
+            // Caracteres especiais do RTF como '{', '}' e '\' precisam ser escapados com uma barra invertida.
+            let rtfContent = '{\\rtf1\\ansi\\deff0\n';
+            const lines = transcriptText.split('\n');
+            lines.forEach(line => {
+                // Escapa caracteres especiais e adiciona a linha ao conteúdo RTF
+                const escapedLine = line.replace(/\\/g, '\\\\').replace(/{/g, '\\{').replace(/}/g, '\\}');
+                rtfContent += `\\pard ${escapedLine}\\par\n`;
+            });
+            rtfContent += '}';
+
+            // Cria o Blob com o tipo de MIME correto para RTF
+            const blob = new Blob([rtfContent], { type: 'application/rtf' });
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
@@ -2266,6 +2277,7 @@ ${scriptContent}
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
+            // --- FIM DA MUDANÇA PARA .RTF ---
         };
     
         /**
