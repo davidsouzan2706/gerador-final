@@ -1923,13 +1923,12 @@ The final output MUST be only the JSON code, like this example:
         /**
          * Itera sobre todas as seções do roteiro na ordem correta,
          * renumera globalmente todas as cenas E recalcula o timestamp
-         * usando uma duração média fixa por cena.
+         * com base na duração estimada pela IA para cada cena.
          */
         const reNumberAllScenes = () => {
             let globalSceneCounter = 1;
-            totalScriptSeconds = 0; // Zera a contagem global a cada recálculo
+            totalScriptSeconds = 0;
             const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
-            const averageSceneDuration = 18; // DURAÇÃO MÉDIA DE CADA CENA EM SEGUNDOS (DENTRO DA FAIXA 17-25)
 
             sectionOrder.forEach(sectionId => {
                 const promptBlocks = document.querySelectorAll(`#${sectionId} .individual-prompt-block`);
@@ -1937,14 +1936,15 @@ The final output MUST be only the JSON code, like this example:
                 promptBlocks.forEach(block => {
                     const timeElement = block.querySelector('.prompt-time');
                     if (timeElement) {
+                        // Lê a duração do atributo data-duration
+                        const sceneDuration = parseInt(block.dataset.duration, 10) || 18; // Usa 18 como fallback
+                        
                         const minutes = Math.floor(totalScriptSeconds / 60);
                         const seconds = Math.floor(totalScriptSeconds % 60);
                         
-                        // Define o timestamp de início da cena e o número da cena
                         timeElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} - Cena ${String(globalSceneCounter).padStart(2, '0')}`;
                         
-                        // Incrementa o tempo total pela duração média para a próxima cena
-                        totalScriptSeconds += averageSceneDuration;
+                        totalScriptSeconds += sceneDuration;
                         globalSceneCounter++;
                     }
                 });
@@ -2035,7 +2035,7 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Gera prompts de imagem para uma seção específica do roteiro.
+	 * Gera prompts de imagem para uma seção específica do roteiro.
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
@@ -2048,34 +2048,48 @@ The final output MUST be only the JSON code, like this example:
             }
 
             const scriptContent = scriptContentElement.textContent;
-            
             promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
-
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            // --- INÍCIO DO PROMPT APRIMORADO E FINAL ---
-            let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar um storyboard visual dinâmico.
+            // --- INÍCIO DO PROMPT FINAL E INTELIGENTE ---
+            let prompt = `Você é um Diretor de Arte e Roteirista de Storyboard. Sua tarefa é analisar o trecho de roteiro abaixo e criar um storyboard visual com ritmo dinâmico.
 
-**SUA TAREFA MAIS IMPORTANTE É O RITMO.** Você deve criar um prompt de imagem a cada **15 a 25 segundos de narração**. Para isso, você **DEVE AGRUPAR VÁRIAS FRASES** do roteiro. Leia um parágrafo inteiro, entenda a mensagem principal e crie **UMA ÚNICA IMAGEM** que represente todo aquele bloco de texto. Não crie uma imagem para cada frase curta. Pense em "qual é a imagem mental que resume os próximos 20 segundos de fala?".
+**SUA TAREFA MAIS IMPORTANTE É O RITMO:**
+1.  Leia um bloco de frases do roteiro.
+2.  **Estime** quantos segundos levaria para narrar esse bloco de texto (o ideal é entre 15 e 25 segundos).
+3.  Crie UMA única imagem que represente visualmente a ideia principal desse bloco de texto.
+4.  Retorne a frase principal que resume o bloco, a descrição da imagem e a sua estimativa de duração.
 
 **REGRAS INEGOCIÁVEIS:**
-1.  **CENA INICIAL:** O primeiro prompt DEVE corresponder à primeira frase completa do roteiro.
-2.  **SEM INSTRUÇÕES DE CÂMERA:** NÃO descreva movimentos de câmera, cortes ou enquadramentos. Descreva APENAS o conteúdo visual da cena como uma fotografia.
+-   **NÃO** descreva movimentos de câmera, cortes ou enquadramentos. Descreva APENAS o conteúdo visual estático.
+-   A resposta DEVE SER um array JSON. Cada objeto no array DEVE ter **exatamente** três chaves: \`scriptPhrase\` (string), \`imageDescription\` (string), e \`estimated_duration\` (número de segundos).
 
-Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription"). A chave "scriptPhrase" deve conter o bloco de frases que o prompt de imagem representa.
+**EXEMPLO DE RESPOSTA PERFEITA:**
+[
+  {
+    "scriptPhrase": "Imagine being in Mary's shoes, feeling the weight of grief.",
+    "imageDescription": "A dimly lit, rustic room where a woman sits alone, head bowed in sorrow, a single tear tracing a path on her cheek. The atmosphere is heavy with loss.",
+    "estimated_duration": 18
+  },
+  {
+    "scriptPhrase": "The news of Lazarus' death reaches Jesus, but his response is not what they expected.",
+    "imageDescription": "A solitary figure of Jesus stands on a dusty road, looking towards a distant silhouette of a village, his expression is calm and determined, not rushed.",
+    "estimated_duration": 22
+  }
+]
 
-Trecho do roteiro:
----${scriptContent}
+Agora, analise o seguinte trecho de roteiro e gere o JSON:
+---
+${scriptContent}
 ---`;
-            // --- FIM DO PROMPT APRIMORADO E FINAL ---
+            // --- FIM DO PROMPT FINAL E INTELIGENTE ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
             }
-
             if (imageStyleSelect === 'cinematic') {
                 prompt += `\n\nApply a cinematic film still style to these image descriptions: ${CINEMATIC_STYLE_BLOCK}`;
                 selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
@@ -2092,7 +2106,6 @@ Trecho do roteiro:
                     try {
                         prompts = JSON.parse(cleanedText);
                         if (!Array.isArray(prompts)) {
-                            console.warn("AI returned non-array JSON, attempting to convert.");
                             prompts = [prompts];
                         }
                     } catch (e) {
@@ -2109,8 +2122,9 @@ Trecho do roteiro:
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
                     allImagePrompts[sectionElementId].forEach((promptData, index) => {
                         const styleBlockContent = promptData.styleBlock || '';
+                        // Adiciona a duração estimada como um atributo de dados para a função de renumeração ler
                         const promptHtml = `
-                            <div class="individual-prompt-block card-background">
+                            <div class="individual-prompt-block card-background" data-duration="${promptData.estimated_duration || 18}">
                                 <div class="flex items-center justify-between mb-2">
                                     <p class="prompt-time">00:00 - Cena 00</p> 
                                     <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
