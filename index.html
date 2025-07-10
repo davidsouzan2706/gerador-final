@@ -1901,6 +1901,63 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
+         * Gera títulos de vídeo e ideias de thumbnail.
+         */
+        const generateTitlesAndThumbnails = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateTitlesAndThumbnailsBtn);
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('titles_thumbnails');
+                const result = await callGroqAPI(prompt, maxTokens);
+                const cleanedResult = cleanGeneratedText(result, true);
+                
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido.");
+                
+                const parsedContent = JSON.parse(cleanedResult);
+                generatedTitlesAndThumbnails = parsedContent;
+
+                const targetContentElement = document.getElementById('titlesThumbnailsContent');
+                if (targetContentElement) {
+                    const titlesListHtml = parsedContent.titles.map((title, index) => `<p>${index + 1}. ${title}</p>`).join('');
+                    const thumbnailsListHtml = parsedContent.thumbnails.map((thumb, index) => `
+                        <div class="${index === 0 ? '' : 'thumbnail-item-separator'}"> 
+                            <p class="font-semibold">"${thumb.title}"</p>
+                            <p class="text-sm leading-tight">Descrição: ${thumb.description}</p>
+                        </div>
+                    `).join('');
+
+                    targetContentElement.innerHTML = `
+                        <div class="space-y-4 text-sm">
+                            <div>
+                                <h4 class="font-bold text-base mb-2">Sugestões de Títulos:</h4>
+                                <div class="p-3 card-background rounded-md space-y-2">${titlesListHtml}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeTitles()">Analisar CTR</button>
+                                    <div id="ctrAnalysisResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <h4 class="font-bold text-base mb-2">Ideias de Thumbnail:</h4>
+                                <div class="p-3 card-background rounded-md space-y-3">${thumbnailsListHtml}</div>
+                                <div class="mt-3">
+                                    <button class="btn btn-secondary btn-small" onclick="window.analyzeThumbnails()">Analisar Thumbnails</button>
+                                    <div id="thumbnailAnalysisResult" class="mt-3"></div>
+                                </div>
+                            </div>
+                        </div>
+                    `;
+                    markButtonAsCompleted(buttons.generateTitlesAndThumbnailsBtn.id);
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Títulos: ${error.message}`);
+                console.error("Error generating Titles/Thumbnails.", error);
+            } finally {
+                hideLoading(buttons.generateTitlesAndThumbnailsBtn);
+                updateButtonStates();
+            }
+        };
+    
+        /**
          * Realiza o download do roteiro como PDF.
          */
         const downloadPdf = async () => {
