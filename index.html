@@ -1029,7 +1029,7 @@
                             <button id="generateOutlineBtn" class="btn btn-secondary btn-small">Criar Esboço</button>
                         </div>
                         <div id="outlineContent">
-                             <div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>
+                             <div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>
                         </div>
                     </div>
 
@@ -1044,7 +1044,7 @@
                     
                     <!-- Controles de Geração, agora fixos no final da coluna -->
                     <div id="scriptGenerationControls" class="rounded-b-lg sticky bottom-0">
-                        <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3 text-center">Gerar Seções do Roteiro</h3>
+                        <h3 class="font-bold text-lg text-indigo-800 dark:text-indigo-300 mb-3 text-center">Gerar Secções do Roteiro</h3>
                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <button id="generateIntroBtn" class="btn btn-primary btn-small">Introdução</button>
                             <button id="generateDevelopmentBtn" class="btn btn-primary btn-small">Desenvolvimento</button>
@@ -1580,7 +1580,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         // --- FIM DO NOVO MÓDULO DE NARRATIVA ---
 
         /**
-         * Constrói o contexto base do prompt com base nos inputs do usuário.
+         * Constrói o contexto base do prompt com base nos inputs do utilizador.
          * @returns {string} O contexto do prompt.
          */
         const getBasePromptContext = () => {
@@ -1631,10 +1631,10 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
-         * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
-         * @param {string} sectionName - O nome da seção (ex: 'intro', 'titles_thumbnails').
-         * @param {string} sectionTitle - O título da seção para o prompt.
-         * @param {string|null} outlineDirective - Uma diretriz específica do esboço estratégico para esta seção.
+         * Constrói o prompt específico para cada secção do roteiro ou tipo de conteúdo.
+         * @param {string} sectionName - O nome da secção (ex: 'intro', 'titles_thumbnails').
+         * @param {string} sectionTitle - O título da secção para o prompt.
+         * @param {string|null} outlineDirective - Uma diretriz específica do esboço estratégico para esta secção.
          * @returns {{prompt: string, maxTokens: number}} O prompt e o limite de tokens.
          */
         const constructScriptPrompt = (sectionName, sectionTitle, outlineDirective = null) => {
@@ -1672,7 +1672,7 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                 case 'documentary':
                     prompt += `\n\nNARRATIVE STYLE: Use a 'Documentary' structure.
                     - **Introduction:** Start with a powerful, factual statement or a thought-provoking question that establishes the central theme. Present the "thesis" of the documentary.
-                    - **Development:** Build the narrative by presenting evidence, data, and historical context in a logical sequence. Structure it like an investigation, revealing information progressively. Use language that suggests authority and credibility (e.g., "Evidence suggests...", "Historical records show...", "Experts believe...").
+                    - **Development:** Build the narrative by presenting evidence, data, and historical context in a logical sequence. Structure it like an an investigation, revealing information progressively. Use language that suggests authority and credibility (e.g., "Evidence suggests...", "Historical records show...", "Experts believe...").
                     - **Climax:** Present the most compelling piece of evidence or the central conclusion of your argument. This should be the moment where the "thesis" from the introduction is proven or deeply explored.
                     - **Conclusion:** Summarize the key findings and arguments. End with a broader reflection on the implications of the topic, leaving the viewer with a new understanding or perspective.`;
                     break;
@@ -1747,7 +1747,7 @@ Você é um mestre roteirista e estrategista de conteúdo. Sua tarefa é criar u
 
 Responda APENAS com um objeto JSON. O objeto deve conter chaves para cada parte principal do roteiro: "introduction", "development", "climax", "conclusion", e "cta".
 
-O valor de cada chave deve ser uma string descrevendo o objetivo, o conteúdo e a emoção daquela seção específica. Seja conciso, mas estratégico.
+O valor de cada chave deve ser uma string descrevendo o objetivo, o conteúdo e a emoção daquela secção específica. Seja conciso, mas estratégico.
 
 Exemplo de formato JSON esperado:
 {
@@ -1920,7 +1920,7 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Itera sobre todas as seções do roteiro na ordem correta
+         * Itera sobre todas as secções do roteiro na ordem correta
          * e renumera globalmente todas as cenas.
          */
         const reNumberAllScenes = () => {
@@ -1949,10 +1949,10 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
-         * Lida com a geração de uma seção específica do roteiro.
+         * Lida com a geração de uma secção específica do roteiro.
          * @param {HTMLElement} button - O botão que acionou a geração.
-         * @param {string} sectionName - O nome da seção (ex: 'intro').
-         * @param {string} sectionTitle - O título da seção para exibição.
+         * @param {string} sectionName - O nome da secção (ex: 'intro').
+         * @param {string} sectionTitle - O título da secção para exibição.
          * @param {string} elementId - O ID do elemento HTML onde o conteúdo será inserido (ex: 'intro').
          */
         const handleGenerateSection = async (button, sectionName, sectionTitle, elementId) => {
@@ -1966,7 +1966,7 @@ The final output MUST be only the JSON code, like this example:
 
             showLoading(button);
             try {
-                // Pega a diretriz específica para esta seção do nosso esboço global
+                // Pega a diretriz específica para esta secção do nosso esboço global
                 const directive = strategicOutline[sectionName]; 
                 
                 const { prompt, maxTokens } = constructScriptPrompt(sectionName, sectionTitle, directive);
@@ -1990,7 +1990,7 @@ The final output MUST be only the JSON code, like this example:
                     if(accordionItem) accordionItem.classList.add('animate-fade-in');
                 } else {
                     console.error(`Target section element with ID '${elementId}Section' not found.`);
-                    window.showToast("Erro interno: Seção do roteiro não encontrada.");
+                    window.showToast("Erro interno: Secção do roteiro não encontrada.");
                     return;
                 }
                 
@@ -2006,11 +2006,11 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Re-gera o conteúdo de uma seção específica do roteiro.
-         * Chamada pelos botões "Re-gerar" dentro das seções.
-         * @param {string} sectionName - O nome da seção (ex: 'intro').
-         * @param {string} sectionTitle - O título da seção.
-         * @param {string} elementId - O ID do elemento HTML da seção.
+         * Re-gera o conteúdo de uma secção específica do roteiro.
+         * Chamada pelos botões "Re-gerar" dentro das secções.
+         * @param {string} sectionName - O nome da secção (ex: 'intro').
+         * @param {string} sectionTitle - O título da secção.
+         * @param {string} elementId - O ID do elemento HTML da secção.
          */
         window.regenerateSection = (sectionName, sectionTitle, elementId) => {
             const mainButtonIdMap = {
@@ -2028,8 +2028,7 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Gera prompts de imagem para uma seção específica do roteiro.
-         * @param {string} sectionElementId - O ID do elemento HTML da seção (ex: 'introSection').
+         * Gera prompts de imagem para uma secção específica do roteiro.
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
@@ -2037,11 +2036,11 @@ The final output MUST be only the JSON code, like this example:
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
-                window.showToast("Por favor, gere o conteúdo do roteiro desta seção primeiro.");
+                window.showToast("Por favor, gere o conteúdo do roteiro desta secção primeiro.");
                 return;
             }
 
-            const scriptContent = scriptContentElement.textContent; // Corrected to use scriptContentElement
+            const scriptContent = scriptContentElement.textContent;
             
             promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
 
@@ -2050,13 +2049,14 @@ The final output MUST be only the JSON code, like this example:
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
+            // --- INÍCIO DA CORREÇÃO E APRIMORAMENTO DO PROMPT ---
             let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
 
-**REGRA ABSOLUTA: NÃO descreva movimentos de câmera, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.**
+**REGRA DE RITMO (A MAIS IMPORTANTE):** Seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso é crucial para um vídeo dinâmico. **Analise o fluxo do texto**: leia um bloco de frases, estime o tempo de fala e só então escolha o momento visual mais impactante dentro desse bloco para criar UM único prompt. Não crie uma imagem para cada frase.
 
-**RITMO DINÂMICO:** O seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Leia várias frases, entenda o tempo, e só então escolha o momento mais impactante para criar UM prompt.
+**REGRA DE CENA INICIAL (INEGOCIÁVEL):** O primeiro prompt que você criar **DEVE OBRIGATORIAMENTE** corresponder à **primeira frase completa** do roteiro para garantir impacto visual imediato.
 
-**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do roteiro.
+**REGRA DE CONTEÚDO (ABSOLUTA):** **NÃO descreva movimentos de câmara**, cortes ou enquadramentos (ex: 'close-up de', 'câmara foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.
 
 Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
 
@@ -2065,14 +2065,14 @@ Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "image
 Trecho do roteiro:
 ---${scriptContent}
 ---`;
+            // --- FIM DA CORREÇÃO E APRIMORAMENTO DO PROMPT ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
             }
 
             if (imageStyleSelect === 'cinematic') {
-                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
-                prompt += `\n\n${cinematicPromptPart}`;
+                prompt += `\n\nApply a cinematic film still style to these image descriptions: ${CINEMATIC_STYLE_BLOCK}`;
                 selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
                 prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
@@ -2093,33 +2093,27 @@ Trecho do roteiro:
                     } catch (e) {
                         window.showToast("Erro ao analisar JSON de prompts de imagem. Verifique o console.");
                         console.error("Erro ao analisar JSON de prompts de imagem:", e);
-                        prompts = [];
                     }
                 } else {
-                    window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
+                    window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta secção.");
                 }
                 
-                // --- MUDANÇA NA LÓGICA DE DADOS ---
-                // Agora não precisamos mais da propriedade 'sequence'
+                // A lógica de tempo agora é apenas uma estimativa para exibição, a IA já fez o trabalho pesado.
                 let accumulatedTimeSeconds = 1; 
-                allImagePrompts[sectionElementId] = prompts.map((p, i) => {
+                allImagePrompts[sectionElementId] = prompts.map((p) => {
                     const time = accumulatedTimeSeconds;
-                    accumulatedTimeSeconds += 20;
+                    // Aumenta o tempo baseado no número de prompts que a IA retornou, criando uma média.
+                    accumulatedTimeSeconds += (prompts.length > 1 ? (120 / prompts.length) : 20); // Ex: Se a IA devolveu 6 prompts para um roteiro de 2 min, a média é 20s.
+                    
                     const mins = Math.floor(time / 60);
-                    const secs = Math.round(time % 60); // Use round instead of floor for seconds
-                    return { 
-                        ...p, 
-                        time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
-                        styleBlock: selectedStyleBlock
-                    };
+                    const secs = Math.floor(time % 60);
+                    return { ...p, time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, styleBlock: selectedStyleBlock };
                 });
 
                 promptContainer.innerHTML = '';
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
                     allImagePrompts[sectionElementId].forEach((promptData, index) => {
                         const styleBlockContent = promptData.styleBlock || '';
-                        // --- MUDANÇA NA LÓGICA DE DISPLAY ---
-                        // Geramos o HTML com um placeholder simples para a contagem
                         const promptHtml = `
                             <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
@@ -2135,12 +2129,10 @@ Trecho do roteiro:
                         promptContainer.innerHTML += promptHtml;
                     });
                 } else {
-                    promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
+                    promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta secção.</p>';
                 }
                 
-                // --- CHAMADA DA NOVA FUNÇÃO "MAESTRO" ---
                 reNumberAllScenes();
-                
                 updateButtonStates();
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
@@ -2149,8 +2141,8 @@ Trecho do roteiro:
         };
 
         /**
-         * Sugere trilhas sonoras para uma seção específica do roteiro.
-         * @param {string} sectionId - O ID do elemento HTML da seção (ex: 'introSection').
+         * Sugere trilhas sonoras para uma secção específica do roteiro.
+         * @param {string} sectionId - O ID do elemento HTML da secção (ex: 'introSection').
          */
         window.suggestSoundtrack = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2158,7 +2150,7 @@ Trecho do roteiro:
             const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
             
             if (!scriptContent) {
-                window.showToast("Gere o roteiro para esta seção primeiro.");
+                window.showToast("Gere o roteiro para esta secção primeiro.");
                 return;
             }
 
@@ -2434,7 +2426,7 @@ ${scriptContent}
                 outlineHtml += '</ul>';
                 outlineContentDiv.innerHTML = outlineHtml;
 
-                // REMOVIDO: Habilita os botões de geração de seção
+                // REMOVIDO: Habilita os botões de geração de secção
                 // A lógica agora está na função handleGenerateSection para exibir um alerta.
 
                 markButtonAsCompleted(buttons.generateOutlineBtn.id);
@@ -2551,7 +2543,7 @@ ${scriptContent}
                 sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
             // Limpar o cartão do esboço
-            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
             strategicOutline = null; // Reseta o esboço estratégico
 
             // Limpar os cartões de recursos e restaurar os placeholders
@@ -2574,7 +2566,7 @@ ${scriptContent}
         };
 
         /**
-         * Exporta o estado atual do projeto para um arquivo JSON.
+         * Exporta o estado atual do projeto para um ficheiro JSON.
          */
         const exportProject = () => {
             const projectData = {
@@ -2593,7 +2585,7 @@ ${scriptContent}
                     projectData.inputs[key] = elements[key].value;
                 }
             }
-            // Salva o conteúdo gerado (HTML interno das seções)
+            // Salva o conteúdo gerado (HTML interno das secções)
             const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
             scriptSectionIds.forEach(id => {
                 const sectionElement = document.getElementById(id);
@@ -2622,9 +2614,9 @@ ${scriptContent}
         };
 
         /**
-         * Renderiza os prompts de imagem para uma seção específica na UI.
+         * Renderiza os prompts de imagem para uma secção específica na UI.
          * Usado após carregar um projeto.
-         * @param {string} sectionElementId - O ID do elemento HTML da seção.
+         * @param {string} sectionElementId - O ID do elemento HTML da secção.
          */
         const renderImagePromptsForSection = (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
@@ -2654,13 +2646,13 @@ ${scriptContent}
                     promptContainer.innerHTML += promptHtml;
                 });
             } else {
-                promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
+                promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta secção.</p>';
             }
         };
 
         /**
-         * Importa um projeto de um arquivo JSON.
-         * @param {Event} event - O evento de mudança do input de arquivo.
+         * Importa um projeto de um ficheiro JSON.
+         * @param {Event} event - O evento de mudança do input de ficheiro.
          */
         const importProject = (event) => {
             const file = event.target.files[0];
@@ -2715,7 +2707,7 @@ ${scriptContent}
                     if (document.getElementById('videoDescriptionContent').innerHTML.includes('Hashtags')) markButtonAsCompleted('generateDescriptionBtn');
                     if (document.getElementById('titlesThumbnailsContent').innerHTML.includes('Analisar CTR')) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
 
-                    // Re-renderiza os prompts de imagem para todas as seções
+                    // Re-renderiza os prompts de imagem para todas as secções
                     for (const sectionId in allImagePrompts) {
                         if (allImagePrompts.hasOwnProperty(sectionId)) {
                             renderImagePromptsForSection(sectionId);
@@ -2730,7 +2722,7 @@ ${scriptContent}
                     window.showToast("Projeto importado com sucesso!");
 
                 } catch (err) {
-                    window.showToast("Erro: Arquivo de projeto inválido ou corrompido.");
+                    window.showToast("Erro: Ficheiro de projeto inválido ou corrompido.");
                     console.error("Erro ao importar projeto:", err);
                 }
             };
