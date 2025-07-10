@@ -17,7 +17,7 @@
         /* ========================================================== */
         /* ==================== ESTILOS GERAIS ==================== */
         /* ========================================================== */
-        /* Variáveis CSS para cores consistentes e fácil manutenção */
+        /* Variáveis CSS para cores consistentess e fácil manutenção */
         :root {
             --primary-color: #4f46e5; /* Indigo-600 */
             --primary-hover: #4338ca; /* Indigo-700 */
@@ -799,24 +799,6 @@
             color: #f3f4f6 !important;
         }
         /* ========================================================== */
-        /* ====== CORREÇÃO FINAL DE CORES DE TÍTULOS (MODO CLARO) ===== */
-        /* ========================================================== */
-
-        /* Garante que o H1 principal e os textos da barra de progresso
-           tenham a cor correta no MODO CLARO, sem afetar o modo escuro. */
-        .container > h1,
-        #progressBarContainer .flex > span {
-            color: var(--text-dark); /* Cor escura padrão para o Modo Claro */
-        }
-
-        /* Garante que eles voltem a ser claros no MODO ESCURO para sobrescrever o padrão */
-        .dark .container > h1 {
-             color: #f3f4f6; /* Cinza 100 - Bem claro para o título principal */
-        }
-        .dark #progressBarContainer .flex > span {
-            color: #d1d5db; /* Cinza 300 - Padrão de texto do modo escuro */
-        }
-        /* ========================================================== */
         /* === CORREÇÃO FINAL - FUNDO DO ACORDEÃO NO MODO ESCURO ==== */
         /* ========================================================== */
         /* Esta regra garante que o item do acordeão (e por herança, seu
@@ -824,6 +806,44 @@
            sobrescrevendo a regra geral do modo claro. */
         .dark .accordion-item {
             background-color: #1f2937; /* Cinza 800 - o mesmo do container */
+        }
+        /* ========================================================== */
+        /* === ESTILOS PARA ACORDEÃO ANINHADO (PROMPTS E TRILHA) ==== */
+        /* ========================================================== */
+        .nested-accordion-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            cursor: pointer;
+            user-select: none;
+            margin-top: 1.5rem;
+            padding: 1rem 0.5rem;
+            border-top: 1px dashed var(--border-light);
+            transition: background-color 0.2s;
+            border-radius: 6px;
+        }
+
+        .dark .nested-accordion-header {
+            border-top-color: #4b5563;
+        }
+        
+        .nested-accordion-header:hover, .nested-accordion-header.active {
+            background-color: var(--bg-light);
+        }
+
+        .dark .nested-accordion-header:hover, .dark .nested-accordion-header.active {
+             background-color: #374151; /* Gray-700 */
+        }
+
+        .nested-accordion-header h4 {
+            font-size: 1rem;
+            font-weight: 700;
+            margin: 0;
+            color: var(--text-medium);
+        }
+        
+        .dark .nested-accordion-header h4 {
+            color: #9ca3af;
         }
     </style>
 </head>
@@ -1087,12 +1107,14 @@
                     <!-- Cartão: Salvar e Exportar -->
                     <div class="card-background p-4 rounded-lg shadow-md">
                          <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Finalizar Projeto</h3>
-                         <div class="grid grid-cols-2 gap-3">
+                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <button id="exportProjectBtn" class="btn btn-secondary">Exportar</button>
                             <button id="importProjectBtn" class="btn btn-secondary">Importar</button>
                             <input type="file" id="importFileInput" class="hidden" accept=".json">
                             <button id="downloadPdfBtn" class="btn btn-secondary">PDF</button>
                             <button id="resetScriptBtn" class="btn btn-secondary">Novo</button>
+                            <!-- BOTÃO NOVO ADICIONADO AQUI -->
+                            <button id="copyTranscriptBtn" class="btn btn-secondary col-span-2 sm:col-span-1">Copiar Transcrição</button>
                         </div>
                     </div>
                 </div>
@@ -1345,6 +1367,26 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
+         * Coleta e concatena o texto puro de todas as seções do roteiro na ordem correta.
+         * @returns {string} A transcrição completa e limpa.
+         */
+        const getTranscriptOnly = () => {
+            let transcript = '';
+            const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            
+            sectionOrder.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                const contentWrapper = section?.querySelector('.generated-content-wrapper');
+                if (contentWrapper?.textContent.trim()) {
+                    // Adiciona o texto da seção e duas quebras de linha para separar os parágrafos.
+                    transcript += contentWrapper.textContent.trim() + '\n\n';
+                }
+            });
+            
+            return transcript.trim();
+        };
+    
+        /**
          * Calcula o tempo de leitura estimado de um texto.
          * @param {string} text - O texto a ser analisado.
          * @returns {string} O tempo de leitura formatado (ex: "~1 min 15 seg").
@@ -1372,74 +1414,80 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
-         * Gera o HTML para uma seção do roteiro em formato de acordeão.
+         * Gera o HTML para uma seção do roteiro em formato de acordeão,
+         * com acordeões aninhados para Prompts e Trilha Sonora.
          * @param {string} sectionId - O ID da seção (ex: 'intro', 'development').
          * @param {string} title - O título da seção a ser exibido.
          * @param {string} content - O conteúdo do roteiro para a seção.
-         * @param {object} options - Opções para controlar a exibição de botões (showPromptsButton, showSoundtrackButton).
          * @returns {string} O HTML completo da seção.
          */
-        const generateSectionHtmlContent = (sectionId, title, content, options = {}) => {
-            // Define os valores padrão se não forem fornecidos
-            const { showPromptsButton = true, showSoundtrackButton = true } = options;
+        const generateSectionHtmlContent = (sectionId, title, content) => {
+            const mainBodyId = `${sectionId}Body`;
+            const mainArrowId = `${sectionId}Arrow`;
             
-            const bodyId = `${sectionId}Body`;
-            const arrowId = `${sectionId}Arrow`;
+            // IDs únicos para os acordeões aninhados
+            const promptsBodyId = `promptsBody-${sectionId}`;
+            const promptsArrowId = `promptsArrow-${sectionId}`;
+            const soundtrackBodyId = `soundtrackBody-${sectionId}`;
+            const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
 
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                    <path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>
-                    <path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/>
-                </svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
             </button>`;
 
-            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${bodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
+            const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
             
-            // Constrói condicionalmente as seções de prompt e trilha sonora
-            const promptsSectionHtml = showPromptsButton ? `
-                <div class="section-prompts">
-                    <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">
-                        Gerar Prompts de Imagem
-                    </button>
-                    <div class="prompt-container mt-4"></div>
-                </div>
-            ` : '';
-            
-            const soundtrackSectionHtml = showSoundtrackButton ? `
-                <div class="section-soundtrack">
-                    <button class="btn btn-secondary btn-small" onclick="window.suggestSoundtrack('${sectionId}Section')">
-                        Sugerir Trilha Sonora
-                    </button>
-                    <div class="soundtrack-container mt-4"></div>
-                </div>
-            ` : '';
+            const headerButtonsHtml = `${regenerateBtnHtml} ${copyBtnHtml}`;
 
-            // Removido o regenerateBtnHtml do header-buttons para a Descrição do Vídeo
-            const headerButtonsHtml = (sectionId === 'videoDescriptionOutput' || sectionId === 'titlesThumbnails' || sectionId === 'strategicOutline') ?
-                `${copyBtnHtml}` :
-                `${regenerateBtnHtml} ${copyBtnHtml}`;
+            // Estrutura do acordeão aninhado para Prompts
+            const promptsSectionHtml = `
+                <div class="section-prompts">
+                    <div class="nested-accordion-header" onclick="event.stopPropagation(); toggleAccordion('${promptsBodyId}', '${promptsArrowId}')">
+                        <h4>Recursos Visuais (Prompts)</h4>
+                        <svg id="${promptsArrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                    </div>
+                    <div id="${promptsBodyId}" class="accordion-body">
+                        <div class="pt-2">
+                            <button class="btn btn-secondary btn-small" onclick="window.generatePromptsForSection('${sectionId}Section')">Gerar Prompts de Imagem</button>
+                            <div class="prompt-container mt-4"></div>
+                        </div>
+                    </div>
+                </div>`;
+            
+            // Estrutura do acordeão aninhado para Trilha Sonora
+            const soundtrackSectionHtml = `
+                <div class="section-soundtrack">
+                    <div class="nested-accordion-header" onclick="event.stopPropagation(); toggleAccordion('${soundtrackBodyId}', '${soundtrackArrowId}')">
+                        <h4>Recursos Sonoros (Trilha)</h4>
+                        <svg id="${soundtrackArrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                    </div>
+                    <div id="${soundtrackBodyId}" class="accordion-body">
+                        <div class="pt-2">
+                             <button class="btn btn-secondary btn-small" onclick="window.suggestSoundtrack('${sectionId}Section')">Sugerir Trilha Sonora</button>
+                             <div class="soundtrack-container mt-4"></div>
+                        </div>
+                    </div>
+                </div>`;
 
             return `<div class="accordion-item">
-                        <div class="accordion-header" onclick="toggleAccordion('${bodyId}', '${arrowId}')">
+                        <div class="accordion-header" onclick="toggleAccordion('${mainBodyId}', '${mainArrowId}')">
                             <div class="header-content">
                                  <h3>${title}</h3>
                                  <span class="text-xs font-normal text-gray-400 dark:text-gray-500">${calculateReadingTime(content)}</span>
-                                 <svg id="${arrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
-                                    <path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/>
-                                 </svg>
+                                 <svg id="${mainArrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
                             </div>
                             <div class="header-buttons">
                                 ${headerButtonsHtml}
                             </div>
                         </div>
-                        <div id="${bodyId}" class="accordion-body">
+                        <div id="${mainBodyId}" class="accordion-body">
                             <div class="generated-content-wrapper" contenteditable="true">${content.startsWith('<div') ? content : `<p class="whitespace-pre-wrap">${content}</p>`}</div>
                             ${promptsSectionHtml}
                             ${soundtrackSectionHtml}
                         </div>
                     </div>`;
         };
-
+    
         /**
          * Limpa o texto gerado pela IA, removendo metadados e extraindo JSON se necessário.
          * @param {string} text - O texto bruto da IA.
@@ -1497,25 +1545,14 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
          * @param {string} text - O texto gerado pela IA.
          * @returns {string} O texto sem os comentários meta.
          */
-// CÓDIGO NOVO (SUBSTITUTO)
-        /**
-         * Remove comentários meta da IA do texto gerado, agora com suporte a português.
-         * @param {string} text - O texto gerado pela IA.
-         * @returns {string} O texto sem os comentários meta.
-         */
         const removeMetaComments = (text) => {
             if (!text) return text;
-            
-            // Padrão expandido para pegar frases em inglês e português.
-            // (Aqui está|Claro, aqui está|Certo, segue) o (roteiro|texto|esboço|...)
-            const introPattern = /^(Sure, |Of course, |Certainly, |Claro, |Certo, )?(here is|here's|here are|below is|aqui está|segue)( the | a | o | a )?.*?:\s*\n?/im;
+            // Padrão para remover "Here is/are..." ou "Sure, here is..." etc.
+            const introPattern = /^(Sure, |Of course, )?(here is|here's|here are|below is|certainly, here is) .*?:\s*\n?/im;
             let cleanedText = text.replace(introPattern, '');
             
-            // Remove linhas que começam com "Description:" ou "Hashtags:" e suas traduções
-            cleanedText = cleanedText.replace(/^(Description:|Descrição:|Hashtags:)\s*\n?/gim, '');
-
-            // Remove aspas no início e no fim do texto, caso a IA as adicione ao redor de todo o bloco
-            cleanedText = cleanedText.replace(/^"(.+)"$/s, '$1');
+            // Remove linhas que começam com "Description:" ou "Hashtags:" se a IA as adicionar
+            cleanedText = cleanedText.replace(/^(Description:|Hashtags:)\s*\n?/gim, '');
 
             return cleanedText.trim();
         };
@@ -2076,7 +2113,7 @@ The final output MUST be only the JSON code, like this example:
 
 **REGRAS INEGOCIÁVEIS:**
 -   **NÃO** descreva movimentos de câmera, cortes ou enquadramentos. Descreva APENAS o conteúdo visual estático.
--   A resposta DEVE SER um array JSON. Cada objeto no array DEVE ter **exatamente** três chaves: \`scriptPhrase\` (string), \`imageDescription\` (string), e \`estimated_duration\` (número de segundos).
+-   A resposta DEVE SER um array JSON. Cada objeto no array DEVE ter **exatamente** três chaves: \`scriptPhrase\`, \`imageDescription\`, e \`estimated_duration\` (número de segundos).
 
 **EXEMPLO DE RESPOSTA PERFEITA:**
 [
@@ -2223,6 +2260,40 @@ ${scriptContent}
             }
         };
 
+        /**
+         * Copia a transcrição completa para a área de transferência e
+         * inicia o download de um arquivo .docx contendo a mesma transcrição.
+         */
+        const handleCopyAndDownloadTranscript = () => {
+            const transcriptText = getTranscriptOnly();
+
+            if (!transcriptText) {
+                window.showToast("Nenhum roteiro para copiar. Gere as seções primeiro.");
+                return;
+            }
+
+            // Ação 1: Copiar para a área de transferência
+            copyTextToClipboard(transcriptText);
+            // O showToast já está dentro do copyTextToClipboard, mas podemos adicionar um mais específico.
+            window.showToast("Transcrição copiada e download iniciado!");
+
+            // Ação 2: Gerar e baixar o arquivo .docx
+            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.docx';
+            
+            // Converte o texto plano em HTML simples, preservando as quebras de linha
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body>${transcriptText.replace(/\n/g, '<br>')}</body></html>`;
+            
+            const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        };
+    
         /**
          * Gera títulos de vídeo e ideias de thumbnail.
          */
@@ -2996,6 +3067,8 @@ ${scriptContent}
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
             if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); // Changed to window.print()
             if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
+            // ADICIONE ESTA LINHA
+            if (buttons.copyTranscriptBtn) buttons.copyTranscriptBtn.addEventListener('click', handleCopyAndDownloadTranscript); 
             
             // Outros listeners
             if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
