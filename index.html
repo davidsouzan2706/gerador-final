@@ -817,7 +817,7 @@
             cursor: pointer;
             user-select: none;
             margin-top: 1.5rem;
-            padding: 1rem 0.5rem;
+            padding: 0.75rem 1rem; /* Ajustado para um padding mais compacto */
             border-top: 1px dashed var(--border-light);
             transition: background-color 0.2s;
             border-radius: 6px;
@@ -1125,7 +1125,7 @@
     <!-- Botão para Sair do Modo Foco (começa escondido) -->
     <button id="exitZenModeBtn" class="hidden fixed top-5 right-5 z-[2001] bg-white/50 dark:bg-gray-800/50 backdrop-blur-sm p-2 rounded-full text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
         <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/><path d="M3 14.5a1.5 1.5 0 0 1-1.5-1.5V3a1.5 1.5 0 0 1 1.5-1.5h10A1.5 1.5 0 0 1 14.5 3v10a1.5 1.5 0 0 1-1.5 1.5H3zM4 3v10h8V3H4z"/></svg>
-    </button>
+            </button>
     
     <!-- Elementos de Feedback (Toast e Alerta) -->
     <div id="toastNotification" class="toast-notification"></div>
@@ -1425,7 +1425,6 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const mainBodyId = `${sectionId}Body`;
             const mainArrowId = `${sectionId}Arrow`;
             
-            // IDs únicos para os acordeões aninhados
             const promptsBodyId = `promptsBody-${sectionId}`;
             const promptsArrowId = `promptsArrow-${sectionId}`;
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
@@ -1439,7 +1438,6 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             
             const headerButtonsHtml = `${regenerateBtnHtml} ${copyBtnHtml}`;
 
-            // Estrutura do acordeão aninhado para Prompts
             const promptsSectionHtml = `
                 <div class="section-prompts">
                     <div class="nested-accordion-header" onclick="event.stopPropagation(); toggleAccordion('${promptsBodyId}', '${promptsArrowId}')">
@@ -1454,7 +1452,6 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
                     </div>
                 </div>`;
             
-            // Estrutura do acordeão aninhado para Trilha Sonora
             const soundtrackSectionHtml = `
                 <div class="section-soundtrack">
                     <div class="nested-accordion-header" onclick="event.stopPropagation(); toggleAccordion('${soundtrackBodyId}', '${soundtrackArrowId}')">
@@ -2645,7 +2642,7 @@ ${scriptContent}
             document.querySelectorAll('#scriptColumn .script-section').forEach(sec => {
                 sec.innerHTML = '';
             });
-            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
             document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
             
@@ -2962,7 +2959,12 @@ ${scriptContent}
                 body.classList.toggle('open');
                 arrow.classList.toggle('open');
                 // Adiciona ou remove a classe 'active' no elemento pai do cabeçalho
-                arrow.closest('.accordion-header').classList.toggle('active');
+                // Para acordeões aninhados, o header é o próprio elemento clicado.
+                // Para o acordeão principal, é o pai do header-content.
+                const headerElement = arrow.closest('.accordion-header') || arrow.closest('.nested-accordion-header');
+                if (headerElement) {
+                    headerElement.classList.toggle('active');
+                }
             }
         };
 
