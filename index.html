@@ -1120,9 +1120,10 @@
         // ==========================================================
         // Variáveis de estado globais
         let generatedTitlesAndThumbnails = null;
-        let allImagePrompts = {}; // Armazena prompts de imagem por seção
-        let strategicOutline = null; // Variável para armazenar o esboço estratégico
-
+        let allImagePrompts = {}; 
+        let strategicOutline = null;
+        let totalScriptSeconds = 0; // <-- ADICIONE ESTA LINHA
+    
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
@@ -1920,30 +1921,38 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Itera sobre todas as secções do roteiro na ordem correta
-         * e renumera globalmente todas as cenas.
+         * Itera sobre todas as seções do roteiro na ordem correta,
+         * renumera globalmente todas as cenas E recalcula o timestamp.
          */
         const reNumberAllScenes = () => {
             let globalSceneCounter = 1;
+            totalScriptSeconds = 0; // Zera a contagem global a cada recálculo
             const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            const wordsPerSecond = 2.5; // Média de palavras por segundo para narração
 
             sectionOrder.forEach(sectionId => {
                 const promptBlocks = document.querySelectorAll(`#${sectionId} .individual-prompt-block`);
                 
                 promptBlocks.forEach(block => {
                     const timeElement = block.querySelector('.prompt-time');
-                    if (timeElement) {
-                        // Pega apenas a parte do tempo, ignorando a contagem de cena antiga
-                        const timePart = timeElement.textContent.split(' - ')[0];
+                    const phraseElement = block.querySelector('.prompt-phrase');
+
+                    if (timeElement && phraseElement) {
+                        const wordCount = phraseElement.textContent.trim().split(/\s+/).length;
+                        const sceneDuration = Math.max(5, Math.round(wordCount / wordsPerSecond)); // Mínimo de 5s por cena
+
+                        const minutes = Math.floor(totalScriptSeconds / 60);
+                        const seconds = Math.floor(totalScriptSeconds % 60);
                         
-                        // Atualiza o elemento com a nova contagem global
-                        timeElement.textContent = `${timePart} - Cena ${String(globalSceneCounter).padStart(2, '0')}`;
+                        timeElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} - Cena ${String(globalSceneCounter).padStart(2, '0')}`;
+                        
+                        totalScriptSeconds += sceneDuration; // Adiciona a duração desta cena ao total
                         globalSceneCounter++;
                     }
                 });
             });
         };
-
+    
         // ==========================================================
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
@@ -2028,7 +2037,7 @@ The final output MUST be only the JSON code, like this example:
         };
 
         /**
-         * Gera prompts de imagem para uma secção específica do roteiro.
+         * Gera prompts de imagem para uma seção específica do roteiro.
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
@@ -2036,7 +2045,7 @@ The final output MUST be only the JSON code, like this example:
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
-                window.showToast("Por favor, gere o conteúdo do roteiro desta secção primeiro.");
+                window.showToast("Por favor, gere o conteúdo do roteiro desta seção primeiro.");
                 return;
             }
 
@@ -2049,14 +2058,13 @@ The final output MUST be only the JSON code, like this example:
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            // --- INÍCIO DA CORREÇÃO E APRIMORAMENTO DO PROMPT ---
             let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
 
 **REGRA DE RITMO (A MAIS IMPORTANTE):** Seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso é crucial para um vídeo dinâmico. **Analise o fluxo do texto**: leia um bloco de frases, estime o tempo de fala e só então escolha o momento visual mais impactante dentro desse bloco para criar UM único prompt. Não crie uma imagem para cada frase.
 
 **REGRA DE CENA INICIAL (INEGOCIÁVEL):** O primeiro prompt que você criar **DEVE OBRIGATORIAMENTE** corresponder à **primeira frase completa** do roteiro para garantir impacto visual imediato.
 
-**REGRA DE CONTEÚDO (ABSOLUTA):** **NÃO descreva movimentos de câmara**, cortes ou enquadramentos (ex: 'close-up de', 'câmara foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.
+**REGRA DE CONTEÚDO (ABSOLUTA):** **NÃO descreva movimentos de câmera**, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.
 
 Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
 
@@ -2065,7 +2073,6 @@ Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "image
 Trecho do roteiro:
 ---${scriptContent}
 ---`;
-            // --- FIM DA CORREÇÃO E APRIMORAMENTO DO PROMPT ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
@@ -2095,20 +2102,11 @@ Trecho do roteiro:
                         console.error("Erro ao analisar JSON de prompts de imagem:", e);
                     }
                 } else {
-                    window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta secção.");
+                    window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
                 }
                 
-                // A lógica de tempo agora é apenas uma estimativa para exibição, a IA já fez o trabalho pesado.
-                let accumulatedTimeSeconds = 1; 
-                allImagePrompts[sectionElementId] = prompts.map((p) => {
-                    const time = accumulatedTimeSeconds;
-                    // Aumenta o tempo baseado no número de prompts que a IA retornou, criando uma média.
-                    accumulatedTimeSeconds += (prompts.length > 1 ? (120 / prompts.length) : 20); // Ex: Se a IA devolveu 6 prompts para um roteiro de 2 min, a média é 20s.
-                    
-                    const mins = Math.floor(time / 60);
-                    const secs = Math.floor(time % 60);
-                    return { ...p, time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, styleBlock: selectedStyleBlock };
-                });
+                // Apenas armazena os dados brutos, sem se preocupar com tempo ou sequência
+                allImagePrompts[sectionElementId] = prompts.map((p) => ({ ...p, styleBlock: selectedStyleBlock }));
 
                 promptContainer.innerHTML = '';
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
@@ -2117,7 +2115,7 @@ Trecho do roteiro:
                         const promptHtml = `
                             <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="prompt-time">${promptData.time} - Cena 00</p> 
+                                    <p class="prompt-time">00:00 - Cena 00</p> 
                                     <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
                                 </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
@@ -2129,17 +2127,17 @@ Trecho do roteiro:
                         promptContainer.innerHTML += promptHtml;
                     });
                 } else {
-                    promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta secção.</p>';
+                    promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
                 }
                 
-                reNumberAllScenes();
+                reNumberAllScenes(); // O "maestro" agora faz todo o trabalho de tempo e numeração
                 updateButtonStates();
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
                 console.error(`Error generating prompts for section ${sectionElementId}.`, error);
             }
         };
-
+    
         /**
          * Sugere trilhas sonoras para uma secção específica do roteiro.
          * @param {string} sectionId - O ID do elemento HTML da secção (ex: 'introSection').
@@ -2634,7 +2632,7 @@ ${scriptContent}
                     const promptHtml = `
                         <div class="individual-prompt-block card-background">
                             <div class="flex items-center justify-between mb-2">
-                                <p class="prompt-time">${promptData.time} - Cena 00</p>
+                                <p class="prompt-time">00:00 - Cena 00</p>
                                 <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
                             </div>
                             <p class="prompt-phrase">${promptData.scriptPhrase}</p>
