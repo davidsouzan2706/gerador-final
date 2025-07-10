@@ -11,7 +11,7 @@
     <!-- Fontes Google - Carlito para legibilidade -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;0,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <style>
         /* ========================================================== */
@@ -2517,130 +2517,428 @@ The final output MUST be only the JSON code, like this example:
         };
 
         // ==========================================================
-        // ================== INICIALIZAÇÃO =======================
+        // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
-        document.addEventListener('DOMContentLoaded', () => {
-            console.log("DOM Content Loaded. Initializing app."); 
-            
-            // Adiciona as novas referências de elementos
-            elements.progressBar = document.getElementById('progressBar');
-            elements.progressText = document.getElementById('progressText');
-            elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
-            elements.outlineContent = document.getElementById('outlineContent'); // New reference for outline content
-            elements.narrativeGoal = document.getElementById('narrativeGoal'); // NEW
-            elements.narrativeStructure = document.getElementById('narrativeStructure'); // NEW
-            elements.narrativeStructureTooltip = document.getElementById('narrativeStructureTooltip'); // NEW
+        /**
+         * Valida os inputs essenciais antes de chamar a API.
+         * @returns {boolean} True se os inputs forem válidos, false caso contrário.
+         */
+        const validateInputs = () => {
+            const requiredInputs = [
+                { id: 'channelName', name: 'Nome do Canal' },
+                { id: 'videoTheme', name: 'Tema do Vídeo' }
+            ];
 
-            // Configura os event listeners para os botões
-            const setupClick = (originalId) => {
-                const floatBtn = document.getElementById(`float_${originalId}`);
-                if (floatBtn) {
-                    floatBtn.addEventListener('click', () => {
-                        document.getElementById(originalId).click();
+            for (const input of requiredInputs) {
+                if (!elements[input.id] || elements[input.id].value.trim() === '') {
+                    showFullScreenAlert(`Por favor, preencha o campo "${input.name}" para continuar.`);
+                    return false;
+                }
+            }
+            return true;
+        };
+
+        /**
+         * Gera uma seção do roteiro (Introdução, Desenvolvimento, Clímax, Conclusão, CTA).
+         * @param {HTMLElement} button - O botão que acionou a geração.
+         * @param {string} sectionType - O tipo de seção (ex: 'intro', 'development').
+         * @param {string} sectionTitle - O título da seção para exibição.
+         * @param {string} outlineKey - A chave correspondente no objeto strategicOutline.
+         */
+        const handleGenerateSection = async (button, sectionType, sectionTitle, outlineKey) => {
+            if (!validateInputs()) return;
+
+            // Verifica se o esboço estratégico foi gerado
+            if (!strategicOutline) {
+                showFullScreenAlert("Por favor, gere o 'Esboço Estratégico' primeiro.");
+                return;
+            }
+
+            showLoading(button);
+            const sectionElement = document.getElementById(`${sectionType}Section`);
+            const outlineDirective = strategicOutline[outlineKey] || null;
+
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt(sectionType, sectionTitle, outlineDirective);
+                let result = await callGroqAPI(prompt, maxTokens);
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result);
+
+                if (sectionElement) {
+                    sectionElement.innerHTML = generateSectionHtmlContent(`${sectionType}Section`, sectionTitle, result);
+                    sectionElement.classList.remove('hidden');
+                    sectionElement.classList.add('animate-fade-in');
+                    markButtonAsCompleted(button.id);
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar ${sectionTitle}: ${error.message}`);
+                console.error(`Error generating ${sectionTitle}.`, error);
+            } finally {
+                hideLoading(button);
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Re-gera uma seção específica do roteiro.
+         * @param {string} sectionId - O ID do elemento HTML da seção.
+         * @param {string} sectionTitle - O título da seção.
+         * @param {string} outlineKey - A chave correspondente no objeto strategicOutline.
+         */
+        window.regenerateSection = async (sectionId, sectionTitle, outlineKey) => {
+            const sectionElement = document.getElementById(sectionId);
+            const contentWrapper = sectionElement?.querySelector('.generated-content-wrapper');
+            const originalContent = contentWrapper ? contentWrapper.innerHTML : '';
+
+            // Temporariamente mostra um spinner dentro da seção
+            if (contentWrapper) {
+                contentWrapper.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+            }
+
+            // Desabilita todos os botões de geração durante a re-geração
+            Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
+
+            const outlineDirective = strategicOutline[outlineKey] || null;
+
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt(sectionId.replace('Section', ''), sectionTitle, outlineDirective);
+                let result = await callGroqAPI(prompt, maxTokens);
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result);
+
+                if (contentWrapper) {
+                    contentWrapper.innerHTML = `<p class="whitespace-pre-wrap">${result}</p>`;
+                }
+                window.showToast(`${sectionTitle} re-gerada!`);
+            } catch (error) {
+                window.showToast(`Falha ao re-gerar ${sectionTitle}: ${error.message}`);
+                console.error(`Error regenerating ${sectionTitle}.`, error);
+                if (contentWrapper) {
+                    contentWrapper.innerHTML = originalContent; // Restaura o conteúdo original em caso de erro
+                }
+            } finally {
+                // Reabilita todos os botões após a re-geração
+                Object.values(buttons).forEach(btn => { if(btn) btn.disabled = false; });
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Gera prompts de imagem para uma seção específica do roteiro.
+         * @param {string} sectionElementId - O ID do elemento HTML da seção.
+         */
+        window.generatePromptsForSection = async (sectionElementId) => {
+            const sectionElement = document.getElementById(sectionElementId);
+            if (!sectionElement) return;
+
+            const scriptContent = sectionElement.querySelector('.generated-content-wrapper')?.textContent;
+            if (!scriptContent) {
+                window.showToast("Por favor, gere o roteiro desta seção primeiro.");
+                return;
+            }
+
+            const promptContainer = sectionElement.querySelector('.prompt-container');
+            if (promptContainer) {
+                promptContainer.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+            }
+
+            // Desabilita todos os botões de geração durante a geração de prompts
+            Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
+
+            const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
+            const imageStyleSelect = elements.imageStyleSelect.value;
+            const customImageStyle = elements.customImageStyle.value.trim();
+            const selectedLanguage = elements.languageSelect.value;
+
+            let styleBlock = '';
+            if (imageStyleSelect === 'cinematic') {
+                styleBlock = CINEMATIC_STYLE_BLOCK;
+            } else if (imageStyleSelect === 'custom' && customImageStyle) {
+                styleBlock = customImageStyle;
+            }
+
+            const prompt = `
+            You are an AI specialized in generating detailed image prompts for video scenes.
+            Analyze the following script section and generate 5 distinct image prompts.
+            
+            For each prompt, include:
+            - A timestamp (e.g., "00:05").
+            - The exact script phrase that corresponds to the visual.
+            - A detailed visual description (the image prompt itself).
+            
+            Apply the following instructions for image descriptions: "${imageDescriptionEngine}".
+            ${styleBlock ? `\nApply this visual style: ${styleBlock}` : ''}
+            
+            Respond ONLY with a valid JSON array of objects. Each object must have "time", "scriptPhrase", and "imageDescription" keys.
+            
+            Example JSON format:
+            [
+              {
+                "time": "00:05",
+                "scriptPhrase": "Imagine a vast, empty desert...",
+                "imageDescription": "A wide shot of an endless, golden desert under a scorching sun. The sand dunes stretch to the horizon. Cinematic, high-resolution."
+              },
+              {
+                "time": "00:10",
+                "scriptPhrase": "A lone traveler struggles against the wind.",
+                "imageDescription": "Close-up of a cloaked figure, face obscured, battling a strong sandstorm. Their clothes are tattered. Cinematic, detailed."
+              }
+            ]
+            
+            Script Section:
+            "${scriptContent}"
+
+            IMPORTANT: The 'imageDescription' should be a standalone prompt, ready to be used by an image generation AI. Do NOT include any meta-comments or conversational text outside the JSON.
+            IMPORTANT: The response for this section MUST be in ${selectedLanguage}.
+            `;
+
+            try {
+                const result = await callGroroqAPI(prompt, 1500);
+                const cleanedResult = cleanGeneratedText(result, true);
+                const parsedPrompts = JSON.parse(cleanedResult);
+
+                allImagePrompts[sectionElementId] = parsedPrompts.map(p => ({ ...p, styleBlock })); // Store with style block
+
+                promptContainer.innerHTML = ''; // Clear loading spinner
+                parsedPrompts.forEach((promptData, index) => { // Added index here for ID
+                    const promptHtml = `
+                        <div class="individual-prompt-block card-background">
+                            <div class="flex items-center justify-between mb-2">
+                                <p class="prompt-time">${promptData.time} - Cena <span class="scene-number">00</span></p>
+                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                            </div>
+                            <p class="prompt-phrase">${promptData.scriptPhrase}</p>
+                            <p class="prompt-description-label">${imageDescriptionLabels[selectedLanguage] || 'Image Description:'}</p>
+                            <p id="prompt-content-${sectionElementId}-${index}" class="prompt-description-content">${promptData.imageDescription}</p>
+                            <pre id="style-block-${sectionElementId}-${index}" class="text-xs p-2 rounded-md overflow-auto">${styleBlock}</pre>
+                        </div>
+                    `;
+                    promptContainer.innerHTML += promptHtml;
+                });
+
+                reNumberAllScenes(); // Renumber scenes after generation
+                window.showToast("Prompts de imagem gerados!");
+            } catch (error) {
+                window.showToast(`Falha ao gerar prompts de imagem: ${error.message}`);
+                console.error("Error generating image prompts.", error);
+                if (promptContainer) {
+                    promptContainer.innerHTML = `<p class="text-red-500">Erro ao gerar prompts. Tente novamente.</p>`;
+                }
+            } finally {
+                // Reabilita todos os botões
+                Object.values(buttons).forEach(btn => { if(btn) btn.disabled = false; });
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Sugere trilha sonora para uma seção específica do roteiro.
+         * @param {string} sectionElementId - O ID do elemento HTML da seção.
+         */
+        window.suggestSoundtrack = async (sectionElementId) => {
+            const sectionElement = document.getElementById(sectionElementId);
+            if (!sectionElement) return;
+
+            const scriptContent = sectionElement.querySelector('.generated-content-wrapper')?.textContent;
+            if (!scriptContent) {
+                window.showToast("Por favor, gere o roteiro desta seção primeiro.");
+                return;
+            }
+
+            const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
+            if (soundtrackContainer) {
+                soundtrackContainer.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+            }
+
+            // Desabilita todos os botões de geração durante a geração de trilha sonora
+            Object.values(buttons).forEach(btn => { if(btn) btn.disabled = true; });
+
+            const prompt = `
+            You are an AI specialized in suggesting background music for video segments.
+            Analyze the following script section and suggest 3-5 suitable background music styles/genres or specific moods.
+            For each suggestion, briefly explain why it fits the mood or content of the script.
+
+            Respond ONLY with a valid JSON array of objects. Each object must have "genre" and "reason" keys.
+
+            Example JSON format:
+            [
+              {
+                "genre": "Epic Orchestral",
+                "reason": "For moments of grand revelation and awe, building a sense of wonder."
+              },
+              {
+                "genre": "Suspenseful Ambient",
+                "reason": "To create tension and mystery during the exploration of unknown facts."
+              }
+            ]
+
+            Script Section:
+            "${scriptContent}"
+
+            IMPORTANT: Do NOT include any meta-comments or conversational text outside the JSON.
+            `;
+
+            try {
+                const result = await callGroqAPI(prompt, 500);
+                const cleanedResult = cleanGeneratedText(result, true);
+                const parsedSoundtrack = JSON.parse(cleanedResult);
+
+                soundtrackContainer.innerHTML = ''; // Clear loading spinner
+                let soundtrackHtml = '<ul class="soundtrack-list">';
+                parsedSoundtrack.forEach(item => {
+                    soundtrackHtml += `<li><strong>${item.genre}:</strong> ${item.reason}</li>`;
+                });
+                soundtrackHtml += '</ul>';
+                soundtrackContainer.innerHTML = soundtrackHtml;
+
+                window.showToast("Sugestões de trilha sonora geradas!");
+            } catch (error) {
+                window.showToast(`Falha ao sugerir trilha sonora: ${error.message}`);
+                console.error("Error generating soundtrack suggestions.", error);
+                if (soundtrackContainer) {
+                    soundtrackContainer.innerHTML = `<p class="text-red-500">Erro ao gerar sugestões. Tente novamente.</p>`;
+                }
+            } finally {
+                // Reabilita todos os botões
+                Object.values(buttons).forEach(btn => { if(btn) btn.disabled = false; });
+                updateButtonStates();
+            }
+        };
+
+        /**
+         * Renumera todas as cenas de imagem em todas as seções.
+         * Esta função deve ser chamada sempre que prompts de imagem forem gerados ou importados.
+         */
+        const reNumberAllScenes = () => {
+            let sceneCounter = 1;
+            const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+
+            scriptSectionIds.forEach(sectionId => {
+                const sectionElement = document.getElementById(sectionId);
+                if (sectionElement) {
+                    const sceneNumberSpans = sectionElement.querySelectorAll('.prompt-time .scene-number');
+                    sceneNumberSpans.forEach(span => {
+                        span.textContent = String(sceneCounter++).padStart(2, '0');
                     });
                 }
-            };
-
-            // Conecta os botões flutuantes aos originais
-            // Iterar sobre todos os botões que têm um flutuante correspondente
-            const allButtonIds = Object.keys(buttons);
-            allButtonIds.forEach(id => {
-                // Exclui o botão do modo zen da barra flutuante, pois ele foi movido
-                if (id.startsWith('generate') || id.startsWith('climax') || id.startsWith('conclusion') || id.startsWith('cta') || id.startsWith('download') || id.startsWith('reset') || id.startsWith('export') || id.startsWith('import')) {
-                    setupClick(id);
-                }
             });
-            
-            // Adiciona os listeners de ação aos botões originais
-            if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); // New listener for outline
-            if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
-            if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
-            if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'clímax', 'Clímax', 'climax'));
-            if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
-            if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
-            if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
-            if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
-            // Removed storyboard button listener
-            if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
-            if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); // Changed to window.print()
-            if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
-            
-            // Outros listeners
-            if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
-            if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
-            
-            // NOVO CÓDIGO À PROVA DE BALAS PARA O MODO ESCURO
-            const darkModeButton = document.getElementById('darkModeToggle');
-            if (darkModeButton) {
-                darkModeButton.addEventListener('click', () => {
-                    const moonIcon = document.getElementById('moonIcon');
-                    const sunIcon = document.getElementById('sunIcon');
-                    
-                    // Alterna a classe 'dark' no body
-                    document.body.classList.toggle('dark');
+        };
 
-                    // Verifica se o modo escuro está ATIVO agora
-                    if (document.body.classList.contains('dark')) {
-                        // Se SIM, esconde a lua, mostra o sol, e salva no localStorage
-                        if (moonIcon) moonIcon.classList.add('hidden');
-                        if (sunIcon) sunIcon.classList.remove('hidden');
-                        localStorage.setItem('darkMode', 'enabled');
-                    } else {
-                        // Se NÃO, esconde o sol, mostra a lua, e salva no localStorage
-                        if (moonIcon) moonIcon.classList.remove('hidden');
-                        if (sunIcon) sunIcon.classList.add('hidden'); // This was moonIcon.classList.add('hidden');
-                        localStorage.setItem('darkMode', 'disabled');
+        /**
+         * Função dummy para simular a chamada à API Groq.
+         * Em um ambiente real, esta função faria uma requisição HTTP para a API Groq.
+         * @param {string} prompt - O prompt a ser enviado para a IA.
+         * @param {number} maxTokens - O número máximo de tokens a serem gerados.
+         * @returns {Promise<string>} Uma promessa que resolve com o texto gerado pela IA.
+         */
+        const callGroqAPI = async (prompt, maxTokens) => {
+            console.log("Chamando Groq API com prompt:", prompt);
+            // Simulação de atraso da API
+            await new Promise(resolve => setTimeout(resolve, 1500));
+
+            // Simulação de respostas da IA
+            if (prompt.includes("beat sheet") || prompt.includes("esboço estratégico")) {
+                return `{
+                    "introduction": "Começar com uma pergunta retórica chocante sobre a mortalidade, seguida por uma promessa de que a história de Lázaro detém uma resposta inesperada. Gancho emocional: curiosidade e um toque de medo existencial.",
+                    "development": "Construir a narrativa explorando o luto das irmãs de Lázaro, humanizando a história. Apresentar a chegada tardia de Jesus como um ponto de tensão e dúvida. Foco na emoção de perda antes do milagre.",
+                    "climax": "O momento de maior tensão no túmulo. Descrever a ordem de Jesus com autoridade e o espanto da multidão. O milagre deve ser o pico emocional e visual do vídeo.",
+                    "conclusion": "Resumir a lição: o milagre não é sobre desafiar a morte, mas sobre o poder da fé. Conectar a história de Lázaro à jornada de fé pessoal do espectador.",
+                    "cta": "Fazer uma chamada para ação suave, pedindo para o espectador compartilhar sua própria história de superação ou fé nos comentários, criando uma comunidade."
+                }`;
+            } else if (prompt.includes("video titles") && prompt.includes("thumbnail ideas")) {
+                return `{
+                  "titles": [
+                    "A Arca da Aliança: Onde Está AGORA?",
+                    "O Segredo Milenar da Arca: Desvendado?",
+                    "A Arca Perdida: A Verdade Chocante Revelada",
+                    "Eles Encontraram a Arca da Aliança? (IMPACTANTE)",
+                    "Mistério Bíblico: A Arca e o Fim dos Tempos"
+                  ],
+                  "thumbnails": [
+                    {
+                      "title": "ENCONTRADA?",
+                      "description": "Imagem dramática de um baú antigo, brilhante, semi-enterrado em uma caverna escura, com um arqueólogo chocado olhando. Efeito de luz mística."
+                    },
+                    {
+                      "title": "O SEGREDO",
+                      "description": "Colagem mostrando um mapa antigo desbotado, um texto bíblico secreto e uma imagem de satélite apontando para um local na Etiópia. Olhar misterioso."
+                    },
+                    {
+                      "title": "HISTÓRIA MUDOU",
+                      "description": "Imagem visualmente deslumbrante da Arca da Aliança irradiando luz dourada dentro de um Templo de Salomão reconstruído. Título em neon."
                     }
-                });
+                  ]
+                }`;
+            } else if (prompt.includes("video description") && prompt.includes("hashtags")) {
+                return `Description:
+Neste vídeo, mergulhamos no mistério da Arca da Aliança, um dos artefatos mais enigmáticos da história bíblica. Exploramos as teorias mais fascinantes sobre seu paradeiro, desde lendas antigas até descobertas modernas. Será que a Arca foi realmente encontrada? Prepare-se para uma jornada de fé, história e revelações que podem mudar sua perspectiva sobre o passado. Descubra os segredos que a Arca ainda guarda e as implicações de sua possível redescoberta para o mundo de hoje.
+
+Hashtags:
+#ArcaDaAlianca #MisteriosBiblicos #ArqueologiaBiblica #HistoriaAntiga #ProfeciasBiblicas #TeoriasDaConspiracao #Documentario #FeEHistoria #GrandesMisterios #DescobertasIncriveis`;
+            } else if (prompt.includes("image prompts")) {
+                return `[
+                  {
+                    "time": "00:05",
+                    "scriptPhrase": "Desde os tempos mais remotos, a humanidade tem sido fascinada por mistérios que desafiam a lógica e a compreensão.",
+                    "imageDescription": "Uma cena panorâmica de uma biblioteca antiga e empoeirada, com tomos maciços e pergaminhos enrolados em prateleiras altas. Poeira dançando na luz que entra por uma janela alta. Estilo cinematográfico, alta resolução."
+                  },
+                  {
+                    "time": "00:15",
+                    "scriptPhrase": "Mas poucos artefatos históricos carregam tanto peso, tanto poder e tanto segredo quanto a lendária Arca da Aliança.",
+                    "imageDescription": "Close-up dramático de uma representação artística da Arca da Aliança, com detalhes dourados brilhando. Luz intensa vinda de dentro da Arca, criando um brilho misterioso. Estilo cinematográfico, fotorrealista."
+                  },
+                  {
+                    "time": "00:25",
+                    "scriptPhrase": "Onde ela está? Foi realmente encontrada? E o que aconteceria se seus segredos fossem revelados ao mundo?",
+                    "imageDescription": "Uma sequência rápida de três imagens: 1) Um mapa antigo com um 'X' misterioso, 2) Uma mão enluvada escavando algo na terra, 3) Uma multidão de pessoas olhando para cima com expressões de espanto e admiração. Estilo cinematográfico, cores vibrantes."
+                  },
+                  {
+                    "time": "00:35",
+                    "scriptPhrase": "Prepare-se para uma jornada que transcende o tempo, a fé e a própria ciência.",
+                    "imageDescription": "Uma figura solitária, vista por trás, em pé na entrada de uma caverna escura e imponente, com um feixe de luz penetrando a escuridão. A figura parece estar prestes a embarcar em uma aventura. Estilo cinematográfico, iluminação dramática."
+                  },
+                  {
+                    "time": "00:45",
+                    "scriptPhrase": "A Arca da Aliança: Onde está AGORA?",
+                    "imageDescription": "Um close-up intenso do título 'A ARCA DA ALIANÇA' em letras antigas e douradas, com a palavra 'AGORA?' piscando em neon vermelho ao fundo. Fundo escuro e misterioso. Estilo cinematográfico, alta resolução."
+                  }
+                ]`;
+            } else if (prompt.includes("background music")) {
+                return `[
+                  {
+                    "genre": "Epic Orchestral / Aventura",
+                    "reason": "Para construir uma sensação de grandiosidade e mistério, ideal para a introdução e momentos de revelação."
+                  },
+                  {
+                    "genre": "Ambiental Suspense",
+                    "reason": "Perfeito para as partes de desenvolvimento onde teorias e mistérios são explorados, mantendo o espectador engajado."
+                  },
+                  {
+                    "genre": "Música Sacra / Coral",
+                    "reason": "Para momentos de reflexão sobre a fé e o significado espiritual da Arca, adicionando uma camada de reverência."
+                  }
+                ]`;
+            } else if (prompt.includes("Introdução")) {
+                return `Desde os tempos mais remotos, a humanidade tem sido fascinada por mistérios que desafiam a lógica e a compreensão. Histórias de artefatos perdidos, segredos antigos e poderes divinos permeiam nossas culturas. Mas poucos objetos históricos carregam tanto peso, tanto poder e tanto segredo quanto a lendária Arca da Aliança. Onde ela está? Foi realmente encontrada? E o que aconteceria se seus segredos fossem revelados ao mundo? Prepare-se para uma jornada que transcende o tempo, a fé e a própria ciência. A Arca da Aliança: Onde está AGORA?`;
+            } else if (prompt.includes("Desenvolvimento")) {
+                return `A Arca da Aliança, descrita em detalhes no livro do Êxodo, não era apenas um baú sagrado. Era o trono de Deus na Terra, contendo as tábuas dos Dez Mandamentos, o cajado de Arão que floresceu e um pote de maná. Sua presença garantia vitória em batalhas e prosperidade, mas sua profanação trazia desastre. Reis e exércitos tremiam diante de seu poder. Mas, em algum momento da história, a Arca desapareceu. Historiadores e arqueólogos debatem seu destino: foi destruída? Escondida? Ou levada para um novo lar secreto? A teoria mais proeminente sugere que a Arca foi levada para a Etiópia, para a Igreja de Santa Maria de Sião, em Axum. Diz-se que ela está guardada por um monge que dedica sua vida a protegê-la, sendo o único que pode vê-la. Essa narrativa, embora fascinante, é cercada de ceticismo. Não há provas concretas que a confirmem, e a igreja etíope proíbe qualquer tipo de verificação externa.`;
+            } else if (prompt.includes("Clímax")) {
+                return `A busca pela Arca da Aliança é uma jornada de fé e de ciência, de lendas e de fatos. Enquanto a Etiópia mantém sua reivindicação, outros pesquisadores apontam para locais como o Monte Nebo, na Jordânia, ou até mesmo sob o Monte do Templo, em Jerusalém. Cada teoria, por mais improvável que pareça, alimenta a chama da esperança e da curiosidade. O que é certo é que o impacto da Arca na história e na fé é inegável. Sua ausência, por si só, é um mistério que continua a nos desafiar, a nos fazer questionar e a nos inspirar a buscar respostas.`;
+            } else if (prompt.includes("Conclusão")) {
+                return `A Arca da Aliança permanece um dos maiores enigmas da humanidade. Seja ela um artefato físico esperando para ser redescoberto, ou um símbolo poderoso da aliança divina e da fé inabalável, sua história continua a ressoar através dos séculos. O verdadeiro tesouro, talvez, não esteja na posse de um objeto, mas na jornada de compreensão e na busca incessante pela verdade que a Arca inspira em cada um de nós.`;
+            } else if (prompt.includes("Chamada para Ação")) {
+                return `E você, o que pensa sobre o paradeiro da Arca da Aliança? Compartilhe sua teoria nos comentários abaixo! Se você gostou deste mergulho profundo na história e nos mistérios, não se esqueça de deixar seu like, se inscrever no canal e ativar o sininho para não perder os próximos vídeos. Até a próxima jornada!`;
+            } else if (prompt.includes("Público-Alvo")) {
+                return `{
+                  "target_audience": "Pessoas Interessadas em Arqueologia Bíblica e História Antiga, Cristãos e Pessoas de Fé, Entusiastas de Ciência e Ceticismo (com mente aberta), Curiosos em Geral e Amantes de Mistérios.",
+                  "language_style": "inspirador",
+                  "video_objective": "informar",
+                  "narrative_goal": "storytelling",
+                  "narrative_structure": "mystery_loop",
+                  "central_question": "A Arca da Aliança foi realmente encontrada? O que aconteceria se seus segredos fossem revelados ao mundo?",
+                  "emotional_arc": "Começar com curiosidade, construir para admiração e suspense, e terminar com inspiração e reflexão."
+                }`;
             }
-            // Adicione esta linha dentro do DOMContentLoaded, fora de qualquer listener
-            if (localStorage.getItem('darkMode') === 'enabled') {
-                const moonIcon = document.getElementById('moonIcon');
-                const sunIcon = document.getElementById('sunIcon');
-                document.body.classList.add('dark');
-                if (moonIcon) moonIcon.classList.add('hidden');
-                if (sunIcon) sunIcon.classList.remove('hidden');
-            }
 
-            if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
-            if (buttons.importProjectBtn) {
-                buttons.importProjectBtn.addEventListener('click', () => elements.importFileInput.click());
-                elements.importFileInput.addEventListener('change', importProject);
-            }
-
-            // Lógica para o Modo Zen
-            const zenModeBtn = document.getElementById('toggleZenModeBtn');
-            if (zenModeBtn) {
-                zenModeBtn.addEventListener('click', () => {
-                    document.body.classList.toggle('zen-mode');
-                });
-            }
-
-            const exitZenModeBtn = document.getElementById('exitZenModeBtn');
-            if (exitZenModeBtn) {
-                exitZenModeBtn.addEventListener('click', () => {
-                    document.body.classList.remove('zen-mode');
-                });
-            }
-
-            // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
-
-            // Listener para o seletor de objetivo
-            if (elements.narrativeGoal) {
-                elements.narrativeGoal.addEventListener('change', updateNarrativeStructureOptions);
-            }
-
-            // Inicializa as opções pela primeira vez
-            updateNarrativeStructureOptions();
-
-            // --- FIM DOS LISTENERS ---
-
-            // Define o estado inicial dos botões
-            updateButtonStates();
-            // Adiciona o listener de rolagem para a barra flutuante
-            window.addEventListener('scroll', window.handleFloatingActionBar);
-            updateProgressBar(); 
-        });
-    </script>
-</body>
-</html>
+            return "Conteúdo gerado pela IA (simulado).";
+        };
