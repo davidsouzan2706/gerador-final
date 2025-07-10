@@ -17,7 +17,7 @@
         /* ========================================================== */
         /* ==================== ESTILOS GERAIS ==================== */
         /* ========================================================== */
-        /* Variáveis CSS para cores consistentes e fácil manutenção */
+        /* Variáveis CSS para cores consistentess e fácil manutenção */
         :root {
             --primary-color: #4f46e5; /* Indigo-600 */
             --primary-hover: #4338ca; /* Indigo-700 */
@@ -1087,12 +1087,14 @@
                     <!-- Cartão: Salvar e Exportar -->
                     <div class="card-background p-4 rounded-lg shadow-md">
                          <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Finalizar Projeto</h3>
-                         <div class="grid grid-cols-2 gap-3">
+                         <div class="grid grid-cols-2 sm:grid-cols-3 gap-3">
                             <button id="exportProjectBtn" class="btn btn-secondary">Exportar</button>
                             <button id="importProjectBtn" class="btn btn-secondary">Importar</button>
                             <input type="file" id="importFileInput" class="hidden" accept=".json">
                             <button id="downloadPdfBtn" class="btn btn-secondary">PDF</button>
                             <button id="resetScriptBtn" class="btn btn-secondary">Novo</button>
+                            <!-- BOTÃO NOVO ADICIONADO AQUI -->
+                            <button id="copyTranscriptBtn" class="btn btn-secondary col-span-2 sm:col-span-1">Copiar Transcrição</button>
                         </div>
                     </div>
                 </div>
@@ -1344,6 +1346,26 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             elements.customImageStyleContainer.style.display = elements.imageStyleSelect.value === 'custom' ? 'block' : 'none';
         };
 
+        /**
+         * Coleta e concatena o texto puro de todas as seções do roteiro na ordem correta.
+         * @returns {string} A transcrição completa e limpa.
+         */
+        const getTranscriptOnly = () => {
+            let transcript = '';
+            const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            
+            sectionOrder.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                const contentWrapper = section?.querySelector('.generated-content-wrapper');
+                if (contentWrapper?.textContent.trim()) {
+                    // Adiciona o texto da seção e duas quebras de linha para separar os parágrafos.
+                    transcript += contentWrapper.textContent.trim() + '\n\n';
+                }
+            });
+            
+            return transcript.trim();
+        };
+    
         /**
          * Calcula o tempo de leitura estimado de um texto.
          * @param {string} text - O texto a ser analisado.
@@ -2213,6 +2235,40 @@ ${scriptContent}
         };
 
         /**
+         * Copia a transcrição completa para a área de transferência e
+         * inicia o download de um arquivo .docx contendo a mesma transcrição.
+         */
+        const handleCopyAndDownloadTranscript = () => {
+            const transcriptText = getTranscriptOnly();
+
+            if (!transcriptText) {
+                window.showToast("Nenhum roteiro para copiar. Gere as seções primeiro.");
+                return;
+            }
+
+            // Ação 1: Copiar para a área de transferência
+            copyTextToClipboard(transcriptText);
+            // O showToast já está dentro do copyTextToClipboard, mas podemos adicionar um mais específico.
+            window.showToast("Transcrição copiada e download iniciado!");
+
+            // Ação 2: Gerar e baixar o arquivo .docx
+            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.docx';
+            
+            // Converte o texto plano em HTML simples, preservando as quebras de linha
+            const htmlContent = `<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body>${transcriptText.replace(/\n/g, '<br>')}</body></html>`;
+            
+            const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = fileName;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(link.href);
+        };
+    
+        /**
          * Gera títulos de vídeo e ideias de thumbnail.
          */
         const generateTitlesAndThumbnails = async () => {
@@ -2985,6 +3041,8 @@ ${scriptContent}
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
             if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); // Changed to window.print()
             if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
+            // ADICIONE ESTA LINHA
+            if (buttons.copyTranscriptBtn) buttons.copyTranscriptBtn.addEventListener('click', handleCopyAndDownloadTranscript); 
             
             // Outros listeners
             if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
