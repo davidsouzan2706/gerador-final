@@ -2533,8 +2533,18 @@ ${scriptContent}
          * Reseta o estado da aplicação para um novo roteiro.
          */
         const resetApplicationState = () => {
+            // Reseta todos os inputs para seus valores padrão
+            elements.channelName.value = 'The Biblical Unveiling'; // Valor padrão
             elements.videoTheme.value = '';
             elements.videoDescription.value = '';
+            elements.targetAudience.value = 'Pessoas Interessadas em Arqueologia Bíblica e História Antiga, Cristãos e Pessoas de Fé, Entusiastas de Ciência e Ceticismo (com mente aberta), Curiosos em Geral e Amantes de Mistérios.'; // Valor padrão
+            elements.languageSelect.value = 'en';
+            elements.languageStyle.value = 'inspirador';
+            elements.videoObjective.value = 'informar';
+            elements.videoDuration.value = '';
+            elements.speakingPace.value = 'moderate';
+            document.getElementById('narrativeGoal').value = 'storytelling'; // Reseta o novo seletor
+            updateNarrativeStructureOptions(); // Atualiza as opções de estrutura
             elements.centralQuestion.value = '';
             elements.emotionalArc.value = '';
             elements.viralElements.value = '';
@@ -2542,32 +2552,30 @@ ${scriptContent}
             elements.imageStyleSelect.value = 'cinematic';
             elements.customImageStyle.value = '';
             toggleCustomImageStyleVisibility();
-            // Resetar os novos seletores de narrativa
-            elements.narrativeGoal.value = 'storytelling';
-            updateNarrativeStructureOptions(); // Para preencher as opções da estrutura
-            elements.narrativeStructure.value = 'documentary'; // Define um padrão para a estrutura
 
-            document.querySelectorAll('#scriptColumn > .script-section').forEach(sec => {
+            // Limpa todas as variáveis de estado globais
+            strategicOutline = null;
+            allImagePrompts = {};
+            generatedTitlesAndThumbnails = null;
+            totalScriptSeconds = 0;
+
+            // Limpa o HTML de todas as seções de conteúdo gerado
+            document.querySelectorAll('#scriptColumn .script-section').forEach(sec => {
                 sec.innerHTML = '';
-                sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
             });
-            // Limpar o cartão do esboço
-            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
-            strategicOutline = null; // Reseta o esboço estratégico
-
-            // Limpar os cartões de recursos e restaurar os placeholders
+            elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro.</div>`;
             document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
-            // Removed storyboardContent reset
-
-            allImagePrompts = {}; // Limpa todos os prompts de imagem
-            generatedTitlesAndThumbnails = null;
             
-            resetCompletionIcons();
-            updateButtonStates();
-            updateProgressBar(); 
+            // Limpa o conteúdo do Centro Multicanal, se ele existir
+            const repurposeOutput = document.getElementById('repurposeOutput');
+            if(repurposeOutput) repurposeOutput.innerHTML = '';
 
-            // Esconder o dashboard até que um novo conteúdo seja gerado
+            // Reseta os ícones e a barra de progresso
+            resetCompletionIcons();
+            updateProgressBar();
+            
+            // Esconde o painel principal, forçando o usuário a gerar uma nova estratégia
             elements.projectDashboard.classList.add('hidden');
 
             window.showToast("Pronto para um novo roteiro!");
@@ -2740,7 +2748,7 @@ ${scriptContent}
         };
 
         /**
-         * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
+	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
          */
         const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
@@ -2750,69 +2758,81 @@ ${scriptContent}
                 window.showToast("Por favor, preencha o Tema e a Descrição do Vídeo.");
                 return;
             }
+            
+            // --- INÍCIO DA CORREÇÃO ---
+            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
+            resetApplicationState();
+            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
+            elements.videoTheme.value = theme;
+            elements.videoDescription.value = description;
+            // --- FIM DA CORREÇÃO ---
 
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
-            // Opções válidas para cada campo (precisamos disso para a IA)
+            // Opções válidas para cada campo
             const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            // CORRIGIDO: Agora pega as opções do novo seletor de estrutura de narrativa
-            const narrativeStructureOptions = Array.from(document.getElementById('narrativeStructure').options).map(o => o.value).join(', ');
+            
+            // Agrega todas as opções de estrutura para o prompt
+            const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
+            const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Sua tarefa é analisar o tema e a descrição de um vídeo e definir a melhor estratégia de conteúdo para ele.
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
 
             Tema do Vídeo: "${theme}"
-            Descrição do Vídeo: "${description}"
+            Descrição: "${description}"
 
-            Com base nisso, preencha os seguintes campos. Responda APENAS com um objeto JSON válido.
-
-            O objeto JSON deve ter as seguintes chaves:
-            1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
-            2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
-            3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções: [${videoObjectiveOptions}].
-            4.  "narrative_structure": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStructureOptions}].
-            5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
-            6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
-
-            Analise profundamente o tema e a descrição para fazer as escolhas mais coesas e eficazes.`;
+            Responda APENAS com um objeto JSON válido com as seguintes chaves:
+            1. "target_audience": (string) O público-alvo ideal.
+            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
+            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
+            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
+            6. "central_question": (string) A pergunta central mais intrigante.
+            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
+            
+            Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 1000);
+                const rawResult = await callGroqAPI(prompt, 1500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
                 // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
                 if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
-                
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
-                    const returnedValue = strategy.video_objective;
-                    
-                    // Cria um array com todos os valores válidos das opções
+                    const returnedValue = strategy.video_objective.trim();
                     const validOptions = Array.from(objectiveSelect.options).map(opt => opt.value);
-                    
-                    // Verifica se o valor retornado pela IA está na nossa lista de opções válidas
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
-                        // Se não for válido, define um padrão seguro (ex: 'informar')
                         console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
-                // CORRIGIDO: Atribui ao novo seletor de estrutura de narrativa
-                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure; 
+                
+                // Preenche os novos seletores de narrativa
+                if(strategy.narrative_goal) {
+                    elements.narrativeGoal.value = strategy.narrative_goal;
+                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
+                }
+                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
+
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
                 window.showToast("Estratégia definida com sucesso!");
-                elements.projectDashboard.classList.remove('hidden'); // Show dashboard after strategy is set
+                elements.projectDashboard.classList.remove('hidden');
 
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
+                // Restaura os valores em caso de erro para o usuário não perder o que digitou
+                elements.videoTheme.value = theme;
+                elements.videoDescription.value = description;
             } finally {
                 hideLoading(button);
             }
