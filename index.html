@@ -1563,11 +1563,14 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (viralElements) { context += `\nViral Elements to incorporate: "${viralElements}"`; }
             if (imageDescriptionEngine) { context += `\nImage Description Instructions: "${imageDescriptionEngine}"`; }
             
+            // --- INÍCIO DA CORREÇÃO ---
+            // Agora usa a constante CINEMATIC_STYLE_BLOCK para consistência
             if (imageStyleSelect === 'cinematic') {
-                context += `\nImage Style: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
+                context += `\nImage Style: ${CINEMATIC_STYLE_BLOCK}`;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
                 context += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
             }
+            // --- FIM DA CORREÇÃO ---
 
             return context;
         };
@@ -1585,6 +1588,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const selectedLanguage = elements.languageSelect.value;
             const narrativeStyle = elements.narrativeStyle.value;
 
+            // --- VERSÃO FINAL COM FORMATAÇÃO CORRETA ---
             let prompt = `${baseContext}
 
 You are a master screenwriter, a true virtuoso of words. Your task is to write the **${sectionTitle}** section of the script.
@@ -1596,6 +1600,8 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
 4.  **Rhetorical Techniques:** Intelligently use rhetorical questions, powerful analogies, and striking metaphors to make the content more memorable and thought-provoking.
 5.  **Hook Reinforcement:** If there is a central question, subtly remind the viewer of the mystery or the promise made in the introduction to keep them hooked and eager for the resolution.
 `;
+            // --- FIM DO BLOCO CORRIGIDO ---
+
             let maxTokens = 2000;
 
             if (outlineDirective) {
@@ -1617,7 +1623,6 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     - **Climax:** Present the most compelling piece of evidence or the central conclusion of your argument. This should be the moment where the "thesis" from the introduction is proven or deeply explored.
                     - **Conclusion:** Summarize the key findings and arguments. End with a broader reflection on the implications of the topic, leaving the viewer with a new understanding or perspective.`;
                     break;
-                
                 case 'mystery_loop':
                     prompt += `\n\nNARRATIVE STYLE: Use the 'Mystery/Open Loop' structure.
                     - In the **Introduction**, present a compelling central question or mystery and promise the answer by the end.
@@ -1651,7 +1656,8 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     break;
             }
 
-            prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle. Instead of stating facts plainly, use descriptive, evocative language to paint a picture in the viewer's mind. Create a sensory and visual experience through your words.`;
+            // A linha abaixo foi REMOVIDA por ser redundante
+            // prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle...`;
 
             switch (sectionName) {
                 case 'outline': // New case for strategic outline
@@ -1991,8 +1997,8 @@ Trecho do roteiro:
             }
 
             if (imageStyleSelect === 'cinematic') {
-                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
-                prompt += `\n\n${cinematicPromptPart}`;
+                // Use the constant directly
+                prompt += `\n\nApply a cinematic film still style to these image descriptions: ${CINEMATIC_STYLE_BLOCK}`;
                 selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
                 prompt += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
