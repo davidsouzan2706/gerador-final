@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # Configuração geral para todas as funções
 [functions]
   directory = "netlify/functions"
@@ -6,3 +7,8 @@
 [functions.groq]
   # Aumenta o tempo limite de execução para 25 segundos (o máximo seguro é 26)
   timeout = 25
+=======
+# Arquivo: netlify.toml
+[functions]
+  directory = "netlify/functions"
+>>>>>>> a15c69ad49be1cf4ec572c5bb85e7dc39da27bc5
