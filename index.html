@@ -1101,7 +1101,7 @@ Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revel
                     <!-- ===== NOVO MÓDULO: CENTRO DE CONTEÚDO MULTICANAL ===== -->
                     <!-- ========================================================== -->
                     <div class="card-background p-4 rounded-lg shadow-md">
-                        <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Centro de Conteúdo Multicanal</h3>
+                        <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Centro de Conteúdo Multicanal</h3>
                         <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Transforme seu roteiro principal em conteúdo para outras plataformas.</p>
                         
                         <div class="grid grid-cols-2 gap-3 mb-4">
@@ -1482,16 +1482,22 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (!text) return null;
 
             if (expectJson) {
+                // --- INÍCIO DA CORREÇÃO ---
                 // Encontra o primeiro colchete de abertura ou chave
                 const firstBracket = text.indexOf('[');
                 const firstBrace = text.indexOf('{');
+                
                 let startIndex = -1;
 
-                if (firstBracket !== -1 && firstBrace !== -1) {
-                    startIndex = Math.min(firstBracket, firstBrace);
+                // Determina o índice de início real do JSON, ignorando textos anteriores
+                if (firstBracket === -1) {
+                    startIndex = firstBrace;
+                } else if (firstBrace === -1) {
+                    startIndex = firstBracket;
                 } else {
-                    startIndex = Math.max(firstBracket, firstBrace);
+                    startIndex = Math.min(firstBracket, firstBrace);
                 }
+                // --- FIM DA CORREÇÃO ---
                 
                 if (startIndex === -1) {
                     console.error("Não foi possível encontrar um início de JSON ('{' ou '[') na resposta.", text);
@@ -1523,7 +1529,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             
             return text.trim();
         };
-
+    
         /**
          * Remove comentários meta da IA do texto gerado.
          * @param {string} text - O texto gerado pela IA.
@@ -2777,11 +2783,11 @@ ${scriptContent}
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
-            // Opções válidas para cada campo (precisamos disso para a IA)
             const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
             const narrativeStyleOptions = Array.from(elements.narrativeStyle.options).map(o => o.value).join(', ');
 
+            // --- INÍCIO DA CORREÇÃO NO PROMPT ---
             const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Sua tarefa é analisar o tema e a descrição de um vídeo e definir a melhor estratégia de conteúdo para ele.
 
             Tema do Vídeo: "${theme}"
@@ -2792,45 +2798,42 @@ ${scriptContent}
             O objeto JSON deve ter as seguintes chaves:
             1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
             2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
-            3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções: [${videoObjectiveOptions}].
+            3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. **Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções, sem qualquer alteração:** [${videoObjectiveOptions}].
             4.  "narrative_style": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStyleOptions}].
             5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
             6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
 
             Analise profundamente o tema e a descrição para fazer as escolhas mais coesas e eficazes.`;
+            // --- FIM DA CORREÇÃO NO PROMPT ---
 
             try {
                 const rawResult = await callGroqAPI(prompt, 1000);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
-                // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
                 if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
                 
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
-                    const returnedValue = strategy.video_objective;
+                    const returnedValue = strategy.video_objective.trim(); // Adiciona .trim() para segurança
                     
-                    // Cria um array com todos os valores válidos das opções
                     const validOptions = Array.from(objectiveSelect.options).map(opt => opt.value);
                     
-                    // Verifica se o valor retornado pela IA está na nossa lista de opções válidas
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
-                        // Se não for válido, define um padrão seguro (ex: 'informar')
                         console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
 
-                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style; // CORRIGIDO AQUI
+                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style;
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
                 window.showToast("Estratégia definida com sucesso!");
-                elements.projectDashboard.classList.remove('hidden'); // Show dashboard after strategy is set
+                elements.projectDashboard.classList.remove('hidden');
 
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
@@ -2839,7 +2842,7 @@ ${scriptContent}
                 hideLoading(button);
             }
         };
-
+    
         /**
          * Lida com a geração de conteúdo reaproveitado para outras plataformas.
          * @param {HTMLElement} button - O botão que acionou a geração.
