@@ -2906,24 +2906,6 @@ ${scriptContent}
                 }
             });
 
-            const updateProgressBar = () => {
-            // Lista de todas as tarefas que contam para o progresso
-            const taskButtonIds = [
-                'generateOutlineBtn',
-                'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
-                'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
-                'generateTitlesAndThumbnailsBtn' 
-            ];
-            const totalTasks = taskButtonIds.length;
-
-            let completedTasks = 0;
-            taskButtonIds.forEach(id => {
-                const button = document.getElementById(id);
-                if (button && button.classList.contains('btn-success')) {
-                    completedTasks++;
-                }
-            });
-
             const percentage = Math.round((completedTasks / totalTasks) * 100);
 
             // Atualiza a UI
@@ -2932,15 +2914,11 @@ ${scriptContent}
                 elements.progressText.textContent = `${percentage}%`;
 
                 if (percentage === 100) {
-                    elements.progressBar.textContent = "Projeto Pronto!";
+                    elements.progressBar.textContent = "Projeto Pronto!"; // Atualiza o texto diretamente na barra
                     elements.progressBar.style.backgroundColor = 'var(--primary-color)';
-                    // --- CORREÇÃO ADICIONADA AQUI ---
-                    elements.progressBar.style.color = '#ffffff'; // Garante que o texto seja branco
-                    elements.progressBar.style.textAlign = 'center'; // Centraliza o texto
                 } else {
-                    elements.progressBar.textContent = ''; // Limpa o texto se não for 100%
+                     // Garante que a cor volte ao verde se não for 100%
                     elements.progressBar.style.backgroundColor = 'var(--success-color)';
-                    elements.progressBar.style.color = 'transparent'; // Esconde qualquer resquício de texto
                 }
             }
         };
