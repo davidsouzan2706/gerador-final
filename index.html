@@ -944,41 +944,28 @@
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace" class="card-background">
                         <option value="moderate" selected>Moderado</option>
-                        <option value="slow">Lento</option> <!-- CORRIGIDO AQUI -->
+                        <option value="slow">Lento</m>
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
             </div>
-            <div class="input-group md:col-span-2">
+            <!-- NOVO MÓDULO DE SELEÇÃO DE NARRATIVA - INSERIR ESTE BLOCO -->
+            <div class="input-group md:col-span-1">
+                <label for="narrativeGoal">1. Objetivo da Narrativa:</label>
+                <select id="narrativeGoal" class="card-background">
+                    <option value="storytelling">Conectar e Entreter (Storytelling)</option>
+                    <option value="storyselling">Persuadir e Vender (Storyselling)</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-1">
                 <div class="flex items-center gap-2">
-                    <label for="narrativeStyle">Estilo da Narrativa:</label>
-                    <span class="tooltip card-background"
-                        data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para vídeos gerais.
-
-Documentário (Factual e Investigativo): Constrói um argumento com fatos, evidências e uma narração autoritária. Perfeito para vídeos expositivos e de investigação.
-
-Jornada do Herói: Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.
-
-Mistério (Loop Aberto): Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.
-
-Problema-Agitação-Solução (PAS): Foca em um problema que o público tem e apresenta a solução. Perfeito para vídeos de marketing e tutoriais.
-
-Antes-Depois-Ponte (BAB): Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá.
-
-Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revelação surpreendente no final."
-                    >
+                    <label for="narrativeStructure">2. Estrutura Específica:</label>
+                    <span id="narrativeStructureTooltip" class="tooltip card-background" data-tooltip="Selecione um objetivo primeiro.">
                         (?)
                     </span>
                 </div>
-                <select id="narrativeStyle" class="card-background">
-                    <option value="direct" selected>Direto e Informativo (Padrão)</option>
-                    <!-- ADICIONE A LINHA ABAIXO -->
-                    <option value="documentary">Documentário (Factual e Investigativo)</option>
-                    <option value="heros_journey">Jornada do Herói (Clássico)</option>
-                    <option value="mystery_loop">Mistério (com Loop Aberto)</option>
-                    <option value="pas">Problema-Agitação-Solução (PAS)</option>
-                    <option value="before_after_bridge">Antes-Depois-Ponte (BAB)</option>
-                    <option value="twist">Narrativa com Virada (Twist)</option>
+                <select id="narrativeStructure" class="card-background">
+                    <!-- As opções serão preenchidas dinamicamente pelo JavaScript -->
                 </select>
             </div>
             <div class="input-group md:col-span-2">
@@ -1521,6 +1508,77 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             return cleanedText.trim();
         };
 
+        // --- INÍCIO DO NOVO MÓDULO DE NARRATIVA ---
+
+        const narrativeStructures = {
+            storytelling: {
+                documentary: "Documentário (Factual e Investigativo)",
+                heros_journey: "Jornada do Herói (Estrutura Épica)",
+                pixar_spine: "Espinha Dorsal - Pixar (Estrutura Emocional)",
+                mystery_loop: "Mistério (com Loop Aberto)",
+                twist: "Narrativa com Virada (Twist)"
+            },
+            storyselling: {
+                underdog_victory: "Vitória do Vira-lata (Conexão e Superação)",
+                discovery_mentor: "A Grande Descoberta / Mentor Secreto",
+                if_not_found_create: "Não Encontrei, Então Criei (História de Origem)",
+                pas: "Problema-Agitação-Solução (PAS)",
+                bab: "Antes-Depois-Ponte (BAB)"
+            }
+        };
+
+        const narrativeTooltips = {
+            documentary: "Constrói um argumento com fatos, evidências e uma narração autoritária. Perfeito para vídeos expositivos.",
+            heros_journey: "Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.",
+            pixar_spine: "Estrutura emocional de 8 passos (Era uma vez... todo dia... até que...). Perfeita para arcos de personagem rápidos.",
+            mystery_loop: "Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.",
+            twist: "Constrói uma expectativa e a quebra com uma revelação surpreendente no final.",
+            underdog_victory: "Mostra alguém com limitações que venceu contra tudo e todos. Gera alta conexão emocional.",
+            discovery_mentor: "Revela um grande segredo ou uma descoberta que mudou tudo. Posição de autoridade.",
+            if_not_found_create: "Conta a história de origem de um produto ou serviço criado a partir de uma necessidade pessoal.",
+            pas: "Foca em um problema que o público tem, agita a dor e apresenta a solução. Perfeito para vendas diretas.",
+            bab: "Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá."
+        };
+
+        const updateNarrativeStructureOptions = () => {
+            const goalSelect = document.getElementById('narrativeGoal');
+            const structureSelect = document.getElementById('narrativeStructure');
+            if (!goalSelect || !structureSelect) return;
+
+            const goal = goalSelect.value;
+            structureSelect.innerHTML = ''; // Limpa as opções atuais
+
+            const structures = narrativeStructures[goal];
+            for (const key in structures) {
+                const option = document.createElement('option');
+                option.value = key;
+                option.textContent = structures[key];
+                structureSelect.appendChild(option);
+            }
+            
+            updateMainTooltip();
+        };
+
+        const updateMainTooltip = () => {
+            const goalSelect = document.getElementById('narrativeGoal');
+            const tooltip = document.getElementById('narrativeStructureTooltip');
+            if (!goalSelect || !tooltip) return;
+
+            const goal = goalSelect.value;
+            const structures = narrativeStructures[goal];
+            
+            let tooltipContent = '';
+            for (const key in structures) {
+                tooltipContent += `${structures[key]}: ${narrativeTooltips[key]}
+
+`;
+            }
+            
+            tooltip.setAttribute('data-tooltip', tooltipContent.trim());
+        };
+
+        // --- FIM DO NOVO MÓDULO DE NARRATIVA ---
+
         /**
          * Constrói o contexto base do prompt com base nos inputs do usuário.
          * @returns {string} O contexto do prompt.
@@ -1534,7 +1592,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const videoObjective = elements.videoObjective.value;
             const videoDuration = elements.videoDuration.value;
             const speakingPace = elements.speakingPace.value;
-            const narrativeStyle = elements.narrativeStyle.value;
+            const narrativeStyle = document.getElementById('narrativeStructure').value; // CORRIGIDO: Lê do novo seletor
             const videoDescription = elements.videoDescription.value.trim();
             const centralQuestion = elements.centralQuestion.value.trim();
             const emotionalArc = elements.emotionalArc.value.trim();
@@ -1564,7 +1622,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (imageDescriptionEngine) { context += `\nImage Description Instructions: "${imageDescriptionEngine}"`; }
             
             if (imageStyleSelect === 'cinematic') {
-                context += `\nImage Style: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
+                context += `\nImage Style: ${CINEMATIC_STYLE_BLOCK}`;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
                 context += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
             }
@@ -1583,7 +1641,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const baseContext = getBasePromptContext();
             const videoDuration = elements.videoDuration.value;
             const selectedLanguage = elements.languageSelect.value;
-            const narrativeStyle = elements.narrativeStyle.value;
+            const narrativeStyle = document.getElementById('narrativeStructure').value; // CORRIGIDO: Lê do novo seletor
 
             let prompt = `${baseContext}
 
@@ -1609,6 +1667,7 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                 prompt += `\nIf a 'Central Question' is provided, ensure every section of the script (Introduction, Development, Climax) directly contributes to exploring or answering this question. The entire video must revolve around this central theme.`;
             }
 
+            // --- INÍCIO DA NOVA LÓGICA DE NARRATIVA ---
             switch (narrativeStyle) {
                 case 'documentary':
                     prompt += `\n\nNARRATIVE STYLE: Use a 'Documentary' structure.
@@ -1617,7 +1676,34 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     - **Climax:** Present the most compelling piece of evidence or the central conclusion of your argument. This should be the moment where the "thesis" from the introduction is proven or deeply explored.
                     - **Conclusion:** Summarize the key findings and arguments. End with a broader reflection on the implications of the topic, leaving the viewer with a new understanding or perspective.`;
                     break;
-                
+                case 'pixar_spine':
+                    prompt += `\n\nNARRATIVE STYLE: Use the 'Pixar Spine' structure.
+                    - **Introduction:** Era uma vez... (Introduce the main character and their ordinary world). Todo dia... (Describe their routine and the status quo).
+                    - **Development:** Até que um dia... (The inciting incident that changes everything). E por causa disso... (The character's journey begins, facing a series of challenges and events). E por causa disso... (The stakes get higher).
+                    - **Climax:** Até que finalmente... (The character faces the final confrontation or overcomes the main obstacle).
+                    - **Conclusion:** E desde então... (Describe the new normal and the character's transformation).`;
+                    break;
+                case 'underdog_victory':
+                     prompt += `\n\nNARRATIVE STYLE: Use the 'Victory of the Underdog' structure.
+                    - **Introduction:** Present a character or entity in a disadvantaged, underestimated, or limited situation (the 'underdog').
+                    - **Development:** Detail the immense challenges, the unfair obstacles, and the moments of doubt and struggle they faced. Emphasize their resilience and determination.
+                    - **Climax:** The moment of ultimate triumph, where the underdog overcomes the final, greatest obstacle against all odds.
+                    - **Conclusion:** Reflect on the victory, connecting it to a universal message of hope, perseverance, or potential, inspiring the audience with a "if they can do it, so can I" feeling.`;
+                    break;
+                case 'discovery_mentor':
+                    prompt += `\n\nNARRATIVE STYLE: Use the 'Great Discovery / Secret Mentor' structure.
+                    - **Introduction:** Start with the "before" state - a life of struggle, confusion, or mediocrity. Hint that a breakthrough is coming.
+                    - **Development:** Describe the moment of discovery or the encounter with a mentor. Explain the 'secret' or the new perspective that was revealed. Show how this new knowledge was applied and the first signs of change.
+                    - **Climax:** Detail the peak result or the ultimate transformation achieved by applying this secret knowledge.
+                    - **Conclusion:** Share the core lesson of the discovery and offer it to the audience, positioning the content as a guide to achieve similar results.`;
+                    break;
+                case 'if_not_found_create':
+                     prompt += `\n\nNARRATIVE STYLE: Use the 'I Couldn't Find It, So I Created It' structure.
+                    - **Introduction (The Problem):** Describe a personal and relatable problem you (or the protagonist) faced. Explain the frustration of searching for a solution and finding nothing adequate.
+                    - **Development (The Creation):** Detail the journey of deciding to create your own solution. Describe the trial and error, the hard work, and the key insights learned along the way.
+                    - **Climax (The Solution):** Present the final, successful creation (the product, the service, the method). Show how it solved the original problem perfectly.
+                    - **Conclusion (The Offer):** Offer this solution to the audience, who likely share the same original problem.`;
+                    break;
                 case 'mystery_loop':
                     prompt += `\n\nNARRATIVE STYLE: Use the 'Mystery/Open Loop' structure.
                     - In the **Introduction**, present a compelling central question or mystery and promise the answer by the end.
@@ -1643,7 +1729,7 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     - **Climax:** The 'Ordeal' or the final battle. The moment of greatest tension and the hero's ultimate test.
                     - **Conclusion:** The 'Return with the Elixir'. Show the resolution, what was learned, and how the 'Ordinary World' has changed because of the journey.`;
                     break;
-                case 'before_after_bridge':
+                case 'bab':
                     prompt += `\n\nNARRATIVE STYLE: Use the 'Before-After-Bridge' (BAB) structure.
                     - **Introduction (Before):** Describe the 'Before' state. A world without the knowledge or solution you're about to present. Paint a picture of the problem or the lack of understanding.
                     - **Development (After):** Describe the 'After' state. A desirable world where the problem is solved or the knowledge is revealed. Show the benefits and the ideal outcome.
@@ -1651,8 +1737,8 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     break;
             }
 
-            prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle. Instead of stating facts plainly, use descriptive, evocative language to paint a picture in the viewer's mind. Create a sensory and visual experience through your words.`;
-
+            // O resto da função continua...
+            // ...
             switch (sectionName) {
                 case 'outline': // New case for strategic outline
                     prompt = `${baseContext}
@@ -1678,9 +1764,6 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The introduction should hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
                     `;
-                    if (narrativeStyle === 'direct') {
-                        prompt += `\nThis is **Act 1** of the story. Your introduction should serve as the 'Inciting Incident', clearly presenting the central question or mystery that will drive the video. Establish the 'Normal World' of the topic before introducing the core conflict.`;
-                    }
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
                     }
@@ -1690,9 +1773,6 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The development section should delve into the core topic, presenting facts, arguments, and historical context. It should maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
                     `;
-                    if (narrativeStyle === 'direct') {
-                        prompt += `\nThis is **Act 2** of the story. Your goal is to raise the stakes. Present compelling evidence but also introduce obstacles and counter-arguments. Build towards a major revelation or turning point (the Midpoint).`;
-                    }
                     maxTokens = 1500;
                     break;
                 case 'climax':
@@ -2026,7 +2106,7 @@ Trecho do roteiro:
                     const time = accumulatedTimeSeconds;
                     accumulatedTimeSeconds += 20;
                     const mins = Math.floor(time / 60);
-                    const secs = Math.floor(time % 60);
+                    const secs = Math.round(time % 60); // Use round instead of floor for seconds
                     return { 
                         ...p, 
                         time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
@@ -2461,10 +2541,11 @@ ${scriptContent}
             elements.imageStyleSelect.value = 'cinematic';
             elements.customImageStyle.value = '';
             toggleCustomImageStyleVisibility();
-            elements.narrativeStyle.value = 'direct';
-            elements.videoDuration.value = '';
+            // Resetar os novos seletores de narrativa
+            elements.narrativeGoal.value = 'storytelling';
+            updateNarrativeStructureOptions(); // Para preencher as opções da estrutura
+            elements.narrativeStructure.value = 'documentary'; // Define um padrão para a estrutura
 
-            // Limpar a coluna de roteiro
             document.querySelectorAll('#scriptColumn > .script-section').forEach(sec => {
                 sec.innerHTML = '';
                 sec.classList.remove('animate-fade-in'); // Remove a classe de animação ao resetar
@@ -2675,7 +2756,8 @@ ${scriptContent}
             // Opções válidas para cada campo (precisamos disso para a IA)
             const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            const narrativeStyleOptions = Array.from(elements.narrativeStyle.options).map(o => o.value).join(', ');
+            // CORRIGIDO: Agora pega as opções do novo seletor de estrutura de narrativa
+            const narrativeStructureOptions = Array.from(document.getElementById('narrativeStructure').options).map(o => o.value).join(', ');
 
             const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Sua tarefa é analisar o tema e a descrição de um vídeo e definir a melhor estratégia de conteúdo para ele.
 
@@ -2688,7 +2770,7 @@ ${scriptContent}
             1.  "target_audience": (string) Descreva em uma frase o público-alvo ideal para este vídeo.
             2.  "language_style": (string) Escolha o melhor estilo de linguagem da seguinte lista: [${languageStyleOptions}].
             3.  "video_objective": (string) Analise o tema e escolha o objetivo principal do vídeo. Sua resposta para esta chave DEVE SER UMA correspondência EXATA de uma das seguintes opções: [${videoObjectiveOptions}].
-            4.  "narrative_style": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStyleOptions}].
+            4.  "narrative_structure": (string) Escolha a estrutura narrativa mais impactante da seguinte lista: [${narrativeStructureOptions}].
             5.  "central_question": (string) Formule a pergunta central mais intrigante que o vídeo deve responder.
             6.  "emotional_arc": (string) Descreva o arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Revelação -> Inspiração).
 
@@ -2719,8 +2801,8 @@ ${scriptContent}
                         objectiveSelect.value = 'informar'; 
                     }
                 }
-
-                if(strategy.narrative_style) elements.narrativeStyle.value = strategy.narrative_style; // CORRIGIDO AQUI
+                // CORRIGIDO: Atribui ao novo seletor de estrutura de narrativa
+                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure; 
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
@@ -2831,6 +2913,23 @@ ${scriptContent}
             elements.progressText = document.getElementById('progressText');
             elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
             elements.outlineContent = document.getElementById('outlineContent'); // New reference for outline content
+
+            // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
+
+            // Adiciona as novas referências de elementos que não são botões
+            elements.narrativeGoal = document.getElementById('narrativeGoal');
+            elements.narrativeStructure = document.getElementById('narrativeStructure');
+            elements.narrativeStructureTooltip = document.getElementById('narrativeStructureTooltip');
+
+            // Listener para o seletor de objetivo
+            if (elements.narrativeGoal) {
+                elements.narrativeGoal.addEventListener('change', updateNarrativeStructureOptions);
+            }
+
+            // Inicializa as opções pela primeira vez quando a página carrega
+            updateNarrativeStructureOptions();
+
+            // --- FIM DOS LISTENERS ---
 
             // Configura os event listeners para os botões
             const setupClick = (originalId) => {
