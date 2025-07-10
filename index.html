@@ -1097,6 +1097,26 @@ Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revel
                     <!-- Cartão: Storyboard Visual (REMOVIDO) -->
                     <div id="storyboardContent" style="display: none;"></div>
                     
+                    <!-- ========================================================== -->
+                    <!-- ===== NOVO MÓDULO: CENTRO DE CONTEÚDO MULTICANAL ===== -->
+                    <!-- ========================================================== -->
+                    <div class="card-background p-4 rounded-lg shadow-md">
+                        <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Centro de Conteúdo Multicanal</h3>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Transforme seu roteiro principal em conteúdo para outras plataformas.</p>
+                        
+                        <div class="grid grid-cols-2 gap-3 mb-4">
+                            <button id="generateShortsBtn" class="btn btn-secondary btn-small">Shorts/Reels</button>
+                            <button id="generateBlogBtn" class="btn btn-secondary btn-small">Post de Blog</button>
+                            <button id="generateTwitterBtn" class="btn btn-secondary btn-small">Thread (X)</button>
+                            <button id="generateInstaBtn" class="btn btn-secondary btn-small">Post (Insta/LinkedIn)</button>
+                        </div>
+
+                        <!-- Área de Saída para o Conteúdo Reproposto -->
+                        <div id="repurposeOutput" class="space-y-4">
+                            <!-- O conteúdo gerado será injetado aqui -->
+                        </div>
+                    </div>
+                    
                     <!-- Cartão: Salvar e Exportar -->
                     <div class="card-background p-4 rounded-lg shadow-md">
                          <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-3">Finalizar Projeto</h3>
@@ -1333,7 +1353,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (resetBtn) resetBtn.disabled = false; // Ajuste conforme a necessidade de reset
             if (floatResetBtn) floatResetBtn.disabled = false;
 
-            // REMOVIDO: Habilitar botões de geração de roteiro se o esboço estiver pronto
+            // REMOVIDO: Habilita os botões de geração de roteiro se o esboço estiver pronto
             // A lógica agora está na função handleGenerateSection para exibir um alerta.
         };
 
@@ -1522,6 +1542,24 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
+         * Concatena o texto de todas as seções do roteiro em uma única string.
+         * @returns {string} O roteiro completo.
+         */
+        const getFullScriptText = () => {
+            let fullScript = '';
+            const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+            sectionOrder.forEach(sectionId => {
+                const section = document.getElementById(sectionId);
+                const contentWrapper = section?.querySelector('.generated-content-wrapper');
+                if (contentWrapper?.textContent.trim()) {
+                    const title = section.querySelector('h3')?.textContent || sectionId.replace('Section', '');
+                    fullScript += `\n\n--- ${title.toUpperCase()} ---\n${contentWrapper.textContent.trim()}`;
+                }
+            });
+            return fullScript.trim();
+        };
+    
+        /**
          * Constrói o contexto base do prompt com base nos inputs do usuário.
          * @returns {string} O contexto do prompt.
          */
@@ -1682,7 +1720,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'intro':
                     prompt += `
-                    The introduction should hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
+                    The introduction must hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create intense curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
                     `;
                     if (narrativeStyle === 'direct') {
                         prompt += `\nThis is **Act 1** of the story. Your introduction should serve as the 'Inciting Incident', clearly presenting the central question or mystery that will drive the video. Establish the 'Normal World' of the topic before introducing the core conflict.`;
@@ -1694,7 +1732,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'development':
                     prompt += `
-                    The development section should delve into the core topic, presenting facts, arguments, and historical context. It should maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
+                    The development must delve into the core topic, presenting facts, arguments, and historical context. It must maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
                     `;
                     if (narrativeStyle === 'direct') {
                         prompt += `\nThis is **Act 2** of the story. Your goal is to raise the stakes. Present compelling evidence but also introduce obstacles and counter-arguments. Build towards a major revelation or turning point (the Midpoint).`;
@@ -1703,7 +1741,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'climax':
                     prompt += `
-                    The climax should be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
+                    The climax must be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1712,7 +1750,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'conclusion':
                     prompt += `
-                    The conclusion should summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
+                    The conclusion must summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1721,7 +1759,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'cta':
                     prompt += `
-                    The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
+                    The Call to Action (CTA) must be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1729,6 +1767,7 @@ Exemplo de formato JSON esperado:
                     maxTokens = 200;
                     break;
                 case 'titles_thumbnails':
+                    // --- CORREÇÃO DO TYPO ---
                     prompt = `${baseContext}
 Generate 5 highly clickable and viral YouTube video titles and 5 compelling thumbnail ideas.
 
@@ -1736,7 +1775,7 @@ IMPORTANT: Respond ONLY with a valid JSON object. Do not include any other text,
 
 The JSON object must have two top-level keys:
 1.  "titles": An array of strings.
-2.  "thumbnails": Anatah array of objects, where each object has a "title" (string) and a "description" (string) key. Each description should focus on strong visual elements, emotions, and clear text overlays.
+2.  "thumbnails": An array of objects, where each object has a "title" (string) and a "description" (string) key. Each description should focus on strong visual elements, emotions, and clear text overlays.
 
 The final output MUST be only the JSON code, like this example:
 {
@@ -1783,6 +1822,71 @@ The final output MUST be only the JSON code, like this example:
             return { prompt, maxTokens };
         };
 
+        /**
+         * Constrói o prompt para reaproveitar o conteúdo para diferentes plataformas.
+         * @param {string} contentType - O tipo de conteúdo a ser gerado ('shorts', 'blog', 'twitter', 'linkedin').
+         * @param {string} fullScript - O texto completo do roteiro principal.
+         * @returns {{prompt: string, maxTokens: number}} O prompt e o limite de tokens.
+         */
+        const constructRepurposePrompt = (contentType, fullScript) => {
+            const baseContext = getBasePromptContext();
+            let prompt = `${baseContext}\n\nO roteiro principal do vídeo é o seguinte:\n---${fullScript}\n---\n\n`;
+            let maxTokens = 3000;
+
+            switch (contentType) {
+                case 'shorts':
+                    prompt += `Você é um especialista em conteúdo viral para vídeos curtos (Shorts/Reels). Sua tarefa é analisar o roteiro principal e extrair **3 ideias distintas** para vídeos curtos de 30 a 60 segundos.
+
+Para cada ideia, forneça:
+1.  Um "Gancho" poderoso de 3 segundos.
+2.  Um mini-roteiro conciso.
+3.  Sugestões de texto para aparecer na tela.
+
+Responda APENAS com um array JSON. Cada objeto no array deve ter as chaves "gancho", "mini_roteiro" e "texto_na_tela".`;
+                    break;
+
+                case 'blog':
+                    prompt += `Você é um especialista em SEO e Marketing de Conteúdo. Transforme o roteiro principal em um post de blog otimizado e bem estruturado.
+
+**Requisitos:**
+1.  Crie um título (H1) magnético e otimizado para SEO.
+2.  Escreva uma introdução cativante que prenda o leitor.
+3.  Use subtítulos (H2, H3) para organizar o conteúdo de forma lógica.
+4.  Adapte a linguagem falada para uma linguagem escrita clara e engajante.
+5.  Termine com uma conclusão forte e uma chamada para ação (CTA) para o vídeo original do YouTube.
+
+Responda APENAS com o conteúdo do post em formato HTML.`;
+                    break;
+
+                case 'twitter':
+                    prompt += `Você é um especialista em engajamento no X (Twitter). Transforme o roteiro principal em uma thread viral.
+
+**Requisitos:**
+1.  Crie uma thread com 5 a 7 tweets.
+2.  O primeiro tweet (o "gancho") deve ser extremamente cativante para incentivar o clique em "Mostrar mais".
+3.  Cada tweet deve ser conciso e conectar-se ao próximo.
+4.  Use emojis de forma inteligente para aumentar o apelo visual.
+5.  O último tweet deve ter uma chamada para ação (CTA) para assistir ao vídeo completo no YouTube.
+
+Responda com os tweets numerados.`;
+                    break;
+
+                case 'linkedin':
+                    prompt += `Você é um especialista em conteúdo para LinkedIn e Instagram. Adapte o roteiro principal para um post de carrossel ou um post longo para essas plataformas.
+
+**Requisitos:**
+1.  Comece com uma primeira linha (o "gancho") que quebre o padrão e gere curiosidade.
+2.  Resuma o ponto principal do vídeo em 3 a 4 parágrafos curtos e de fácil leitura.
+3.  Use quebras de linha para arejar o texto.
+4.  Termine com uma pergunta aberta para estimular comentários e discussão.
+5.  Sugira uma ideia visual para o post (ex: "Carrossel de 5 slides com os pontos-chave").
+
+Responda com o texto do post, seguido pela sugestão visual.`;
+                    break;
+            }
+            return { prompt, maxTokens };
+        };
+    
         /**
          * Faz uma chamada à API Groq através de uma função Netlify.
          * @param {string} prompt - O prompt a ser enviado para a IA.
@@ -2473,6 +2577,7 @@ ${scriptContent}
             document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
             // Removed storyboardContent reset
+            document.getElementById('repurposeOutput').innerHTML = '<!-- O conteúdo gerado será injetado aqui -->'; // Clear repurpose output
 
             allImagePrompts = {}; // Limpa todos os prompts de imagem
             generatedTitlesAndThumbnails = null;
@@ -2523,6 +2628,7 @@ ${scriptContent}
             // Salva o conteúdo dos cartões de recursos
             projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
             projectData.outputs.videoDescriptionContent = document.getElementById('videoDescriptionContent').innerHTML;
+            projectData.outputs.repurposeOutput = document.getElementById('repurposeOutput').innerHTML; // Export repurpose output
             // Removed storyboardContent export
             
             const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
@@ -2614,6 +2720,9 @@ ${scriptContent}
                     }
                     if (projectData.outputs.videoDescriptionContent) {
                         document.getElementById('videoDescriptionContent').innerHTML = projectData.outputs.videoDescriptionContent;
+                    }
+                    if (projectData.outputs.repurposeOutput) { // Import repurpose output
+                        document.getElementById('repurposeOutput').innerHTML = projectData.outputs.repurposeOutput;
                     }
                     
                     allImagePrompts = projectData.memory.allImagePrompts || {};
@@ -2731,6 +2840,60 @@ ${scriptContent}
             }
         };
 
+        /**
+         * Lida com a geração de conteúdo reaproveitado para outras plataformas.
+         * @param {HTMLElement} button - O botão que acionou a geração.
+         * @param {string} contentType - O tipo de conteúdo a ser gerado.
+         */
+        const handleRepurposeContent = async (button, contentType) => {
+            if (!isScriptComplete()) {
+                window.showToast("Por favor, gere todas as seções do roteiro principal primeiro!");
+                return;
+            }
+
+            const outputContainer = document.getElementById('repurposeOutput');
+            outputContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`; // Mostra o loading
+            button.disabled = true; // Desabilita o botão específico
+
+            try {
+                const fullScript = getFullScriptText();
+                const { prompt, maxTokens } = constructRepurposePrompt(contentType, fullScript);
+                let result = await callGroqAPI(prompt, maxTokens);
+                
+                // Limpa o resultado
+                result = cleanGeneratedText(result, false);
+
+                // Formatação especial para JSON (Shorts)
+                if (contentType === 'shorts') {
+                    try {
+                        const shortsData = JSON.parse(result);
+                        let html = '<div class="space-y-4">';
+                        shortsData.forEach((short, index) => {
+                            html += `<div class="p-3 card-background rounded-md shadow-sm">
+                                <h4 class="font-bold">Ideia de Short ${index + 1}</h4>
+                                <p><strong>Gancho:</strong> ${short.gancho}</p>
+                                <p><strong>Roteiro:</strong> ${short.mini_roteiro}</p>
+                                <p><strong>Texto na Tela:</strong> ${short.texto_na_tela}</p>
+                            </div>`;
+                        });
+                        html += '</div>';
+                        outputContainer.innerHTML = html;
+                    } catch (e) {
+                        // Se falhar o parse, mostra o texto bruto
+                        outputContainer.innerHTML = `<pre class="whitespace-pre-wrap">${result}</pre>`;
+                    }
+                } else {
+                    // Para outros conteúdos, mostra como texto pré-formatado
+                    outputContainer.innerHTML = `<div class="p-3 card-background rounded-md shadow-sm"><pre class="whitespace-pre-wrap font-sans">${result}</pre></div>`;
+                }
+
+            } catch (error) {
+                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar conteúdo: ${error.message}</p>`;
+            } finally {
+                button.disabled = false; // Reabilita o botão
+            }
+        };
+    
         /**
          * Controla a visibilidade e o conteúdo da barra de ações flutuante com base na rolagem.
          */
@@ -2919,6 +3082,12 @@ ${scriptContent}
                     document.body.classList.remove('zen-mode');
                 });
             }
+
+            // Adicione os listeners para os novos botões do Centro de Conteúdo
+            if (buttons.generateShortsBtn) buttons.generateShortsBtn.addEventListener('click', () => handleRepurposeContent(buttons.generateShortsBtn, 'shorts'));
+            if (buttons.generateBlogBtn) buttons.generateBlogBtn.addEventListener('click', () => handleRepurposeContent(buttons.generateBlogBtn, 'blog'));
+            if (buttons.generateTwitterBtn) buttons.generateTwitterBtn.addEventListener('click', () => handleRepurposeContent(buttons.generateTwitterBtn, 'twitter'));
+            if (buttons.generateInstaBtn) buttons.generateInstaBtn.addEventListener('click', () => handleRepurposeContent(buttons.generateInstaBtn, 'linkedin'));
 
             // Define o estado inicial dos botões
             updateButtonStates();
