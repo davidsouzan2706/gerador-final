@@ -11,7 +11,7 @@
     <!-- Fontes Google - Carlito para legibilidade -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Carlito:ital,wght@0,400;0,700;1,400;0,700&display=swap" rel="stylesheet">
     <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🚀</text></svg>">
     <style>
         /* ========================================================== */
@@ -1958,6 +1958,32 @@ The final output MUST be only the JSON code, like this example:
         };
     
         /**
+         * Gera a descrição do vídeo e hashtags.
+         */
+        const generateVideoDescription = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateDescriptionBtn);
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('description');
+                let result = await callGroqAPI(prompt, maxTokens);
+                result = cleanGeneratedText(result, false);
+                result = removeMetaComments(result);
+                
+                const targetContentElement = document.getElementById('videoDescriptionContent');
+                if (targetContentElement) {
+                    targetContentElement.innerHTML = `<div class="p-3 text-sm card-background rounded-md whitespace-pre-wrap">${result}</div>`;
+                    markButtonAsCompleted(buttons.generateDescriptionBtn.id);
+                }
+            } catch (error) {
+                window.showToast(`Falha ao gerar Descrição: ${error.message}`);
+                console.error("Error generating Video Description.", error);
+            } finally {
+                hideLoading(buttons.generateDescriptionBtn);
+                updateButtonStates();
+            }
+        };
+
+        /**
          * Realiza o download do roteiro como PDF.
          */
         const downloadPdf = async () => {
@@ -2529,7 +2555,7 @@ The final output MUST be only the JSON code, like this example:
             if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); // New listener for outline
             if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
             if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
-            if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
+            if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'clímax', 'Clímax', 'climax'));
             if (buttons.conclusionBtn) buttons.conclusionBtn.addEventListener('click', () => handleGenerateSection(buttons.conclusionBtn, 'conclusion', 'Conclusão', 'conclusion'));
             if (buttons.generateCTABtn) buttons.generateCTABtn.addEventListener('click', () => handleGenerateSection(buttons.generateCTABtn, 'cta', 'Chamada para Ação', 'cta'));
             if (buttons.generateTitlesAndThumbnailsBtn) buttons.generateTitlesAndThumbnailsBtn.addEventListener('click', generateTitlesAndThumbnails);
