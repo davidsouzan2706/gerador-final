@@ -1519,14 +1519,24 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
          * @param {string} text - O texto gerado pela IA.
          * @returns {string} O texto sem os comentários meta.
          */
+        /**
+         * Remove comentários meta da IA do texto gerado, agora com suporte a português.
+         * @param {string} text - O texto gerado pela IA.
+         * @returns {string} O texto sem os comentários meta.
+         */
         const removeMetaComments = (text) => {
             if (!text) return text;
-            // Padrão para remover "Here is/are..." ou "Sure, here is..." etc.
-            const introPattern = /^(Sure, |Of course, )?(here is|here's|here are|below is|certainly, here is) .*?:\s*\n?/im;
+            
+            // Padrão expandido para pegar frases em inglês e português.
+            // (Aqui está|Claro, aqui está|Certo, segue) o (roteiro|texto|esboço|...)
+            const introPattern = /^(Sure, |Of course, |Certainly, |Claro, |Certo, )?(here is|here's|here are|below is|aqui está|segue)( the | a | o | a )?.*?:\s*\n?/im;
             let cleanedText = text.replace(introPattern, '');
             
-            // Remove linhas que começam com "Description:" ou "Hashtags:" se a IA as adicionar
-            cleanedText = cleanedText.replace(/^(Description:|Hashtags:)\s*\n?/gim, '');
+            // Remove linhas que começam com "Description:" ou "Hashtags:" e suas traduções
+            cleanedText = cleanedText.replace(/^(Description:|Descrição:|Hashtags:)\s*\n?/gim, '');
+
+            // Remove aspas no início e no fim do texto, caso a IA as adicione ao redor de todo o bloco
+            cleanedText = cleanedText.replace(/^"(.+)"$/s, '$1');
 
             return cleanedText.trim();
         };
