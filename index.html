@@ -816,6 +816,15 @@
         .dark #progressBarContainer .flex > span {
             color: #d1d5db; /* Cinza 300 - Padrão de texto do modo escuro */
         }
+        /* ========================================================== */
+        /* === CORREÇÃO FINAL - FUNDO DO ACORDEÃO NO MODO ESCURO ==== */
+        /* ========================================================== */
+        /* Esta regra garante que o item do acordeão (e por herança, seu
+           cabeçalho inativo) tenha o fundo escuro correto no Modo Escuro,
+           sobrescrevendo a regra geral do modo claro. */
+        .dark .accordion-item {
+            background-color: #1f2937; /* Cinza 800 - o mesmo do container */
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1116,7 +1125,11 @@
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.
+**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
+**Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
 `;
         // Labels para descrição de imagem em diferentes idiomas
         const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
@@ -1551,7 +1564,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
-	 * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
+         * Constrói o prompt específico para cada seção do roteiro ou tipo de conteúdo.
          * @param {string} sectionName - O nome da seção (ex: 'intro', 'titles_thumbnails').
          * @param {string} sectionTitle - O título da seção para o prompt.
          * @param {string|null} outlineDirective - Uma diretriz específica do esboço estratégico para esta seção.
@@ -1563,7 +1576,6 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const selectedLanguage = elements.languageSelect.value;
             const narrativeStyle = elements.narrativeStyle.value;
 
-            // --- VERSÃO FINAL COM FORMATAÇÃO CORRETA ---
             let prompt = `${baseContext}
 
 You are a master screenwriter, a true virtuoso of words. Your task is to write the **${sectionTitle}** section of the script.
@@ -1575,8 +1587,6 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
 4.  **Rhetorical Techniques:** Intelligently use rhetorical questions, powerful analogies, and striking metaphors to make the content more memorable and thought-provoking.
 5.  **Hook Reinforcement:** If there is a central question, subtly remind the viewer of the mystery or the promise made in the introduction to keep them hooked and eager for the resolution.
 `;
-            // --- FIM DO BLOCO CORRIGIDO ---
-
             let maxTokens = 2000;
 
             if (outlineDirective) {
@@ -1624,11 +1634,10 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
                     break;
             }
 
-            // A linha abaixo foi removida pois sua essência já está no bloco de instruções principal e aprimorado.
-            // prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle...`;
+            prompt += `\n\nIMPORTANT WRITING STYLE: Use the 'Show, Don't Tell' principle. Instead of stating facts plainly, use descriptive, evocative language to paint a picture in the viewer's mind. Create a sensory and visual experience through your words.`;
 
             switch (sectionName) {
-                case 'outline': 
+                case 'outline': // New case for strategic outline
                     prompt = `${baseContext}
 
 Você é um mestre roteirista e estrategista de conteúdo. Sua tarefa é criar um "beat sheet" ou um esboço estratégico detalhado para o vídeo. Analise todos os parâmetros fornecidos (tema, público, estilo narrativo, etc.) para criar a estrutura mais impactante possível.
@@ -1650,7 +1659,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'intro':
                     prompt += `
-                    The introduction must hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create intense curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
+                    The introduction should hook the viewer immediately, clearly state the video's intriguing question or mystery, and set the stage for what's to come. It must be captivating and create curiosity. For a "${videoDuration}" video, make this introduction appropriate in length and detail.
                     `;
                     if (narrativeStyle === 'direct') {
                         prompt += `\nThis is **Act 1** of the story. Your introduction should serve as the 'Inciting Incident', clearly presenting the central question or mystery that will drive the video. Establish the 'Normal World' of the topic before introducing the core conflict.`;
@@ -1662,7 +1671,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'development':
                     prompt += `
-                    The development section must delve into the core topic, presenting facts, arguments, and historical context. It must maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
+                    The development section should delve into the core topic, presenting facts, arguments, and historical context. It should maintain a strong narrative flow, building suspense and providing compelling information. Break down complex ideas into easily digestible parts. For a "${videoDuration}" video, ensure this section is comprehensive but also flows well, adapting its length to the desired duration.
                     `;
                     if (narrativeStyle === 'direct') {
                         prompt += `\nThis is **Act 2** of the story. Your goal is to raise the stakes. Present compelling evidence but also introduce obstacles and counter-arguments. Build towards a major revelation or turning point (the Midpoint).`;
@@ -1671,7 +1680,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'climax':
                     prompt += `
-                    The climax must be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
+                    The climax should be the most impactful part of the video, revealing key insights, surprising twists, or the most compelling evidence related to the video theme. It should be dramatic and leave the viewer with a sense of awe or profound understanding. For a "${videoDuration}" video, make this climax impactful and well-paced.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1680,7 +1689,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'conclusion':
                     prompt += `
-                    The conclusion must summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
+                    The conclusion should summarize the main points, provide a final thought or reflection, and leave the viewer with a lasting impression. Ensure the conclusion is complete and well-rounded, providing a sense of closure. For a "${videoDuration}" video, make this conclusion concise yet impactful.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1689,7 +1698,7 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'cta':
                     prompt += `
-                    The Call to Action (CTA) must be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
+                    The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
@@ -1902,7 +1911,7 @@ The final output MUST be only the JSON code, like this example:
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
-            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper');
+            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper'); // Updated selector
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
@@ -1912,31 +1921,26 @@ The final output MUST be only the JSON code, like this example:
 
             const scriptContent = scriptContentElement.textContent;
             
-            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
+            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
 
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            // --- INÍCIO DA MUDANÇA PRINCIPAL NO PROMPT ---
-            let prompt = `Você é um **Diretor de Arte e Artista de Storyboard**. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
+            let prompt = `Você é um diretor de vídeo. Sua tarefa é ler o trecho de roteiro a seguir e criar prompts de imagem.
 
-**REGRA ABSOLUTA: NÃO descreva movimentos de câmera, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.**
+**SUA REGRA MAIS IMPORTANTE é manter um ritmo dinâmico.** Não crie uma imagem para cada frase. O objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso significa que você deve LER várias frases, entender o tempo de narração e só então escolher o momento mais impactante DENTRO desse bloco de tempo para criar UM prompt.
 
-**RITMO DINÂMICO:** O seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Leia várias frases, entenda o tempo, e só então escolha o momento mais impactante para criar UM prompt.
+**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt de imagem que você criar **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do trecho do roteiro. Sem exceções. O vídeo precisa de um impacto visual imediato.
 
-**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do roteiro.
-
-Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
+Encontre os pontos de virada ou as imagens mentais mais fortes dentro desses intervalos de tempo.
 
 Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription").
 
 Trecho do roteiro:
----
-${scriptContent}
+---${scriptContent}
 ---`;
-            // --- FIM DA MUDANÇA PRINCIPAL NO PROMPT ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
@@ -1952,7 +1956,7 @@ ${scriptContent}
             }
 
             try {
-                const rawResult = await callGroqAPI(prompt, 4000);
+                const rawResult = await callGroqAPI(prompt, 4000); // Aumentado para 4000 tokens para prompts de imagem
                 const cleanedText = cleanGeneratedText(rawResult, true);
                 let prompts = [];
                 if (cleanedText) {
@@ -1971,10 +1975,11 @@ ${scriptContent}
                     window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
                 }
 
-                let accumulatedTimeSeconds = 1; 
+                // Armazena os prompts gerados na estrutura global
+                let accumulatedTimeSeconds = 1; // Reinicia para cada seção para cálculo de tempo
                 allImagePrompts[sectionElementId] = prompts.map((p, i) => {
                     const time = accumulatedTimeSeconds;
-                    accumulatedTimeSeconds += 20;
+                    accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
                     const mins = Math.floor(time / 60);
                     const secs = Math.floor(time % 60);
                     return { 
@@ -1985,10 +1990,12 @@ ${scriptContent}
                     };
                 });
 
-                promptContainer.innerHTML = '';
+                promptContainer.innerHTML = ''; // Limpa o spinner
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
                     allImagePrompts[sectionElementId].forEach(promptData => {
                         const styleBlockContent = promptData.styleBlock || '';
+                        
+                        // ABAIXO ESTÁ A LINHA DE HTML CORRIGIDA:
                         const promptHtml = `
                             <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
@@ -2006,7 +2013,7 @@ ${scriptContent}
                 } else {
                     promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
                 }
-                updateButtonStates();
+                updateButtonStates(); // Atualiza o estado dos botões após gerar prompts
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
                 console.error(`Error generating prompts for section ${sectionElementId}.`, error);
