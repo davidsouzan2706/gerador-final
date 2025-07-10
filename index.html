@@ -1796,12 +1796,12 @@ Exemplo de formato JSON esperado:
                     break;
                 case 'cta':
                     prompt += `
-                    The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, share, or engage with other content. Make it compelling and natural within the video's flow. For a "${videoDuration}" video, keep this CTA direct and effective.
+                    The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, or share. It should be compelling and feel like a natural conclusion to the video. For a "${videoDuration}" video, keep this CTA direct and effective, **but ensure it is a complete and well-rounded paragraph.**
                     `;
                     if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
                         prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
                     }
-                    maxTokens = 200;
+                    maxTokens = 400; // <<< AUMENTAMOS O LIMITE SIGNIFICATIVAMENTE
                     break;
                 case 'titles_thumbnails':
                     prompt = `${baseContext}
