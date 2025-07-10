@@ -2302,6 +2302,53 @@ The final output MUST be only the JSON code, like this example:
         };
     
         /**
+         * Gera o esboço estratégico do roteiro.
+         */
+        const generateStrategicOutline = async () => {
+            if (!validateInputs()) return;
+            showLoading(buttons.generateOutlineBtn);
+            const outlineContentDiv = elements.outlineContent;
+            outlineContentDiv.innerHTML = `<div class="loading-spinner-small mx-auto"></div>`;
+
+            try {
+                const { prompt, maxTokens } = constructScriptPrompt('outline', 'Esboço Estratégico');
+                const result = await callGroqAPI(prompt, maxTokens);
+                const cleanedResult = cleanGeneratedText(result, true);
+
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para o esboço.");
+
+                strategicOutline = JSON.parse(cleanedResult);
+
+                // Formata o esboço para exibição com títulos traduzidos
+                const titleTranslations = {
+                    'introduction': 'Introdução',
+                    'development': 'Desenvolvimento',
+                    'climax': 'Clímax',
+                    'conclusion': 'Conclusão',
+                    'cta': 'CTA'
+                };
+                let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm">';
+                for (const key in strategicOutline) {
+                    const translatedTitle = titleTranslations[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+                    
+                    outlineHtml += `<li><strong class="font-semibold">${translatedTitle}:</strong> ${strategicOutline[key]}</li>`;
+                }
+                outlineHtml += '</ul>';
+                outlineContentDiv.innerHTML = outlineHtml;
+
+                markButtonAsCompleted(buttons.generateOutlineBtn.id);
+
+            } catch (error) {
+                window.showToast(`Falha ao gerar Esboço: ${error.message}`);
+                console.error("Error generating Outline.", error);
+                outlineContentDiv.innerHTML = `<div class="asset-card-placeholder text-red-500">Erro ao gerar o esboço. Tente novamente.</div>`;
+            } finally {
+                hideLoading(buttons.generateOutlineBtn);
+                updateButtonStates();
+            }
+        };
+
+        /**
          * Controla a visibilidade e o conteúdo da barra de ações flutuante com base na rolagem.
          */
         window.handleFloatingActionBar = () => {
