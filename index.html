@@ -1139,12 +1139,7 @@ Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revel
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
-**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
-**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
-**Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
-**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
-`;
+Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
         // Labels para descrição de imagem em diferentes idiomas
         const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
 
@@ -1569,7 +1564,7 @@ Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revel
             if (imageDescriptionEngine) { context += `\nImage Description Instructions: "${imageDescriptionEngine}"`; }
             
             if (imageStyleSelect === 'cinematic') {
-                context += `\nImage Style: Cinematic film still, hyper-realistic, masterful cinematography. Shot on an Arri Alexa 65 with vintage anamorphic lenses. The composition is deliberate and powerful, using principles of photographic storytelling. Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections. Rich, cinematic color grading. The overall mood is immersive, evocative, and deeply atmospheric.`;
+                context += `\nImage Style: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
                 context += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
             }
@@ -1996,7 +1991,7 @@ Trecho do roteiro:
             }
 
             if (imageStyleSelect === 'cinematic') {
-                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: hyper-realistic, masterful cinematography, Arri Alexa 65, vintage anamorphic lenses, deliberate composition, dramatic naturalistic lighting, strong chiaroscuro, extreme attention to micro-details, hyper-realistic textures (skin pores, fabric weaves, material imperfections), rich cinematic color grading, immersive and evocative mood. Avoid cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon.`;
+                const cinematicPromptPart = `Apply a cinematic film still style to these image descriptions: Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.`;
                 prompt += `\n\n${cinematicPromptPart}`;
                 selectedStyleBlock = CINEMATIC_STYLE_BLOCK;
             } else if (imageStyleSelect === 'custom' && customImageStyle) {
@@ -2331,10 +2326,20 @@ ${scriptContent}
 
                 strategicOutline = JSON.parse(cleanedResult); // Armazena o esboço globalmente
                 
-                // Formata o esboço para exibição
+                // Formata o esboço para exibição com títulos traduzidos
+                const titleTranslations = {
+                    'introduction': 'Introdução',
+                    'development': 'Desenvolvimento',
+                    'climax': 'Clímax',
+                    'conclusion': 'Conclusão',
+                    'cta': 'CTA'
+                };
                 let outlineHtml = '<ul class="list-disc list-inside space-y-2 text-sm">';
                 for (const key in strategicOutline) {
-                    outlineHtml += `<li><strong class="font-semibold capitalize">${key}:</strong> ${strategicOutline[key]}</li>`;
+                    // Busca a tradução no nosso dicionário, ou usa a chave original capitalizada como fallback
+                    const translatedTitle = titleTranslations[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+                    
+                    outlineHtml += `<li><strong class="font-semibold">${translatedTitle}:</strong> ${strategicOutline[key]}</li>`;
                 }
                 outlineHtml += '</ul>';
                 outlineContentDiv.innerHTML = outlineHtml;
@@ -2368,13 +2373,21 @@ ${scriptContent}
 
             // Adicionar o esboço estratégico
             if (strategicOutline) {
+                const titleTranslations = {
+                    'introduction': 'Introdução',
+                    'development': 'Desenvolvimento',
+                    'climax': 'Clímax',
+                    'conclusion': 'Conclusão',
+                    'cta': 'CTA'
+                };
                 htmlToPrint += `
                     <div class="print-section">
                         <div class="print-section-title">Esboço Estratégico</div>
                         <div class="print-section-content">
                             <ul style="list-style-type: disc; padding-left: 20px;">`;
                 for (const key in strategicOutline) {
-                    htmlToPrint += `<li><strong>${key.charAt(0).toUpperCase() + key.slice(1)}:</strong> ${strategicOutline[key]}</li>`;
+                    const translatedTitle = titleTranslations[key] || (key.charAt(0).toUpperCase() + key.slice(1));
+                    htmlToPrint += `<li><strong>${translatedTitle}:</strong> ${strategicOutline[key]}</li>`;
                 }
                 htmlToPrint += `</ul></div></div>`;
             }
@@ -2866,7 +2879,7 @@ ${scriptContent}
                     } else {
                         // Se NÃO, esconde o sol, mostra a lua, e salva no localStorage
                         if (moonIcon) moonIcon.classList.remove('hidden');
-                        if (sunIcon) sunIcon.classList.add('hidden');
+                        if (sunIcon) sunIcon.classList.add('hidden'); // This was moonIcon.classList.add('hidden');
                         localStorage.setItem('darkMode', 'disabled');
                     }
                 });
@@ -2877,7 +2890,7 @@ ${scriptContent}
                 const sunIcon = document.getElementById('sunIcon');
                 document.body.classList.add('dark');
                 if (moonIcon) moonIcon.classList.add('hidden');
-                if (sunIcon) sunIcon.classList.add('hidden'); // This was moonIcon.classList.add('hidden');
+                if (sunIcon) sunIcon.classList.remove('hidden');
             }
 
             if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
