@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Configuração geral para todas as funções
 [functions]
   directory = "netlify/functions"
@@ -11,4 +10,3 @@
 # Arquivo: netlify.toml
 [functions]
   directory = "netlify/functions"
->>>>>>> a15c69ad49be1cf4ec572c5bb85e7dc39da27bc5
