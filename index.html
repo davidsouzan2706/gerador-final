@@ -772,7 +772,7 @@
         #projectDashboard #videoDescriptionContent,
         #projectDashboard #titlesThumbnailsContent,
         #projectDashboard .card-background p,
-        #projectDashboard .card-background li,
+        #projectDashboard #projectDashboard .card-background li, /* Added specific rule for li inside card-background */
         #projectDashboard .card-background strong,
         #projectDashboard .asset-card-placeholder,
         #projectDashboard .list-disc {
@@ -784,7 +784,7 @@
         .dark #projectDashboard #videoDescriptionContent,
         .dark #projectDashboard #titlesThumbnailsContent,
         .dark #projectDashboard .card-background p,
-        .dark #projectDashboard .card-background li,
+        .dark #projectDashboard .card-background li, /* Added specific rule for li inside card-background */
         .dark #projectDashboard .card-background strong,
         .dark #projectDashboard .asset-card-placeholder,
         .dark #projectDashboard .list-disc {
@@ -1125,11 +1125,7 @@
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
-**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
-**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
-**Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
-**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
+Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.
 `;
         // Labels para descrição de imagem em diferentes idiomas
         const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
@@ -1713,7 +1709,7 @@ IMPORTANT: Respond ONLY with a valid JSON object. Do not include any other text,
 
 The JSON object must have two top-level keys:
 1.  "titles": An array of strings.
-2.  "thumbnails": An array of objects, where each object has a "title" (string) and a "description" (string) key. Each description should focus on strong visual elements, emotions, and clear text overlays.
+2.  "thumbnails": Anatah array of objects, where each object has a "title" (string) and a "description" (string) key. Each description should focus on strong visual elements, emotions, and clear text overlays.
 
 The final output MUST be only the JSON code, like this example:
 {
@@ -1822,6 +1818,31 @@ The final output MUST be only the JSON code, like this example:
             return true;
         };
 
+        /**
+         * Itera sobre todas as seções do roteiro na ordem correta
+         * e renumera globalmente todas as cenas.
+         */
+        const reNumberAllScenes = () => {
+            let globalSceneCounter = 1;
+            const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
+
+            sectionOrder.forEach(sectionId => {
+                const promptBlocks = document.querySelectorAll(`#${sectionId} .individual-prompt-block`);
+                
+                promptBlocks.forEach(block => {
+                    const timeElement = block.querySelector('.prompt-time');
+                    if (timeElement) {
+                        // Pega apenas a parte do tempo, ignorando a contagem de cena antiga
+                        const timePart = timeElement.textContent.split(' - ')[0];
+                        
+                        // Atualiza o elemento com a nova contagem global
+                        timeElement.textContent = `${timePart} - Cena ${String(globalSceneCounter).padStart(2, '0')}`;
+                        globalSceneCounter++;
+                    }
+                });
+            });
+        };
+
         // ==========================================================
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
@@ -1911,7 +1932,7 @@ The final output MUST be only the JSON code, like this example:
          */
         window.generatePromptsForSection = async (sectionElementId) => {
             const sectionElement = document.getElementById(sectionElementId);
-            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper'); // Updated selector
+            const scriptContentElement = sectionElement.querySelector('.generated-content-wrapper');
             const promptContainer = sectionElement.querySelector('.prompt-container');
             
             if (!scriptContentElement || !scriptContentElement.textContent.trim()) {
@@ -1919,22 +1940,24 @@ The final output MUST be only the JSON code, like this example:
                 return;
             }
 
-            const scriptContent = scriptContentElement.textContent;
+            const scriptContent = scriptContentElement.textContent; // Corrected to use scriptContentElement
             
-            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
 
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            let prompt = `Você é um diretor de vídeo. Sua tarefa é ler o trecho de roteiro a seguir e criar prompts de imagem.
+            let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
 
-**SUA REGRA MAIS IMPORTANTE é manter um ritmo dinâmico.** Não crie uma imagem para cada frase. O objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso significa que você deve LER várias frases, entender o tempo de narração e só então escolher o momento mais impactante DENTRO desse bloco de tempo para criar UM prompt.
+**REGRA ABSOLUTA: NÃO descreva movimentos de câmera, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.**
 
-**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt de imagem que você criar **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do trecho do roteiro. Sem exceções. O vídeo precisa de um impacto visual imediato.
+**RITMO DINÂMICO:** O seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Leia várias frases, entenda o tempo, e só então escolha o momento mais impactante para criar UM prompt.
 
-Encontre os pontos de virada ou as imagens mentais mais fortes dentro desses intervalos de tempo.
+**IMAGEM INICIAL INEGOCIÁVEL:** O primeiro prompt **DEVE OBRIGATORIAMENTE** corresponder à **PRIMEIRA FRASE COMPLETA** do roteiro.
+
+Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
 
 Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription").
 
@@ -1956,7 +1979,7 @@ Trecho do roteiro:
             }
 
             try {
-                const rawResult = await callGroqAPI(prompt, 4000); // Aumentado para 4000 tokens para prompts de imagem
+                const rawResult = await callGroqAPI(prompt, 4000);
                 const cleanedText = cleanGeneratedText(rawResult, true);
                 let prompts = [];
                 if (cleanedText) {
@@ -1974,38 +1997,38 @@ Trecho do roteiro:
                 } else {
                     window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
                 }
-
-                // Armazena os prompts gerados na estrutura global
-                let accumulatedTimeSeconds = 1; // Reinicia para cada seção para cálculo de tempo
+                
+                // --- MUDANÇA NA LÓGICA DE DADOS ---
+                // Agora não precisamos mais da propriedade 'sequence'
+                let accumulatedTimeSeconds = 1; 
                 allImagePrompts[sectionElementId] = prompts.map((p, i) => {
                     const time = accumulatedTimeSeconds;
-                    accumulatedTimeSeconds += 20; // Estimativa de 20s por cena
+                    accumulatedTimeSeconds += 20;
                     const mins = Math.floor(time / 60);
                     const secs = Math.floor(time % 60);
                     return { 
                         ...p, 
-                        time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`, 
-                        sequence: String(i + 1).padStart(2, '0'),
+                        time: `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`,
                         styleBlock: selectedStyleBlock
                     };
                 });
 
-                promptContainer.innerHTML = ''; // Limpa o spinner
+                promptContainer.innerHTML = '';
                 if (allImagePrompts[sectionElementId] && allImagePrompts[sectionElementId].length > 0) {
-                    allImagePrompts[sectionElementId].forEach(promptData => {
+                    allImagePrompts[sectionElementId].forEach((promptData, index) => {
                         const styleBlockContent = promptData.styleBlock || '';
-                        
-                        // ABAIXO ESTÁ A LINHA DE HTML CORRIGIDA:
+                        // --- MUDANÇA NA LÓGICA DE DISPLAY ---
+                        // Geramos o HTML com um placeholder simples para a contagem
                         const promptHtml = `
                             <div class="individual-prompt-block card-background">
                                 <div class="flex items-center justify-between mb-2">
-                                    <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                                    <p class="prompt-time">${promptData.time} - Cena 00</p> 
+                                    <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
                                 </div>
                                 <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                                 <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
-                                <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                                <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                                <p id="prompt-content-${sectionElementId}-${index}" class="prompt-description-content">${promptData.imageDescription}</p>
+                                <pre id="style-block-${sectionElementId}-${index}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
                             </div>
                         `;
                         promptContainer.innerHTML += promptHtml;
@@ -2013,7 +2036,11 @@ Trecho do roteiro:
                 } else {
                     promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
                 }
-                updateButtonStates(); // Atualiza o estado dos botões após gerar prompts
+                
+                // --- CHAMADA DA NOVA FUNÇÃO "MAESTRO" ---
+                reNumberAllScenes();
+                
+                updateButtonStates();
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
                 console.error(`Error generating prompts for section ${sectionElementId}.`, error);
@@ -2480,18 +2507,18 @@ ${scriptContent}
 
             const promptsData = allImagePrompts[sectionElementId];
             if (promptsData && promptsData.length > 0) {
-                promptsData.forEach(promptData => {
+                promptsData.forEach((promptData, index) => { // Added index here for ID
                     const styleBlockContent = promptData.styleBlock || '';
                     const promptHtml = `
                         <div class="individual-prompt-block card-background">
                             <div class="flex items-center justify-between mb-2">
-                                <p class="prompt-time">${promptData.time} - Cena ${promptData.sequence}</p>
-                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${promptData.sequence}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${promptData.sequence}').textContent); window.showCopyFeedback(this)">Copiar</button>
+                                <p class="prompt-time">${promptData.time} - Cena 00</p>
+                                <button class="copy-btn" onclick="copyTextToClipboard(document.getElementById('prompt-content-${sectionElementId}-${index}').textContent + ' ' + document.getElementById('style-block-${sectionElementId}-${index}').textContent); window.showCopyFeedback(this)">Copiar</button>
                             </div>
                             <p class="prompt-phrase">${promptData.scriptPhrase}</p>
                             <p class="prompt-description-label">${imageDescriptionLabels[elements.languageSelect.value] || 'Image Description:'}</p>
-                            <p id="prompt-content-${sectionElementId}-${promptData.sequence}" class="prompt-description-content">${promptData.imageDescription}</p>
-                            <pre id="style-block-${sectionElementId}-${promptData.sequence}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
+                            <p id="prompt-content-${sectionElementId}-${index}" class="prompt-description-content">${promptData.imageDescription}</p>
+                            <pre id="style-block-${sectionElementId}-${index}" class="text-xs p-2 rounded-md overflow-auto">${styleBlockContent}</pre>
                         </div>
                     `;
                     promptContainer.innerHTML += promptHtml;
@@ -2514,63 +2541,49 @@ ${scriptContent}
                 try {
                     const projectData = JSON.parse(e.target.result);
                     
-                    resetApplicationState(); // Limpa o estado atual antes de importar
+                    resetApplicationState();
 
-                    // Restaura os inputs
                     for (const key in projectData.inputs) {
                         if (elements[key] && typeof elements[key].value !== 'undefined') {
                             elements[key].value = projectData.inputs[key];
                         }
                     }
 
-                    // Restaura o conteúdo gerado nas seções do roteiro
                     const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
                     scriptSectionIds.forEach(id => {
                         const sectionElement = document.getElementById(id);
                         if (sectionElement && projectData.outputs[id]) {
                             sectionElement.innerHTML = projectData.outputs[id];
-                            sectionElement.classList.remove('hidden'); // Ensure it's visible if it has content
+                            sectionElement.classList.remove('hidden');
                             sectionElement.classList.add('animate-fade-in');
                         }
                     });
 
-                    // Restore strategic outline content
                     if (projectData.outputs.strategicOutlineContent) {
                         elements.outlineContent.innerHTML = projectData.outputs.strategicOutlineContent;
                     }
-                    strategicOutline = projectData.memory.strategicOutline || null; // Importa o esboço
+                    strategicOutline = projectData.memory.strategicOutline || null;
 
-                    // Restore content of the asset cards
                     if (projectData.outputs.titlesThumbnailsContent) {
                         document.getElementById('titlesThumbnailsContent').innerHTML = projectData.outputs.titlesThumbnailsContent;
                     }
                     if (projectData.outputs.videoDescriptionContent) {
                         document.getElementById('videoDescriptionContent').innerHTML = projectData.outputs.videoDescriptionContent;
                     }
-                    // Removed storyboardContent import
-
-                    // Restaura as variáveis de memória
+                    
                     allImagePrompts = projectData.memory.allImagePrompts || {};
                     generatedTitlesAndThumbnails = projectData.memory.generatedTitlesAndThumbnails || null;
 
                     updateButtonStates();
                     
-                    // Marca os botões como concluídos se o conteúdo existir
-                    // Strategic Outline button
-                    if (elements.outlineContent.textContent.trim() !== "Clique em 'Criar Esboço' para a IA planejar a estrutura do roteiro." && elements.outlineContent.textContent.trim() !== "Não foi possível gerar o esboço. Tente novamente." && elements.outlineContent.textContent.trim() !== "Erro ao gerar.") {
-                        markButtonAsCompleted('generateOutlineBtn');
-                    }
-                    // Script sections
+                    if (elements.outlineContent.textContent.trim().length > 100) markButtonAsCompleted('generateOutlineBtn');
                     if (document.getElementById('introSection').innerHTML.trim()) markButtonAsCompleted('generateIntroBtn');
                     if (document.getElementById('developmentSection').innerHTML.trim()) markButtonAsCompleted('generateDevelopmentBtn');
                     if (document.getElementById('climaxSection').innerHTML.trim()) markButtonAsCompleted('climaxBtn');
                     if (document.getElementById('conclusionSection').innerHTML.trim()) markButtonAsCompleted('conclusionBtn');
                     if (document.getElementById('ctaSection').innerHTML.trim()) markButtonAsCompleted('generateCTABtn');
-                    // Asset buttons (check if content is not placeholder)
-                    if (document.getElementById('videoDescriptionContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>') markButtonAsCompleted('generateDescriptionBtn');
-                    if (document.getElementById('titlesThumbnailsContent').innerHTML.trim() !== '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>') markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
-                    // Removed storyboardContent check for completion
-
+                    if (document.getElementById('videoDescriptionContent').innerHTML.includes('Hashtags')) markButtonAsCompleted('generateDescriptionBtn');
+                    if (document.getElementById('titlesThumbnailsContent').innerHTML.includes('Analisar CTR')) markButtonAsCompleted('generateTitlesAndThumbnailsBtn');
 
                     // Re-renderiza os prompts de imagem para todas as seções
                     for (const sectionId in allImagePrompts) {
@@ -2578,8 +2591,11 @@ ${scriptContent}
                             renderImagePromptsForSection(sectionId);
                         }
                     }
+                    // --- CHAMADA DA NOVA FUNÇÃO "MAESTRO" ---
+                    // Garante a renumeração correta ao importar um projeto.
+                    reNumberAllScenes();
+
                     updateProgressBar(); 
-                    // Show dashboard after import
                     elements.projectDashboard.classList.remove('hidden');
                     window.showToast("Projeto importado com sucesso!");
 
@@ -2589,7 +2605,7 @@ ${scriptContent}
                 }
             };
             reader.readAsText(file);
-            event.target.value = ''; // Limpa o input para permitir importar o mesmo arquivo novamente
+            event.target.value = '';
         };
 
         /**
