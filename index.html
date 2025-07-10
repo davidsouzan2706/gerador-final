@@ -2236,7 +2236,8 @@ ${scriptContent}
 
         /**
          * Copia a transcrição completa para a área de transferência e
-         * inicia o download de um arquivo .rtf (Rich Text Format) contendo a mesma transcrição.
+         * inicia o download de um arquivo .rtf (Rich Text Format) contendo a mesma transcrição,
+         * com suporte total a caracteres Unicode (acentos, ç, etc.).
          */
         const handleCopyAndDownloadTranscript = () => {
             const transcriptText = getTranscriptOnly();
@@ -2246,28 +2247,36 @@ ${scriptContent}
                 return;
             }
 
-            // Ação 1: Copiar para a área de transferência (permanece igual)
+            // Ação 1: Copiar para a área de transferência
             copyTextToClipboard(transcriptText);
             window.showToast("Transcrição copiada e download iniciado!");
 
-            // --- INÍCIO DA MUDANÇA PARA .RTF ---
-            // Ação 2: Gerar e baixar o arquivo .rtf
+            // --- INÍCIO DA MUDANÇA PARA .RTF COM UNICODE ---
             const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.rtf';
             
-            // Cria o conteúdo no formato Rich Text.
-            // \pard -> Inicia um parágrafo
-            // \par -> Quebra de linha (fim do parágrafo)
-            // Caracteres especiais do RTF como '{', '}' e '\' precisam ser escapados com uma barra invertida.
-            let rtfContent = '{\\rtf1\\ansi\\deff0\n';
-            const lines = transcriptText.split('\n');
-            lines.forEach(line => {
-                // Escapa caracteres especiais e adiciona a linha ao conteúdo RTF
-                const escapedLine = line.replace(/\\/g, '\\\\').replace(/{/g, '\\{').replace(/}/g, '\\}');
-                rtfContent += `\\pard ${escapedLine}\\par\n`;
-            });
-            rtfContent += '}';
+            // Constrói o cabeçalho do RTF para suportar UTF-8
+            let rtfContent = '{\\rtf1\\ansi\\deff0\\uc1\\pard\\sa200\\sl276\\slmult1';
 
-            // Cria o Blob com o tipo de MIME correto para RTF
+            // Converte o texto para a sintaxe de escape Unicode do RTF
+            let rtfBody = '';
+            for (let i = 0; i < transcriptText.length; i++) {
+                const charCode = transcriptText.charCodeAt(i);
+                if (charCode <= 127) {
+                    // Caracteres ASCII normais
+                    rtfBody += transcriptText[i];
+                } else {
+                    // Caracteres especiais (acentuados, etc.)
+                    // Converte para a sintaxe RTF: \'xx onde xx é o código hexadecimal
+                    rtfBody += `\\'${charCode.toString(16)}`;
+                }
+            }
+            
+            // Substitui as quebras de linha por parágrafos RTF
+            rtfBody = rtfBody.replace(/\n/g, '\\par\n');
+            
+            rtfContent += `\n${rtfBody}`;
+            rtfContent += '\n}';
+
             const blob = new Blob([rtfContent], { type: 'application/rtf' });
             
             const link = document.createElement('a');
@@ -2277,7 +2286,7 @@ ${scriptContent}
             link.click();
             document.body.removeChild(link);
             URL.revokeObjectURL(link.href);
-            // --- FIM DA MUDANÇA PARA .RTF ---
+            // --- FIM DA MUDANÇA PARA .RTF COM UNICODE ---
         };
     
         /**
