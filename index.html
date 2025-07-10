@@ -1922,34 +1922,29 @@ The final output MUST be only the JSON code, like this example:
 
         /**
          * Itera sobre todas as seções do roteiro na ordem correta,
-         * renumera globalmente todas as cenas E recalcula o timestamp.
+         * renumera globalmente todas as cenas E recalcula o timestamp
+         * usando uma duração média fixa por cena.
          */
         const reNumberAllScenes = () => {
             let globalSceneCounter = 1;
             totalScriptSeconds = 0; // Zera a contagem global a cada recálculo
             const sectionOrder = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
-            const wordsPerSecond = 2.5; // Média de palavras por segundo para narração
+            const averageSceneDuration = 18; // DURAÇÃO MÉDIA DE CADA CENA EM SEGUNDOS (DENTRO DA FAIXA 17-25)
 
             sectionOrder.forEach(sectionId => {
                 const promptBlocks = document.querySelectorAll(`#${sectionId} .individual-prompt-block`);
                 
                 promptBlocks.forEach(block => {
                     const timeElement = block.querySelector('.prompt-time');
-                    const phraseElement = block.querySelector('.prompt-phrase');
-
-                    if (timeElement && phraseElement) {
-                        const wordCount = phraseElement.textContent.trim().split(/\s+/).length;
-                        
-                        // --- LÓGICA DE DURAÇÃO CORRIGIDA ---
-                        // Calcula a duração estimada e garante que nunca seja zero.
-                        const sceneDuration = Math.round(wordCount / wordsPerSecond) || 1; 
-
+                    if (timeElement) {
                         const minutes = Math.floor(totalScriptSeconds / 60);
                         const seconds = Math.floor(totalScriptSeconds % 60);
                         
+                        // Define o timestamp de início da cena e o número da cena
                         timeElement.textContent = `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')} - Cena ${String(globalSceneCounter).padStart(2, '0')}`;
                         
-                        totalScriptSeconds += sceneDuration; // Adiciona a duração desta cena ao total
+                        // Incrementa o tempo total pela duração média para a próxima cena
+                        totalScriptSeconds += averageSceneDuration;
                         globalSceneCounter++;
                     }
                 });
