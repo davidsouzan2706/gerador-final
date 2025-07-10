@@ -1939,7 +1939,10 @@ The final output MUST be only the JSON code, like this example:
 
                     if (timeElement && phraseElement) {
                         const wordCount = phraseElement.textContent.trim().split(/\s+/).length;
-                        const sceneDuration = Math.max(5, Math.round(wordCount / wordsPerSecond)); // Mínimo de 5s por cena
+                        
+                        // --- LÓGICA DE DURAÇÃO CORRIGIDA ---
+                        // Calcula a duração estimada e garante que nunca seja zero.
+                        const sceneDuration = Math.round(wordCount / wordsPerSecond) || 1; 
 
                         const minutes = Math.floor(totalScriptSeconds / 60);
                         const seconds = Math.floor(totalScriptSeconds % 60);
@@ -2058,21 +2061,21 @@ The final output MUST be only the JSON code, like this example:
             const customImageStyle = elements.customImageStyle.value.trim();
             let selectedStyleBlock = '';
 
-            let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar descrições de imagem **estáticas e poderosas** que capturem a essência de cada momento.
+            // --- INÍCIO DO PROMPT APRIMORADO E FINAL ---
+            let prompt = `Você é um Diretor de Arte e Artista de Storyboard. Sua tarefa é ler o trecho do roteiro e criar um storyboard visual dinâmico.
 
-**REGRA DE RITMO (A MAIS IMPORTANTE):** Seu objetivo é criar um prompt a cada **15 a 25 segundos de narração**, aproximadamente. Isso é crucial para um vídeo dinâmico. **Analise o fluxo do texto**: leia um bloco de frases, estime o tempo de fala e só então escolha o momento visual mais impactante dentro desse bloco para criar UM único prompt. Não crie uma imagem para cada frase.
+**SUA TAREFA MAIS IMPORTANTE É O RITMO.** Você deve criar um prompt de imagem a cada **15 a 25 segundos de narração**. Para isso, você **DEVE AGRUPAR VÁRIAS FRASES** do roteiro. Leia um parágrafo inteiro, entenda a mensagem principal e crie **UMA ÚNICA IMAGEM** que represente todo aquele bloco de texto. Não crie uma imagem para cada frase curta. Pense em "qual é a imagem mental que resume os próximos 20 segundos de fala?".
 
-**REGRA DE CENA INICIAL (INEGOCIÁVEL):** O primeiro prompt que você criar **DEVE OBRIGATORIAMENTE** corresponder à **primeira frase completa** do roteiro para garantir impacto visual imediato.
+**REGRAS INEGOCIÁVEIS:**
+1.  **CENA INICIAL:** O primeiro prompt DEVE corresponder à primeira frase completa do roteiro.
+2.  **SEM INSTRUÇÕES DE CÂMERA:** NÃO descreva movimentos de câmera, cortes ou enquadramentos. Descreva APENAS o conteúdo visual da cena como uma fotografia.
 
-**REGRA DE CONTEÚDO (ABSOLUTA):** **NÃO descreva movimentos de câmera**, cortes ou enquadramentos (ex: 'close-up de', 'câmera foca em', 'corte para'). Descreva APENAS o conteúdo visual da cena, como se fosse uma fotografia ou uma pintura.
-
-Encontre os pontos de virada ou as imagens mentais mais fortes e transforme-os em descrições visuais ricas.
-
-Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription").
+Responda APENAS com um array JSON de objetos (com chaves "scriptPhrase" e "imageDescription"). A chave "scriptPhrase" deve conter o bloco de frases que o prompt de imagem representa.
 
 Trecho do roteiro:
 ---${scriptContent}
 ---`;
+            // --- FIM DO PROMPT APRIMORADO E FINAL ---
             
             if (imageDescriptionEngine) {
                 prompt += `\n\nAlso, ensure the image descriptions incorporate the following quality instructions: "${imageDescriptionEngine}"`;
@@ -2105,7 +2108,6 @@ Trecho do roteiro:
                     window.showToast("Erro: IA não retornou prompts ou o formato está incorreto para esta seção.");
                 }
                 
-                // Apenas armazena os dados brutos, sem se preocupar com tempo ou sequência
                 allImagePrompts[sectionElementId] = prompts.map((p) => ({ ...p, styleBlock: selectedStyleBlock }));
 
                 promptContainer.innerHTML = '';
@@ -2130,7 +2132,7 @@ Trecho do roteiro:
                     promptContainer.innerHTML = '<p class="text-gray-500 text-sm">Nenhum prompt gerado para esta seção.</p>';
                 }
                 
-                reNumberAllScenes(); // O "maestro" agora faz todo o trabalho de tempo e numeração
+                reNumberAllScenes();
                 updateButtonStates();
             } catch (error) {
                 promptContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar prompts: ${error.message}</p>`;
