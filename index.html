@@ -953,13 +953,27 @@
                 <div class="flex items-center gap-2">
                     <label for="narrativeStyle">Estilo da Narrativa:</label>
                     <span class="tooltip card-background"
-                        data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para documentários.&#10;&#10;Jornada do Herói: Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.&#10;&#10;Mistério (Loop Aberto): Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.&#10;&#10;Problema-Agitação-Solução (PAS): Foca em um problema que o público tem e apresenta a solução. Perfeito para vídeos de marketing e tutoriais.&#10;&#10;Antes-Depois-Ponte (BAB): Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá.&#10;&#10;Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revelação surpreendente no final."
+                        data-tooltip="Direto e Informativo: Estrutura clássica de começo, meio e fim. Ideal para vídeos gerais.
+
+Documentário (Factual e Investigativo): Constrói um argumento com fatos, evidências e uma narração autoritária. Perfeito para vídeos expositivos e de investigação.
+
+Jornada do Herói: Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.
+
+Mistério (Loop Aberto): Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.
+
+Problema-Agitação-Solução (PAS): Foca em um problema que o público tem e apresenta a solução. Perfeito para vídeos de marketing e tutoriais.
+
+Antes-Depois-Ponte (BAB): Mostra um cenário 'antes' (o problema), um 'depois' (o resultado ideal) e seu conteúdo como 'a ponte' para chegar lá.
+
+Narrativa com Virada (Twist): Constrói uma expectativa e a quebra com uma revelação surpreendente no final."
                     >
                         (?)
                     </span>
                 </div>
                 <select id="narrativeStyle" class="card-background">
                     <option value="direct" selected>Direto e Informativo (Padrão)</option>
+                    <!-- ADICIONE A LINHA ABAIXO -->
+                    <option value="documentary">Documentário (Factual e Investigativo)</option>
                     <option value="heros_journey">Jornada do Herói (Clássico)</option>
                     <option value="mystery_loop">Mistério (com Loop Aberto)</option>
                     <option value="pas">Problema-Agitação-Solução (PAS)</option>
@@ -1125,7 +1139,11 @@
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
 **[ESTILO CINEMATOGRÁFICO]**
-Ultra-realistic, high-resolution photographic image. Captured with natural lighting and cinematic composition. Rich textures and fine surface details — visible skin pores, fabric fibers, weathered materials, realistic reflections, and organic imperfections. Sharp focus with subtle depth of field. True-to-life colors with refined tonal range. Every element should look authentic, physical, and believable — as if taken with a high-end DSLR camera. No exaggerated features, no artificial smoothness — only pure, grounded realism.
+**Style:** Cinematic film still, hyper-realistic, masterful visual storytelling. The composition is deliberate and powerful, using principles of photographic storytelling.
+**Lighting:** Naturalistic and dramatic lighting. Strong use of light and shadow (chiaroscuro) to create depth and mood. The light source feels authentic to the environment, whether it's harsh sunlight, soft window light, or moody candlelight. The lighting quality is reminiscent of high-end cinema, with the organic feel of vintage anamorphic lenses.
+**Details & Textures:** Extreme attention to micro-details. Hyper-realistic textures are paramount: visible skin pores, fabric weaves, material imperfections (scratches on metal, weathering on stone, dust on surfaces). Every element feels tangible and real, as if captured with meticulous precision.
+**Color & Mood:** Rich, cinematic color grading. The color palette is carefully controlled to enhance the story and emotion of the scene. The overall mood is immersive, evocative, and deeply atmospheric.
+**Negative Prompt:** --no cgi, 3d, render, painting, illustration, animation, video game, digital art, cartoon, blurry, low quality, bad anatomy, deformed, ugly, watermark, text, logo, camera, film equipment, tripod, lens, crew, set, studio, production, behind the scenes, monitor, screen, lights, boom mic, cables, wires
 `;
         // Labels para descrição de imagem em diferentes idiomas
         const imageDescriptionLabels = { 'pt-br': 'Descrição da Imagem:', 'pt-pt': 'Descrição da Imagem:', 'en': 'Image Description:' };
@@ -1597,6 +1615,14 @@ You are a master screenwriter, a true virtuoso of words. Your task is to write t
             }
 
             switch (narrativeStyle) {
+                case 'documentary':
+                    prompt += `\n\nNARRATIVE STYLE: Use a 'Documentary' structure.
+                    - **Introduction:** Start with a powerful, factual statement or a thought-provoking question that establishes the central theme. Present the "thesis" of the documentary.
+                    - **Development:** Build the narrative by presenting evidence, data, and historical context in a logical sequence. Structure it like an investigation, revealing information progressively. Use language that suggests authority and credibility (e.g., "Evidence suggests...", "Historical records show...", "Experts believe...").
+                    - **Climax:** Present the most compelling piece of evidence or the central conclusion of your argument. This should be the moment where the "thesis" from the introduction is proven or deeply explored.
+                    - **Conclusion:** Summarize the key findings and arguments. End with a broader reflection on the implications of the topic, leaving the viewer with a new understanding or perspective.`;
+                    break;
+                
                 case 'mystery_loop':
                     prompt += `\n\nNARRATIVE STYLE: Use the 'Mystery/Open Loop' structure.
                     - In the **Introduction**, present a compelling central question or mystery and promise the answer by the end.
@@ -2851,7 +2877,7 @@ ${scriptContent}
                 const sunIcon = document.getElementById('sunIcon');
                 document.body.classList.add('dark');
                 if (moonIcon) moonIcon.classList.add('hidden');
-                if (sunIcon) sunIcon.classList.remove('hidden');
+                if (sunIcon) sunIcon.classList.add('hidden'); // This was moonIcon.classList.add('hidden');
             }
 
             if (buttons.analyzeStrategyBtn) buttons.analyzeStrategyBtn.addEventListener('click', analyzeAndSetStrategy);
