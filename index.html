@@ -2145,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
-         * Analisa o roteiro completo em busca de pontos de retenção e queda.
+         * Analisa o roteiro completo, traduz as sugestões e exibe o resultado.
          */
         const analyzeScriptRetention = async () => {
             if (!isScriptComplete()) {
@@ -2160,41 +2160,53 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const fullScript = getTranscriptOnly();
-                // Pega o idioma selecionado pelo usuário na interface principal
-                const selectedLanguage = elements.languageSelect.value; 
+                const selectedLanguage = elements.languageSelect.value;
 
-                // --- INÍCIO DA CORREÇÃO NO PROMPT ---
-                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube para máxima retenção de audiência. Sua tarefa é analisar o roteiro fornecido e dividi-lo em parágrafos, avaliando cada um.
+                // --- PROMPT DE ANÁLISE (SEMPRE EM INGLÊS PARA CONSISTÊNCIA) ---
+                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts for maximum audience retention. Your task is to analyze the provided script and break it down into paragraphs, evaluating each one.
 
-                **Roteiro para Análise:**
+                **Script for Analysis:**
                 ---
                 ${fullScript}
                 ---
 
-                **Instruções:**
-                Para CADA parágrafo do roteiro, você deve:
-                1.  Avaliar seu impacto na retenção.
-                2.  Atribuir um "retentionScore" (uma string: 'green', 'yellow', ou 'red').
-                    - 'green': Gancho forte, altamente engajante.
-                    - 'yellow': Conteúdo necessário, mas pode ser um pouco lento.
-                    - 'red': Risco de queda. Monótono ou confuso.
-                3.  Escrever uma "suggestion" curta e acionável para melhorar o parágrafo. **IMPORTANTE: A sugestão DEVE estar no idioma: '${selectedLanguage}'.**
-                4.  Retornar o "paragraphText" original, sem nenhuma alteração.
+                **Instructions:**
+                For EACH paragraph of the script, you must:
+                1.  Evaluate its impact on retention.
+                2.  Assign a "retentionScore" (a string: 'green', 'yellow', or 'red').
+                3.  Write a short, actionable "suggestion" in English to improve the paragraph.
+                4.  Return the original "paragraphText".
 
-                Responda APENAS com um array JSON. Cada objeto no array deve ter exatamente as chaves: "paragraphText", "retentionScore", e "suggestion".`;
-                // --- FIM DA CORREÇÃO NO PROMPT ---
+                Respond ONLY with a valid JSON array. Each object must have the keys: "paragraphText", "retentionScore", and "suggestion".`;
 
-                const rawResult = await callGroqAPI(prompt, 4000);
-                const cleanedResult = cleanGeneratedText(rawResult, true);
-                if (!cleanedResult) {
-                    throw new Error("A IA não retornou um JSON válido para a análise de retenção.");
+                const rawAnalysisResult = await callGroqAPI(analysisPrompt, 4000);
+                const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
+                let analysis = JSON.parse(cleanedAnalysis);
+
+                // --- INÍCIO DA ETAPA DE TRADUÇÃO ---
+                if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
+                    // Agrupa todas as sugestões em inglês para uma única chamada de tradução
+                    const suggestionsToTranslate = analysis.map(item => item.suggestion);
+                    
+                    const translationPrompt = `Translate the following array of JavaScript strings into the language with the code '${selectedLanguage}'. Maintain the JSON array structure.
+
+                    ["${suggestionsToTranslate.join('", "')}"]`;
+
+                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1000);
+                    const cleanedTranslation = cleanGeneratedText(rawTranslationResult, true);
+                    const translatedSuggestions = JSON.parse(cleanedTranslation);
+
+                    // Re-mapeia a análise original com as sugestões traduzidas
+                    analysis = analysis.map((item, index) => ({
+                        ...item,
+                        suggestion: translatedSuggestions[index] || item.suggestion // Fallback para a original
+                    }));
                 }
-                const analysis = JSON.parse(cleanedResult);
+                // --- FIM DA ETAPA DE TRADUÇÃO ---
 
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
-                    // Mapeia os scores para os rótulos em português
                     const scoreLabels = {
                         green: "PONTO FORTE",
                         yellow: "PONTO DE ATENÇÃO",
