@@ -845,6 +845,51 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
+        /* ========================================================== */
+        /* ======== ESTILOS PARA O CONSULTOR DE RETENÇÃO ======== */
+        /* ========================================================== */
+        .retention-paragraph {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left-width: 4px;
+            transition: background-color 0.2s;
+            color: var(--text-medium); /* <-- ADICIONADO ESTA LINHA */
+        }
+        .dark .retention-paragraph {
+            color: #d1d5db; /* <-- ADICIONADO ESTE BLOCO */
+        }
+
+        .retention-paragraph strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Cores do Mapa de Calor --- */
+        .retention-green {
+            border-left-color: #10B981; /* success-color */
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+        .dark .retention-green {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+        .retention-yellow {
+            border-left-color: #FBBF24; /* Amber-400 */
+            background-color: rgba(251, 191, 36, 0.05);
+        }
+        .dark .retention-yellow {
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+        .retention-red {
+            border-left-color: #EF4444; /* Red-500 */
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        .dark .retention-red {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1519,6 +1564,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
                             
                             <!-- NOVA ÁREA DE ANÁLISE -->
                             <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                <h4 class="font-bold text-base mb-2 text-gray-800 dark:text-gray-200">Consultor de Retenção para esta Seção:</h4>
                                 ${analyzeBtnHtml}
                                 <div class="section-analysis-output mt-3"></div>
                             </div>
@@ -2080,7 +2126,6 @@ The final output MUST be only the JSON code, like this example:
         
         /**
          * Analisa uma seção específica do roteiro, traduz as sugestões e exibe um relatório visual.
-         * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2100,31 +2145,47 @@ The final output MUST be only the JSON code, like this example:
                 const selectedLanguage = elements.languageSelect.value;
                 const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                // --- PROMPT APRIMORADO PARA RETORNAR JSON E TRADUZIR ---
-                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube. Sua tarefa é analisar o seguinte trecho, que corresponde à seção "${sectionTitle}", e dividi-lo em seus parágrafos ou ideias principais para avaliação.
+                // ETAPA 1: Gerar a análise com sugestões em inglês
+                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts for maximum audience retention. Your task is to analyze the provided script section, which is the "${sectionTitle}" of the video, and break it down into its core paragraphs or ideas for evaluation.
 
-                **Trecho para Análise:**
+                **Script Section for Analysis:**
                 ---
                 ${sectionText}
                 ---
 
-                **Instruções:**
-                Para CADA parágrafo ou ideia principal que você identificar, crie um objeto JSON com:
-                1.  **paragraphText**: O texto original do parágrafo.
-                2.  **retentionScore**: Uma string ('green', 'yellow', ou 'red') avaliando o impacto na retenção.
-                3.  **suggestion**: Uma sugestão curta e acionável para melhorar o parágrafo. **A sugestão DEVE estar no idioma: ${languageName}.**
+                **Instructions:**
+                For EACH paragraph you identify, create a JSON object with:
+                1.  **paragraphText**: The original, unaltered text of the paragraph.
+                2.  **retentionScore**: A string ('green', 'yellow', or 'red') rating its retention impact.
+                3.  **suggestion**: A short, actionable suggestion in English to improve it.
 
-                Responda APENAS com um array JSON de objetos.`;
-                // --- FIM DO PROMPT APRIMORADO ---
+                Respond ONLY with a valid JSON array of these objects.`;
 
-                const rawResult = await callGroqAPI(prompt, 2000);
-                const cleanedResult = cleanGeneratedText(rawResult, true);
-                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para a análise.");
-                const analysis = JSON.parse(cleanedResult);
+                const rawAnalysisResult = await callGroqAPI(analysisPrompt, 2500);
+                const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
+                if (!cleanedAnalysis) throw new Error("A IA retornou uma análise em formato inválido.");
+                let analysis = JSON.parse(cleanedAnalysis);
 
+                // ETAPA 2: Traduzir as sugestões se o idioma não for inglês
+                if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
+                    const suggestionsToTranslate = analysis.map(item => item.suggestion);
+                    
+                    const translationPrompt = `Translate this JSON array of English strings into the language '${languageName}' (code: ${selectedLanguage}). Keep the exact JSON array structure.
+
+                    ${JSON.stringify(suggestionsToTranslate)}`;
+
+                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1000);
+                    const cleanedTranslation = cleanGeneratedText(rawTranslationResult, true);
+                    const translatedSuggestions = JSON.parse(cleanedTranslation);
+
+                    analysis.forEach((item, index) => {
+                        item.suggestion = translatedSuggestions[index] || item.suggestion;
+                    });
+                }
+
+                // ETAPA 3: Renderizar o resultado final
                 outputContainer.innerHTML = ''; 
 
-                // A renderização agora usa o mesmo estilo visual do "mapa de calor"
                 analysis.forEach(item => {
                     const scoreLabels = {
                         green: "PONTO FORTE",
@@ -2142,14 +2203,15 @@ The final output MUST be only the JSON code, like this example:
                         red: "bg-red-50 dark:bg-red-900/20 border-red-500"
                     }
 
+                    // --- HTML DO CARD CORRIGIDO ---
                     const analysisCard = `
                         <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
-                            <p class="text-sm">${item.paragraphText}</p>
-                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-600">
-                                <strong class="text-${scoreColors[item.retentionScore] || 'gray-500'}">
+                            <p class="text-sm italic mb-3 text-gray-700 dark:text-gray-300">"${item.paragraphText}"</p>
+                            <div class="pt-2 border-t border-dashed border-gray-300 dark:border-gray-600">
+                                <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">${item.suggestion}</p>
+                                <p class="text-sm mt-1">${item.suggestion}</p>
                             </div>
                         </div>
                     `;
