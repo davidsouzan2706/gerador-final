@@ -2065,7 +2065,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
-         * Gera e reproduz o áudio para uma seção específica do roteiro.
+         * Gera, reproduz e INICIA O DOWNLOAD do áudio para uma seção específica do roteiro.
          * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
          */
         const playSectionAudio = async (sectionId) => {
@@ -2104,8 +2104,28 @@ The final output MUST be only the JSON code, like this example:
                 }
 
                 const { audioBase64 } = await response.json();
-                audioPlayer.src = `data:audio/mpeg;base64,${audioBase64}`;
+                const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
+                
+                // Ação 1: Reproduzir o áudio
+                audioPlayer.src = audioUrl;
                 audioPlayer.play();
+
+                // --- INÍCIO DA NOVA LÓGICA DE DOWNLOAD ---
+                // Ação 2: Iniciar o download do arquivo de áudio
+                const downloadLink = document.createElement('a');
+                downloadLink.href = audioUrl;
+                
+                // Cria um nome de arquivo inteligente
+                const sectionTitle = sectionElement.querySelector('h3')?.textContent.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || sectionId;
+                const fileName = `${sectionTitle}_audio.mp3`;
+                downloadLink.download = fileName;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+                // --- FIM DA NOVA LÓGICA DE DOWNLOAD ---
+
+                window.showToast(`Reproduzindo e baixando áudio de "${sectionElement.querySelector('h3')?.textContent || 'seção'}"!`);
 
             } catch (error) {
                 window.showToast(error.message);
