@@ -2033,7 +2033,7 @@ The final output MUST be only the JSON code, like this example:
          * @throws {Error} Se a chamada à API falhar.
          */
         const callGroqAPI = async (prompt, maxTokens) => {
-            const proxyUrl = "/.netlify/functions/groq"; // Endpoint do proxy
+            const proxyUrl = "/.netlify/functions/groq";
 
             const payload = {
                 prompt: prompt,
@@ -2048,10 +2048,18 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const response = await fetch(proxyUrl, request);
+
+                // --- INÍCIO DA CORREÇÃO DE ERRO ---
                 if (!response.ok) {
+                    // Detecta especificamente o erro de Rate Limit
+                    if (response.status === 429) {
+                        throw new Error("Limite de requisições atingido. Por favor, aguarde um minuto e tente novamente.");
+                    }
                     const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
-                    throw new Error(`Erro na API via Proxy: ${errorData.error?.message || 'Erro do servidor'}`);
+                    throw new Error(`Erro na API via Proxy: ${errorData.error?.message || `Erro do Servidor (${response.status})`}`);
                 }
+                // --- FIM DA CORREÇÃO DE ERRO ---
+
                 const result = await response.json();
                 const rawContent = result.choices?.[0]?.message?.content;
                 if (rawContent) { return rawContent; }
