@@ -845,6 +845,35 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
+
+        /* ========================================================== */
+        /* ================ ESTILO DO BOTÃO "OUVIR" ================= */
+        /* ========================================================== */
+        .listen-btn {
+            background-color: transparent;
+            color: var(--text-medium);
+            border: 1px solid var(--border-light);
+            padding: 0.4rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dark .listen-btn {
+            color: #9ca3af;
+            border-color: #4b5563;
+        }
+        .listen-btn:hover {
+            background-color: var(--bg-light);
+        }
+        .dark .listen-btn:hover {
+            background-color: #374151;
+        }
+        .listen-btn svg.animate-spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1156,6 +1185,9 @@
         </div>
     </div>
 
+    <!-- Player de Áudio Global para Pré-visualização -->
+    <audio id="audioPlayer" style="display: none;"></audio>
+    
     <script type="module">
         // ==========================================================
         // ==================== SETUP INICIAL =======================
@@ -1432,11 +1464,14 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         const generateSectionHtmlContent = (sectionId, title, content) => {
             const mainBodyId = `${sectionId}Body`;
             const mainArrowId = `${sectionId}Arrow`;
-            
             const promptsBodyId = `promptsBody-${sectionId}`;
             const promptsArrowId = `promptsArrow-${sectionId}`;
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
+
+            const listenBtnHtml = `<button class="listen-btn" onclick="event.stopPropagation(); playSectionAudio('${sectionId}')" title="Ouvir prévia da narração">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            </button>`;
 
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
@@ -1444,7 +1479,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
             
-            const headerButtonsHtml = `${regenerateBtnHtml} ${copyBtnHtml}`;
+            const headerButtonsHtml = `${listenBtnHtml} ${regenerateBtnHtml} ${copyBtnHtml}`;
 
             const promptsSectionHtml = `
                 <div class="section-prompts">
@@ -2028,6 +2063,59 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
+
+        /**
+         * Gera e reproduz o áudio para uma seção específica do roteiro.
+         * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
+         */
+        const playSectionAudio = async (sectionId) => {
+            const sectionElement = document.getElementById(sectionId);
+            const button = sectionElement.querySelector('.listen-btn');
+            const icon = button.querySelector('svg');
+            const originalIconHTML = icon.innerHTML;
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            // Para o áudio atual se um novo for solicitado
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+            }
+
+            const textToSpeak = sectionElement.querySelector('.generated-content-wrapper')?.textContent;
+            if (!textToSpeak) {
+                window.showToast("Não há texto para ouvir nesta seção.");
+                return;
+            }
+
+            icon.innerHTML = `<path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>`;
+            icon.classList.add('animate-spin');
+            button.disabled = true;
+
+            try {
+                const response = await fetch('/.netlify/functions/gemini-tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ textToSpeak })
+                });
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Falha ao gerar o áudio.');
+                }
+
+                const { audioBase64 } = await response.json();
+                audioPlayer.src = `data:audio/mpeg;base64,${audioBase64}`;
+                audioPlayer.play();
+
+            } catch (error) {
+                window.showToast(error.message);
+                console.error("Erro na reprodução de áudio:", error);
+            } finally {
+                icon.classList.remove('animate-spin');
+                icon.innerHTML = originalIconHTML;
+                button.disabled = false;
+            }
+        };
 
         /**
          * Lida com a geração de uma secção específica do roteiro.
@@ -2733,7 +2821,7 @@ ${scriptContent}
             downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
-            document.body.removeChild(downloadAnchorNode);
+            downloadAnchorNode.remove();
             window.showToast("Projeto exportado com sucesso!");
         };
 
@@ -2857,7 +2945,7 @@ ${scriptContent}
         /**
 	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
          */
-	const analyzeAndSetStrategy = async () => {
+        const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
             const description = elements.videoDescription.value.trim();
 
@@ -2866,44 +2954,47 @@ ${scriptContent}
                 return;
             }
             
+            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
             resetApplicationState();
+            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
             elements.videoTheme.value = theme;
             elements.videoDescription.value = description;
-
+            
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
+            // Opções válidas para cada campo
+            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            const narrativeToneOptions = Array.from(document.getElementById('narrativeTone').options).map(o => o.value).join(', ');
+            
+            // Agrega todas as opções de estrutura para o prompt
             const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
             const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia completa.
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
 
             Tema do Vídeo: "${theme}"
             Descrição: "${description}"
 
             Responda APENAS com um objeto JSON válido com as seguintes chaves:
             1. "target_audience": (string) O público-alvo ideal.
-            2. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
-            3. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
-            4. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
-            5. "central_question": (string) A pergunta central mais intrigante.
-            6. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
-            7. "narrative_theme": (string) A "grande ideia" ou tema central da história (Ex: Superação, Injustiça, Inovação).
-            8. "narrative_tone": (string) O tom mais apropriado para a narração. DEVE SER um valor EXATO da lista: [${narrativeToneOptions}].
-            9. "narrative_voice": (string) A personalidade do narrador (Ex: Sábio e experiente, Jovem e cético).
+            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
+            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
+            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
+            6. "central_question": (string) A pergunta central mais intrigante.
+            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
             
             Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 2000);
+                const rawResult = await callGroqAPI(prompt, 1500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
-                // Preenchimento dos campos
+                // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
-                
+                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
                     const returnedValue = strategy.video_objective.trim();
@@ -2911,28 +3002,18 @@ ${scriptContent}
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
+                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
                 
-                // --- INÍCIO DA LÓGICA CORRIGIDA ---
-                // 1. Define o objetivo da narrativa primeiro
-                if (strategy.narrative_goal) {
-                    document.getElementById('narrativeGoal').value = strategy.narrative_goal;
+                // Preenche os novos seletores de narrativa
+                if(strategy.narrative_goal) {
+                    elements.narrativeGoal.value = strategy.narrative_goal;
+                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
                 }
-                
-                // 2. CHAMA a função que popula o segundo dropdown com base no primeiro
-                updateNarrativeStructureOptions();
-                
-                // 3. AGORA, com as opções corretas carregadas, define a estrutura sugerida
-                if (strategy.narrative_structure) {
-                    document.getElementById('narrativeStructure').value = strategy.narrative_structure;
-                }
-                // --- FIM DA LÓGICA CORRIGIDA ---
+                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
 
-                if(strategy.narrative_theme) document.getElementById('narrativeTheme').value = strategy.narrative_theme;
-                if(strategy.narrative_tone) document.getElementById('narrativeTone').value = strategy.narrative_tone;
-                if(strategy.narrative_voice) document.getElementById('narrativeVoice').value = strategy.narrative_voice;
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
@@ -2942,6 +3023,7 @@ ${scriptContent}
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
+                // Restaura os valores em caso de erro para o usuário não perder o que digitou
                 elements.videoTheme.value = theme;
                 elements.videoDescription.value = description;
             } finally {
@@ -3050,6 +3132,7 @@ ${scriptContent}
             elements.progressText = document.getElementById('progressText');
             elements.projectDashboard = document.getElementById('projectDashboard'); 
             elements.outlineContent = document.getElementById('outlineContent'); 
+            elements.audioPlayer = document.getElementById('audioPlayer'); // Referência ao player de áudio
 
             // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
 
