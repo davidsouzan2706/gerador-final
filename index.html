@@ -2079,7 +2079,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção específica do roteiro e exibe o feedback.
+         * Analisa uma seção específica do roteiro, traduz as sugestões e exibe um relatório visual.
          * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
          */
         window.analyzeSectionRetention = async (sectionId) => {
@@ -2100,32 +2100,61 @@ The final output MUST be only the JSON code, like this example:
                 const selectedLanguage = elements.languageSelect.value;
                 const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube. Analise o seguinte trecho de roteiro, que corresponde à seção "${sectionTitle}".
+                // --- PROMPT APRIMORADO PARA RETORNAR JSON E TRADUZIR ---
+                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube. Sua tarefa é analisar o seguinte trecho, que corresponde à seção "${sectionTitle}", e dividi-lo em seus parágrafos ou ideias principais para avaliação.
 
                 **Trecho para Análise:**
                 ---
                 ${sectionText}
                 ---
 
-                **Sua Tarefa:**
-                Com base no fato de que esta é a seção de "${sectionTitle}", forneça um feedback conciso e acionável.
-                - Se a seção for a "Introdução", foque em quão forte é o gancho.
-                - Se for o "Desenvolvimento", foque no ritmo e na construção da tensão.
-                - Se for o "Clímax", foque no impacto emocional e na clareza da revelação.
-                - Se for a "Conclusão" ou "CTA", foque em quão satisfatório é o fechamento e quão clara é a chamada para ação.
+                **Instruções:**
+                Para CADA parágrafo ou ideia principal que você identificar, crie um objeto JSON com:
+                1.  **paragraphText**: O texto original do parágrafo.
+                2.  **retentionScore**: Uma string ('green', 'yellow', ou 'red') avaliando o impacto na retenção.
+                3.  **suggestion**: Uma sugestão curta e acionável para melhorar o parágrafo. **A sugestão DEVE estar no idioma: ${languageName}.**
 
-                **Responda com sua análise diretamente como texto, no idioma: ${languageName}.**`;
+                Responda APENAS com um array JSON de objetos.`;
+                // --- FIM DO PROMPT APRIMORADO ---
 
-                const rawResult = await callGroqAPI(prompt, 500);
-                const feedback = removeMetaComments(rawResult);
+                const rawResult = await callGroqAPI(prompt, 2000);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                if (!cleanedResult) throw new Error("A IA não retornou um JSON válido para a análise.");
+                const analysis = JSON.parse(cleanedResult);
 
-                // Exibe o feedback em um card estilizado
-                outputContainer.innerHTML = `
-                    <div class="p-3 bg-indigo-50 dark:bg-gray-700 rounded-lg">
-                        <p class="text-sm font-semibold text-indigo-800 dark:text-indigo-300">Análise do Consultor:</p>
-                        <p class="text-sm mt-1">${feedback}</p>
-                    </div>
-                `;
+                outputContainer.innerHTML = ''; 
+
+                // A renderização agora usa o mesmo estilo visual do "mapa de calor"
+                analysis.forEach(item => {
+                    const scoreLabels = {
+                        green: "PONTO FORTE",
+                        yellow: "PONTO DE ATENÇÃO",
+                        red: "PONTO DE RISCO"
+                    };
+                    const scoreColors = {
+                        green: "green-500",
+                        yellow: "yellow-400",
+                        red: "red-500"
+                    };
+                    const bgColorClasses = {
+                        green: "bg-green-50 dark:bg-green-900/20 border-green-500",
+                        yellow: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400",
+                        red: "bg-red-50 dark:bg-red-900/20 border-red-500"
+                    }
+
+                    const analysisCard = `
+                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                            <p class="text-sm">${item.paragraphText}</p>
+                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-600">
+                                <strong class="text-${scoreColors[item.retentionScore] || 'gray-500'}">
+                                    ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
+                                </strong>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">${item.suggestion}</p>
+                            </div>
+                        </div>
+                    `;
+                    outputContainer.innerHTML += analysisCard;
+                });
 
             } catch (error) {
                 outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar a seção: ${error.message}</p>`;
