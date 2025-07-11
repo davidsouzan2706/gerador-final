@@ -993,7 +993,7 @@
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace" class="card-background">
                         <option value="moderate" selected>Moderado</option>
-                        <option value="slow">Lento</option>
+                        <option value="slow">Lento</m>
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
@@ -1038,6 +1038,38 @@
             <div class="input-group md:col-span-1">
                 <label for="narrativeVoice">5. Voz do Narrador (a personalidade):</label>
                 <input type="text" id="narrativeVoice" class="card-background" placeholder="Ex: Sábio e experiente, Jovem e cético, Apaixonado e enérgico...">
+            </div>
+            <!-- ========================================================== -->
+            <!-- === NOVO MÓDULO: CONTROLES DE ÁUDIO (VOZ E ESTILO) === -->
+            <!-- ========================================================== -->
+            <div class="input-group md:col-span-1">
+                <label for="audioVoice">6. Voz para Narração:</label>
+                <select id="audioVoice" class="card-background">
+                    <option value="pt-BR-Wavenet-B" selected>Feminina 1 (Português)</option>
+                    <option value="pt-BR-Wavenet-C">Feminina 2 (Português)</option>
+                    <option value="pt-BR-Wavenet-D">Masculina 1 (Português)</option>
+                    <option value="en-US-Wavenet-J">Feminina (Inglês)</option>
+                    <option value="en-US-Wavenet-D">Masculina (Inglês)</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-1">
+                <div class="flex items-center gap-2">
+                    <label for="audioStyle">7. Estilo da Voz (Temperatura):</label>
+                    <span class="tooltip card-background" data-tooltip="Define o quão 'criativa' ou 'certinha' a voz deve ser.
+
+0.5 (Mais Robótica): Precisa e consistente, mas menos expressiva.
+
+0.7 (Equilibrada): Bom balanço entre naturalidade e consistência. (Padrão)
+
+1.0 (Mais Criativa): Mais expressiva e com variações, mas pode soar menos previsível.">
+                        (?)
+                    </span>
+                </div>
+                <select id="audioStyle" class="card-background">
+                    <option value="0.5">Precisa / Robótica</option>
+                    <option value="0.7" selected>Equilibrada (Padrão)</option>
+                    <option value="1.0">Criativa / Expressiva</option>
+                </select>
             </div>
             
             <div class="input-group md:col-span-2">
@@ -2065,8 +2097,8 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
-         * Gera, reproduz e INICIA O DOWNLOAD do áudio para uma seção específica do roteiro.
-         * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
+         * Gera, reproduz e inicia o download do áudio para uma seção específica do roteiro,
+         * usando as configurações de voz e estilo definidas pelo usuário.
          */
         const playSectionAudio = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2075,7 +2107,6 @@ The final output MUST be only the JSON code, like this example:
             const originalIconHTML = icon.innerHTML;
             const audioPlayer = document.getElementById('audioPlayer');
 
-            // Para o áudio atual se um novo for solicitado
             if (!audioPlayer.paused) {
                 audioPlayer.pause();
                 audioPlayer.currentTime = 0;
@@ -2092,11 +2123,16 @@ The final output MUST be only the JSON code, like this example:
             button.disabled = true;
 
             try {
+                // --- LEITURA DOS NOVOS CONTROLES ---
+                const voiceName = document.getElementById('audioVoice').value;
+                const audioTemp = parseFloat(document.getElementById('audioStyle').value);
+
                 const response = await fetch('/.netlify/functions/gemini-tts', {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textToSpeak })
+                    body: JSON.stringify({ textToSpeak, voiceName, audioTemp })
                 });
+                // --- FIM DA MODIFICAÇÃO ---
 
                 if (!response.ok) {
                     const errorData = await response.json();
@@ -2106,16 +2142,11 @@ The final output MUST be only the JSON code, like this example:
                 const { audioBase64 } = await response.json();
                 const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
                 
-                // Ação 1: Reproduzir o áudio
                 audioPlayer.src = audioUrl;
                 audioPlayer.play();
 
-                // --- INÍCIO DA NOVA LÓGICA DE DOWNLOAD ---
-                // Ação 2: Iniciar o download do arquivo de áudio
                 const downloadLink = document.createElement('a');
                 downloadLink.href = audioUrl;
-                
-                // Cria um nome de arquivo inteligente
                 const sectionTitle = sectionElement.querySelector('h3')?.textContent.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || sectionId;
                 const fileName = `${sectionTitle}_audio.mp3`;
                 downloadLink.download = fileName;
@@ -2123,7 +2154,6 @@ The final output MUST be only the JSON code, like this example:
                 document.body.appendChild(downloadLink);
                 downloadLink.click();
                 document.body.removeChild(downloadLink);
-                // --- FIM DA NOVA LÓGICA DE DOWNLOAD ---
 
                 window.showToast(`Reproduzindo e baixando áudio de "${sectionElement.querySelector('h3')?.textContent || 'seção'}"!`);
 
@@ -2767,6 +2797,9 @@ ${scriptContent}
             elements.narrativeTheme.value = '';
             elements.narrativeTone.value = 'inspirador';
             elements.narrativeVoice.value = '';
+            // Resetar os novos campos de áudio
+            elements.audioVoice.value = 'pt-BR-Wavenet-B';
+            elements.audioStyle.value = '0.7';
 
             // Limpa todas as variáveis de estado globais
             strategicOutline = null;
@@ -3165,6 +3198,8 @@ ${scriptContent}
             elements.narrativeTheme = document.getElementById('narrativeTheme');
             elements.narrativeTone = document.getElementById('narrativeTone');
             elements.narrativeVoice = document.getElementById('narrativeVoice');
+            elements.audioVoice = document.getElementById('audioVoice');
+            elements.audioStyle = document.getElementById('audioStyle');
             // --- FIM DAS LINHAS A SEREM ADICIONADAS ---
 
             // Listener para o seletor de objetivo
