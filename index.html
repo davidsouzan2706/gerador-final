@@ -845,6 +845,35 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
+
+        /* ========================================================== */
+        /* ================ ESTILO DO BOTÃO "OUVIR" ================= */
+        /* ========================================================== */
+        .listen-btn {
+            background-color: transparent;
+            color: var(--text-medium);
+            border: 1px solid var(--border-light);
+            padding: 0.4rem;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .dark .listen-btn {
+            color: #9ca3af;
+            border-color: #4b5563;
+        }
+        .listen-btn:hover {
+            background-color: var(--bg-light);
+        }
+        .dark .listen-btn:hover {
+            background-color: #374151;
+        }
+        .listen-btn svg.animate-spin {
+            animation: spin 1s linear infinite;
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -878,6 +907,38 @@
     </div>
 
     <div class="container relative">
+        <!-- ========================================================== -->
+        <!-- ===== NOVO MÓDULO: GERADOR E VALIDADOR DE IDEIAS ===== -->
+        <!-- ========================================================== -->
+        <div id="ideaGeneratorSection" class="mb-12 p-6 card-background rounded-lg border-2 border-dashed border-indigo-300 dark:border-indigo-800">
+            <h2 class="text-2xl font-bold text-center mb-2 text-gray-800 dark:text-gray-200">Precisa de Inspiração?</h2>
+            <p class="text-center text-gray-500 dark:text-gray-400 mb-6">Comece por aqui. Descreva o nicho ou os temas gerais do seu canal e deixe a IA sugerir vídeos com alto potencial.</p>
+
+            <div class="input-group">
+                <label for="nicheDescription">Nicho do Canal ou Temas de Interesse:</label>
+                <textarea id="nicheDescription" rows="3" class="card-background" placeholder="Ex: Arqueologia Bíblica e mistérios não resolvidos; Finanças pessoais para jovens cristãos; Análise de sermões e teologia prática..."></textarea>
+            </div>
+
+            <div class="flex justify-center mt-4">
+                <button id="generateIdeasBtn" class="btn btn-primary w-full md:w-1/2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M8 1a7 7 0 0 1 7 7c0 1.503-.473 2.883-1.283 4.043-.16.185-.33.364-.504.536l.328.328a.5.5 0 0 1 0 .707l-.707.707a.5.5 0 0 1-.707 0l-1.92-1.92a.5.5 0 0 1 0-.707l.328-.328c-.172-.174-.35-.355-.536-.504A6.98 6.98 0 0 1 1 8a7 7 0 0 1 7-7zm0 1a6 6 0 1 0 0 12A6 6 0 0 0 8 2z"/><path d="M8 4.25a.75.75 0 0 1 .75.75v1.25a.75.75 0 0 1-1.5 0V5a.75.75 0 0 1 .75-.75zM8.5 8a.5.5 0 0 0-1 0v2.5a.5.5 0 0 0 1 0V8z"/></svg>
+                    <span class="button-text">Gerar Ideias de Vídeo</span>
+                    <div class="loading-spinner hidden"></div>
+                </button>
+            </div>
+
+            <!-- Área de Saída para as Ideias Geradas -->
+            <div id="ideasOutput" class="mt-8 space-y-4">
+                <!-- Os cartões de ideia serão injetados aqui -->
+            </div>
+        </div>
+        <!-- Divisória para separar as seções -->
+        <div class="relative flex py-5 items-center">
+            <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+            <span class="flex-shrink mx-4 text-gray-400 dark:text-gray-500 font-semibold">OU COMECE DIRETAMENTE AQUI</span>
+            <div class="flex-grow border-t border-gray-300 dark:border-gray-600"></div>
+        </div>
+        
         <div class="absolute top-4 right-4 flex items-center gap-2 z-[1001]">
             <button id="toggleZenModeBtn" class="p-2 rounded-full focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 text-gray-500 dark:text-gray-400" title="Modo Foco">
                 <svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M1.5 1a.5.5 0 0 0-.5.5v4a.5.5 0 0 1-1 0v-4A1.5 1.5 0 0 1 1.5 0h4a.5.5 0 0 1 0 1h-4zM10 .5a.5.5 0 0 1 .5-.5h4A1.5 1.5 0 0 1 16 1.5v4a.5.5 0 0 1-1 0v-4a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 1-.5-.5zM.5 10a.5.5 0 0 1 .5.5v4a.5.5 0 0 0 .5.5h4a.5.5 0 0 1 0 1h-4A1.5 1.5 0 0 1 0 14.5v-4a.5.5 0 0 1 .5-.5zm15 0a.5.5 0 0 1 .5.5v4a1.5 1.5 0 0 1-1.5 1.5h-4a.5.5 0 0 1 0-1h4a.5.5 0 0 0 .5-.5v-4a.5.5 0 0 1 .5-.5z"/><path d="M3 14.5a1.5 1.5 0 0 1-1.5-1.5V3a1.5 1.5 0 0 1 1.5-1.5h10A1.5 1.5 0 0 1 14.5 3v10a1.5 1.5 0 0 1-1.5 1.5H3zM4 3v10h8V3H4z"/></svg>
@@ -964,7 +1025,7 @@
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace" class="card-background">
                         <option value="moderate" selected>Moderado</option>
-                        <option value="slow">Lento</option>
+                        <option value="slow">Lento</m>
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
@@ -1009,6 +1070,38 @@
             <div class="input-group md:col-span-1">
                 <label for="narrativeVoice">5. Voz do Narrador (a personalidade):</label>
                 <input type="text" id="narrativeVoice" class="card-background" placeholder="Ex: Sábio e experiente, Jovem e cético, Apaixonado e enérgico...">
+            </div>
+            <!-- ========================================================== -->
+            <!-- === NOVO MÓDULO: CONTROLES DE ÁUDIO (VOZ E ESTILO) === -->
+            <!-- ========================================================== -->
+            <div class="input-group md:col-span-1">
+                <label for="audioVoice">6. Voz para Narração:</label>
+                <select id="audioVoice" class="card-background">
+                    <option value="pt-BR-Wavenet-B" selected>Feminina 1 (Português)</option>
+                    <option value="pt-BR-Wavenet-C">Feminina 2 (Português)</option>
+                    <option value="pt-BR-Wavenet-D">Masculina 1 (Português)</option>
+                    <option value="en-US-Wavenet-J">Feminina (Inglês)</option>
+                    <option value="en-US-Wavenet-D">Masculina (Inglês)</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-1">
+                <div class="flex items-center gap-2">
+                    <label for="audioStyle">7. Estilo da Voz (Temperatura):</label>
+                    <span class="tooltip card-background" data-tooltip="Define o quão 'criativa' ou 'certinha' a voz deve ser.
+
+0.5 (Mais Robótica): Precisa e consistente, mas menos expressiva.
+
+0.7 (Equilibrada): Bom balanço entre naturalidade e consistência. (Padrão)
+
+1.0 (Mais Criativa): Mais expressiva e com variações, mas pode soar menos previsível.">
+                        (?)
+                    </span>
+                </div>
+                <select id="audioStyle" class="card-background">
+                    <option value="0.5">Precisa / Robótica</option>
+                    <option value="0.7" selected>Equilibrada (Padrão)</option>
+                    <option value="1.0">Criativa / Expressiva</option>
+                </select>
             </div>
             
             <div class="input-group md:col-span-2">
@@ -1156,6 +1249,9 @@
         </div>
     </div>
 
+    <!-- Player de Áudio Global para Pré-visualização -->
+    <audio id="audioPlayer" style="display: none;"></audio>
+    
     <script type="module">
         // ==========================================================
         // ==================== SETUP INICIAL =======================
@@ -1432,11 +1528,14 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         const generateSectionHtmlContent = (sectionId, title, content) => {
             const mainBodyId = `${sectionId}Body`;
             const mainArrowId = `${sectionId}Arrow`;
-            
             const promptsBodyId = `promptsBody-${sectionId}`;
             const promptsArrowId = `promptsArrow-${sectionId}`;
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
+
+            const listenBtnHtml = `<button class="listen-btn" onclick="event.stopPropagation(); playSectionAudio('${sectionId}')" title="Ouvir prévia da narração">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
+            </button>`;
 
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
@@ -1444,7 +1543,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
             
-            const headerButtonsHtml = `${regenerateBtnHtml} ${copyBtnHtml}`;
+            const headerButtonsHtml = `${listenBtnHtml} ${regenerateBtnHtml} ${copyBtnHtml}`;
 
             const promptsSectionHtml = `
                 <div class="section-prompts">
@@ -1646,7 +1745,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const videoObjective = elements.videoObjective.value;
             const videoDuration = elements.videoDuration.value;
             const speakingPace = elements.speakingPace.value;
-            const narrativeStructure = document.getElementById('narrativeStructure').value;
+            const narrativeStructure = elements.narrativeStructure.value; // Corrected to use elements.narrativeStructure
             
             // --- INÍCIO DA LEITURA DOS NOVOS CAMPOS ---
             const narrativeTheme = document.getElementById('narrativeTheme').value.trim();
@@ -1719,7 +1818,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const baseContext = getBasePromptContext();
             const videoDuration = elements.videoDuration.value;
             const selectedLanguage = elements.languageSelect.value;
-            const narrativeStyle = document.getElementById('narrativeStructure').value; 
+            const narrativeStyle = elements.narrativeStructure.value; // Corrected to use elements.narrativeStructure
 
             let prompt = `${baseContext}
 
@@ -2030,6 +2129,151 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
+         * Gera e valida ideias de vídeo com base no nicho fornecido.
+         */
+        const generateVideoIdeas = async () => {
+            const nicheDescription = elements.nicheDescription.value.trim();
+            if (!nicheDescription) {
+                window.showToast("Por favor, descreva o nicho do seu canal.");
+                return;
+            }
+
+            const button = elements.generateIdeasBtn;
+            const outputContainer = elements.ideasOutput;
+            outputContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`;
+            showLoading(button);
+
+            try {
+                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Sua tarefa é analisar a descrição de um nicho e gerar 5 ideias de vídeo com alto potencial de engajamento.
+
+                **Nicho/Descrição:** "${nicheDescription}"
+
+                Para cada ideia, você deve fornecer:
+                1.  **title:** Um título "clickbait" mas inteligente, que gere curiosidade.
+                2.  **angle:** O ângulo ou abordagem única que torna este vídeo diferente dos outros sobre o mesmo tema.
+                3.  **targetAudience:** O público-alvo específico que esta ideia mais atrairia.
+                4.  **viralityScore:** Uma nota de 0 a 10 sobre o potencial de viralidade, baseada na combinação de curiosidade, polêmica, utilidade e apelo emocional.
+                5.  **videoDescription:** Uma descrição curta e otimizada para o YouTube, que servirá de base para o roteiro.
+
+                Responda APENAS com um array JSON. Cada objeto no array deve conter exatamente as chaves acima.`;
+
+                const rawResult = await callGroqAPI(prompt, 4000);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const ideas = JSON.parse(cleanedResult);
+
+                outputContainer.innerHTML = ''; // Limpa o loading
+
+                ideas.forEach((idea, index) => {
+                    const ideaCard = `
+                        <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in">
+                            <h4 class="font-bold text-lg text-gray-800 dark:text-gray-200">${index + 1}. ${idea.title}</h4>
+                            <p class="text-sm mt-2"><strong>Ângulo Único:</strong> ${idea.angle}</p>
+                            <p class="text-sm mt-1"><strong>Público-Alvo:</strong> ${idea.targetAudience}</p>
+                            <p class="text-sm mt-1"><strong>Potencial de Viralidade:</strong> <span class="font-bold text-indigo-500">${idea.viralityScore} / 10</span></p>
+                            <div class="mt-4 flex justify-end">
+                                <button class="btn btn-primary btn-small" onclick="window.selectIdea(${JSON.stringify(idea).replace(/"/g, '&quot;')})">
+                                    Usar esta Ideia
+                                </button>
+                            </div>
+                        </div>
+                    `;
+                    outputContainer.innerHTML += ideaCard;
+                });
+
+            } catch (error) {
+                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar ideias: ${error.message}</p>`;
+            } finally {
+                hideLoading(button);
+            }
+        };
+    
+        /**
+         * Preenche os campos do formulário principal com a ideia selecionada.
+         * @param {object} idea - O objeto da ideia contendo título, descrição, etc.
+         */
+        window.selectIdea = (idea) => {
+            elements.videoTheme.value = idea.title;
+            elements.videoDescription.value = idea.videoDescription;
+            elements.targetAudience.value = idea.targetAudience;
+
+            // Rola suavemente para o painel principal
+            document.getElementById('mainInputsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
+            
+            window.showToast("Ideia selecionada! Agora defina a estratégia completa.");
+        };
+
+        /**
+         * Gera, reproduz e inicia o download do áudio para uma seção específica do roteiro,
+         * usando as configurações de voz e estilo definidas pelo usuário.
+         */
+        const playSectionAudio = async (sectionId) => {
+            const sectionElement = document.getElementById(sectionId);
+            const button = sectionElement.querySelector('.listen-btn');
+            const icon = button.querySelector('svg');
+            const originalIconHTML = icon.innerHTML;
+            const audioPlayer = document.getElementById('audioPlayer');
+
+            if (!audioPlayer.paused) {
+                audioPlayer.pause();
+                audioPlayer.currentTime = 0;
+            }
+
+            const textToSpeak = sectionElement.querySelector('.generated-content-wrapper')?.textContent;
+            if (!textToSpeak) {
+                window.showToast("Não há texto para ouvir nesta seção.");
+                return;
+            }
+
+            icon.innerHTML = `<path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>`;
+            icon.classList.add('animate-spin');
+            button.disabled = true;
+
+            try {
+                // --- LEITURA DOS NOVOS CONTROLES DA INTERFACE ---
+                const voiceName = document.getElementById('audioVoice').value;
+                const audioTemp = parseFloat(document.getElementById('audioStyle').value);
+
+                const response = await fetch('/.netlify/functions/gemini-tts', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ textToSpeak, voiceName, audioTemp })
+                });
+                // --- FIM DA MODIFICAÇÃO ---
+
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.error || 'Falha ao gerar o áudio.');
+                }
+
+                const { audioBase64 } = await response.json();
+                const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
+                
+                audioPlayer.src = audioUrl;
+                audioPlayer.play();
+
+                const downloadLink = document.createElement('a');
+                downloadLink.href = audioUrl;
+                const sectionTitle = sectionElement.querySelector('h3')?.textContent.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || sectionId;
+                const fileName = `${sectionTitle}_audio.mp3`;
+                downloadLink.download = fileName;
+                
+                document.body.appendChild(downloadLink);
+                downloadLink.click();
+                document.body.removeChild(downloadLink);
+
+                window.showToast(`Reproduzindo e baixando áudio de "${sectionElement.querySelector('h3')?.textContent || 'seção'}"!`);
+
+            } catch (error) {
+                window.showToast(error.message);
+                console.error("Erro na reprodução de áudio:", error);
+            } finally {
+                icon.classList.remove('animate-spin');
+                icon.innerHTML = originalIconHTML;
+                button.disabled = false;
+            }
+        };
+
+        /**
          * Lida com a geração de uma secção específica do roteiro.
          * @param {HTMLElement} button - O botão que acionou a geração.
          * @param {string} sectionName - O nome da secção (ex: 'intro').
@@ -2122,7 +2366,7 @@ The final output MUST be only the JSON code, like this example:
             }
 
             const scriptContent = scriptContentElement.textContent;
-            promptContainer.innerHTML = `<div class="loading-spinner-small"></div>`;
+            promptContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`;
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
@@ -2659,6 +2903,13 @@ ${scriptContent}
             elements.narrativeTheme.value = '';
             elements.narrativeTone.value = 'inspirador';
             elements.narrativeVoice.value = '';
+            // Resetar os novos campos de áudio
+            elements.audioVoice.value = 'pt-BR-Wavenet-B';
+            elements.audioStyle.value = '0.7';
+            // Resetar os novos campos do gerador de ideias
+            elements.nicheDescription.value = '';
+            elements.ideasOutput.innerHTML = '';
+
 
             // Limpa todas as variáveis de estado globais
             strategicOutline = null;
@@ -2733,7 +2984,7 @@ ${scriptContent}
             downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
-            document.body.removeChild(downloadAnchorNode);
+            downloadAnchorNode.remove();
             window.showToast("Projeto exportado com sucesso!");
         };
 
@@ -2857,7 +3108,7 @@ ${scriptContent}
         /**
 	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
          */
-	const analyzeAndSetStrategy = async () => {
+        const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
             const description = elements.videoDescription.value.trim();
 
@@ -2866,44 +3117,47 @@ ${scriptContent}
                 return;
             }
             
+            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
             resetApplicationState();
+            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
             elements.videoTheme.value = theme;
             elements.videoDescription.value = description;
-
+            
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
+            // Opções válidas para cada campo
+            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            const narrativeToneOptions = Array.from(document.getElementById('narrativeTone').options).map(o => o.value).join(', ');
+            
+            // Agrega todas as opções de estrutura para o prompt
             const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
             const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia completa.
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
 
             Tema do Vídeo: "${theme}"
             Descrição: "${description}"
 
             Responda APENAS com um objeto JSON válido com as seguintes chaves:
             1. "target_audience": (string) O público-alvo ideal.
-            2. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
-            3. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
-            4. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
-            5. "central_question": (string) A pergunta central mais intrigante.
-            6. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
-            7. "narrative_theme": (string) A "grande ideia" ou tema central da história (Ex: Superação, Injustiça, Inovação).
-            8. "narrative_tone": (string) O tom mais apropriado para a narração. DEVE SER um valor EXATO da lista: [${narrativeToneOptions}].
-            9. "narrative_voice": (string) A personalidade do narrador (Ex: Sábio e experiente, Jovem e cético).
+            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
+            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
+            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
+            6. "central_question": (string) A pergunta central mais intrigante.
+            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
             
             Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 2000);
+                const rawResult = await callGroqAPI(prompt, 1500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
-                // Preenchimento dos campos
+                // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
-                
+                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
                     const returnedValue = strategy.video_objective.trim();
@@ -2911,28 +3165,18 @@ ${scriptContent}
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
+                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
                 
-                // --- INÍCIO DA LÓGICA CORRIGIDA ---
-                // 1. Define o objetivo da narrativa primeiro
-                if (strategy.narrative_goal) {
-                    document.getElementById('narrativeGoal').value = strategy.narrative_goal;
+                // Preenche os novos seletores de narrativa
+                if(strategy.narrative_goal) {
+                    elements.narrativeGoal.value = strategy.narrative_goal;
+                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
                 }
-                
-                // 2. CHAMA a função que popula o segundo dropdown com base no primeiro
-                updateNarrativeStructureOptions();
-                
-                // 3. AGORA, com as opções corretas carregadas, define a estrutura sugerida
-                if (strategy.narrative_structure) {
-                    document.getElementById('narrativeStructure').value = strategy.narrative_structure;
-                }
-                // --- FIM DA LÓGICA CORRIGIDA ---
+                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
 
-                if(strategy.narrative_theme) document.getElementById('narrativeTheme').value = strategy.narrative_theme;
-                if(strategy.narrative_tone) document.getElementById('narrativeTone').value = strategy.narrative_tone;
-                if(strategy.narrative_voice) document.getElementById('narrativeVoice').value = strategy.narrative_voice;
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
 
@@ -2942,6 +3186,7 @@ ${scriptContent}
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
+                // Restaura os valores em caso de erro para o usuário não perder o que digitou
                 elements.videoTheme.value = theme;
                 elements.videoDescription.value = description;
             } finally {
@@ -3050,6 +3295,7 @@ ${scriptContent}
             elements.progressText = document.getElementById('progressText');
             elements.projectDashboard = document.getElementById('projectDashboard'); 
             elements.outlineContent = document.getElementById('outlineContent'); 
+            elements.audioPlayer = document.getElementById('audioPlayer'); // Referência ao player de áudio
 
             // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
 
@@ -3062,7 +3308,14 @@ ${scriptContent}
             elements.narrativeTheme = document.getElementById('narrativeTheme');
             elements.narrativeTone = document.getElementById('narrativeTone');
             elements.narrativeVoice = document.getElementById('narrativeVoice');
+            elements.audioVoice = document.getElementById('audioVoice');
+            elements.audioStyle = document.getElementById('audioStyle');
             // --- FIM DAS LINHAS A SEREM ADICIONADAS ---
+
+            // --- Adiciona referências para os novos elementos do gerador de ideias ---
+            elements.nicheDescription = document.getElementById('nicheDescription');
+            elements.ideasOutput = document.getElementById('ideasOutput');
+            elements.generateIdeasBtn = document.getElementById('generateIdeasBtn');
 
             // Listener para o seletor de objetivo
             if (elements.narrativeGoal) {
@@ -3165,6 +3418,11 @@ ${scriptContent}
                 exitZenModeBtn.addEventListener('click', () => {
                     document.body.classList.remove('zen-mode');
                 });
+            }
+
+            // --- Listener para o Gerador de Ideias ---
+            if (elements.generateIdeasBtn) {
+                elements.generateIdeasBtn.addEventListener('click', generateVideoIdeas);
             }
 
             // Define o estado inicial dos botões
