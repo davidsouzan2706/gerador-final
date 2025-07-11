@@ -2239,26 +2239,42 @@ The final output MUST be only the JSON code, like this example:
             showLoading(button);
 
             try {
-                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Sua tarefa é analisar a descrição de um nicho e gerar 6 ideias de vídeo com alto potencial de engajamento.
+                // --- PROMPT FINAL E BLINDADO ---
+                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Analise a descrição de um nicho e gere 6 ideias de vídeo.
 
                 **Nicho/Descrição:** "${nicheDescription}"
 
-                Para cada ideia, você deve fornecer:
-                1.  **title:** Um título "clickbait" mas inteligente (máximo 70 caracteres).
-                2.  **angle:** O ângulo ou abordagem única em uma frase curta (máximo 120 caracteres).
-                3.  **targetAudience:** O público-alvo específico que esta ideia mais atrairia.
-                4.  **viralityScore:** Uma nota de 0 a 10 sobre o potencial de viralidade.
-                5.  **videoDescription:** Uma descrição curta e otimizada para o YouTube.
+                **REGRAS DE FORMATAÇÃO (ABSOLUTAS):**
+                1.  Sua resposta DEVE ser um array JSON válido.
+                2.  Cada objeto no array DEVE conter **EXATAMENTE e SOMENTE** as seguintes 5 chaves, todas entre aspas duplas: "title", "angle", "targetAudience", "viralityScore", "videoDescription".
+                3.  Não invente ou adicione nenhuma outra chave.
 
-                Responda APENAS com um array JSON. Cada objeto no array deve conter exatamente as chaves acima.`;
+                **REQUISITOS DO CONTEÚDO:**
+                -   "title": Um título "clickbait" mas inteligente (máximo 70 caracteres).
+                -   "angle": O ângulo único em uma frase curta (máximo 120 caracteres).
+                -   "targetAudience": O público-alvo específico.
+                -   "viralityScore": Uma nota numérica de 0 a 10.
+                -   "videoDescription": Uma descrição curta para o YouTube.
+
+                Exemplo de um objeto válido:
+                {
+                    "title": "Exemplo de Título",
+                    "angle": "Um ângulo único e cativante.",
+                    "targetAudience": "Público específico para este tema.",
+                    "viralityScore": 8,
+                    "videoDescription": "Uma descrição otimizada para o vídeo."
+                }`;
 
                 const rawResult = await callGroqAPI(prompt, 4000);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
+                 if (!cleanedResult) {
+                    console.error("Falha na limpeza do JSON.", rawResult);
+                    throw new Error("A IA não retornou um JSON válido.");
+                }
                 const ideas = JSON.parse(cleanedResult);
 
                 outputContainer.innerHTML = ''; 
 
-                // --- LÓGICA DE RENDERIZAÇÃO FINAL MINIMALISTA ---
                 ideas.forEach((idea, index) => {
                     const ideaCard = `
                         <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in flex flex-col justify-between min-h-[140px]">
