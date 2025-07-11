@@ -1486,12 +1486,8 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
-         * Gera o HTML para uma seção do roteiro em formato de acordeão,
-         * com acordeões aninhados para Prompts e Trilha Sonora.
-         * @param {string} sectionId - O ID da seção (ex: 'intro', 'development').
-         * @param {string} title - O título da seção a ser exibido.
-         * @param {string} content - O conteúdo do roteiro para a seção.
-         * @returns {string} O HTML completo da seção.
+	 * Gera o HTML para uma seção do roteiro em formato de acordeão,
+         * com acordeões aninhados e botão de áudio.
          */
         const generateSectionHtmlContent = (sectionId, title, content) => {
             const mainBodyId = `${sectionId}Body`;
@@ -1501,9 +1497,12 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
 
-            const listenBtnHtml = `<button class="listen-btn" onclick="event.stopPropagation(); playSectionAudio('${sectionId}')" title="Ouvir prévia da narração">
+            // --- INÍCIO DA CORREÇÃO ---
+            // O parâmetro passado para playSectionAudio agora é o ID correto do elemento da seção
+            const listenBtnHtml = `<button class="listen-btn" onclick="event.stopPropagation(); window.playSectionAudio('${sectionId}Section')" title="Ouvir prévia da narração">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
             </button>`;
+            // --- FIM DA CORREÇÃO ---
 
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
