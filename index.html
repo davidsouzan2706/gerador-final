@@ -988,6 +988,29 @@
                     <!-- As opções serão preenchidas dinamicamente pelo JavaScript -->
                 </select>
             </div>
+            <!-- ========================================================== -->
+            <!-- === NOVO MÓDULO: PERSONALIDADE DA NARRATIVA (TEMA/TOM/VOZ) === -->
+            <!-- ========================================================== -->
+            <div class="input-group md:col-span-2">
+                <label for="narrativeTheme">3. Tema Principal (a grande ideia):</label>
+                <input type="text" id="narrativeTheme" class="card-background" placeholder="Ex: Superação, Luta contra injustiça, Inovação, A busca pela verdade...">
+            </div>
+            <div class="input-group md:col-span-1">
+                <label for="narrativeTone">4. Tom da Narração (a sensação):</label>
+                <select id="narrativeTone" class="card-background">
+                    <option value="inspirador" selected>Inspirador / Motivacional</option>
+                    <option value="serio">Sério / Factual</option>
+                    <option value="emocional">Emocional / Vulnerável</option>
+                    <option value="humoristico">Humorístico / Leve</option>
+                    <option value="desafiador">Desafiador / Provocativo</option>
+                    <option value="sombrio">Sombrio / Misterioso</option>
+                </select>
+            </div>
+            <div class="input-group md:col-span-1">
+                <label for="narrativeVoice">5. Voz do Narrador (a personalidade):</label>
+                <input type="text" id="narrativeVoice" class="card-background" placeholder="Ex: Sábio e experiente, Jovem e cético, Apaixonado e enérgico...">
+            </div>
+            
             <div class="input-group md:col-span-2">
                 <label for="centralQuestion">Pergunta Central (Opcional):</label>
                 <textarea id="centralQuestion" rows="2" class="card-background" placeholder="Ex: A Arca da Aliança Foi Encontrada?"></textarea>
@@ -1626,7 +1649,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         // --- FIM DO NOVO MÓDULO DE NARRATIVA ---
 
         /**
-         * Constrói o contexto base do prompt com base nos inputs do utilizador.
+         * Constrói o contexto base do prompt com base nos inputs do usuário.
          * @returns {string} O contexto do prompt.
          */
         const getBasePromptContext = () => {
@@ -1638,7 +1661,14 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const videoObjective = elements.videoObjective.value;
             const videoDuration = elements.videoDuration.value;
             const speakingPace = elements.speakingPace.value;
-            const narrativeStyle = document.getElementById('narrativeStructure').value; // CORRIGIDO: Lê do novo seletor
+            const narrativeStructure = document.getElementById('narrativeStructure').value;
+            
+            // --- INÍCIO DA LEITURA DOS NOVOS CAMPOS ---
+            const narrativeTheme = document.getElementById('narrativeTheme').value.trim();
+            const narrativeTone = document.getElementById('narrativeTone').value;
+            const narrativeVoice = document.getElementById('narrativeVoice').value.trim();
+            // --- FIM DA LEITURA DOS NOVOS CAMPOS ---
+
             const videoDescription = elements.videoDescription.value.trim();
             const centralQuestion = elements.centralQuestion.value.trim();
             const emotionalArc = elements.emotionalArc.value.trim();
@@ -1651,31 +1681,48 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             You are an expert YouTube scriptwriter for the channel "${channelName}".
             Your goal is to create highly engaging and viral video content.
             
-            Video Theme: "${videoTheme}"
-            Target Audience: "${targetAudience}"
-            Language: "${language}"
-            Language Style: "${languageStyle}"
-            Video Objective: "${videoObjective}"
-            Desired Duration: "${videoDuration}"
-            Speaking Pace: "${speakingPace}"
-            Narrative Style: "${narrativeStyle}"
+            **Core Project Details:**
+            - Video Topic: "${videoTheme}"
+            - Target Audience: "${targetAudience}"
+            - Language: "${language}"
+            - Video Objective: "${videoObjective}"
+            - Desired Duration: "${videoDuration}"
+            
+            **Narrative & Style Instructions:**
+            - Narrative Structure to use: "${narrativeStructure}"
+            - Speaking Pace: "${speakingPace}"
             `;
 
-            if (videoDescription) { context += `\nInspiration/Context: "${videoDescription}"`; }
-            if (centralQuestion) { context += `\nCentral Question to guide the entire script: "${centralQuestion}"`; }
-            if (emotionalArc) { context += `\nEmotional Arc: "${emotionalArc}"`; }
-            if (viralElements) { context += `\nViral Elements to incorporate: "${viralElements}"`; }
-            if (imageDescriptionEngine) { context += `\nImage Description Instructions: "${imageDescriptionEngine}"`; }
+            // --- INÍCIO DA INJEÇÃO DOS NOVOS DADOS NO CONTEXTO ---
+            if (narrativeTheme) {
+                context += `\n- Core Theme (The Big Idea): "${narrativeTheme}"`;
+            }
+            if (narrativeTone) {
+                context += `\n- Narrative Tone (The Feeling): "${narrativeTone}"`;
+            }
+            if (narrativeVoice) {
+                context += `\n- Narrator's Voice (The Personality): "${narrativeVoice}"`;
+            }
+            // --- FIM DA INJEÇÃO DOS NOVOS DADOS NO CONTEXTO ---
+
+            if (videoDescription) { context += `\n\n**Additional Information & Inspiration:**\n- Inspiration/Context: "${videoDescription}"`; }
+            if (centralQuestion) { context += `\n- Central Question to guide the entire script: "${centralQuestion}"`; }
+            if (emotionalArc) { context += `\n- Desired Emotional Arc: "${emotionalArc}"`; }
+            if (viralElements) { context += `\n- Viral Elements to incorporate: "${viralElements}"`; }
             
-            if (imageStyleSelect === 'cinematic') {
-                context += `\nImage Style: ${CINEMATIC_STYLE_BLOCK}`;
-            } else if (imageStyleSelect === 'custom' && customImageStyle) {
-                context += `\n\nApply the following custom image style to these image descriptions: ${customImageStyle}`;
+            if (imageStyleSelect === 'cinematic' || imageStyleSelect === 'custom') {
+                context += `\n\n**Visual Style Instructions:**`;
+                if (imageDescriptionEngine) { context += `\n- Image Description Keywords: "${imageDescriptionEngine}"`; }
+                if (imageStyleSelect === 'cinematic') {
+                    context += `\n- Image Style: ${CINEMATIC_STYLE_BLOCK}`;
+                } else if (imageStyleSelect === 'custom' && customImageStyle) {
+                    context += `\n- Custom Image Style: ${customImageStyle}`;
+                }
             }
 
             return context;
         };
-
+    
         /**
          * Constrói o prompt específico para cada secção do roteiro ou tipo de conteúdo.
          * @param {string} sectionName - O nome da secção (ex: 'intro', 'titles_thumbnails').
@@ -2631,6 +2678,10 @@ ${scriptContent}
             elements.imageStyleSelect.value = 'cinematic';
             elements.customImageStyle.value = '';
             toggleCustomImageStyleVisibility();
+            // Resetar os novos campos
+            elements.narrativeTheme.value = '';
+            elements.narrativeTone.value = 'inspirador';
+            elements.narrativeVoice.value = '';
 
             // Limpa todas as variáveis de estado globais
             strategicOutline = null;
@@ -3025,6 +3076,12 @@ ${scriptContent}
             elements.narrativeGoal = document.getElementById('narrativeGoal');
             elements.narrativeStructure = document.getElementById('narrativeStructure');
             elements.narrativeStructureTooltip = document.getElementById('narrativeStructureTooltip');
+
+            // --- ADICIONE AS LINHAS ABAIXO ---
+            elements.narrativeTheme = document.getElementById('narrativeTheme');
+            elements.narrativeTone = document.getElementById('narrativeTone');
+            elements.narrativeVoice = document.getElementById('narrativeVoice');
+            // --- FIM DAS LINHAS A SEREM ADICIONADAS ---
 
             // Listener para o seletor de objetivo
             if (elements.narrativeGoal) {
