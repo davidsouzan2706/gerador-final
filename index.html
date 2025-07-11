@@ -2878,7 +2878,8 @@ ${scriptContent}
         };
 
         /**
-	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
+	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo,
+         * incluindo Tema, Tom e Voz.
          */
         const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
@@ -2889,49 +2890,46 @@ ${scriptContent}
                 return;
             }
             
-            // --- INÍCIO DA CORREÇÃO ---
-            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
             resetApplicationState();
-            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
             elements.videoTheme.value = theme;
             elements.videoDescription.value = description;
-            // --- FIM DA CORREÇÃO ---
 
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
             // Opções válidas para cada campo
-            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            
-            // Agrega todas as opções de estrutura para o prompt
+            const narrativeToneOptions = Array.from(document.getElementById('narrativeTone').options).map(o => o.value).join(', ');
             const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
             const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
+            // --- PROMPT MESTRE APRIMORADO ---
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia completa.
 
             Tema do Vídeo: "${theme}"
             Descrição: "${description}"
 
             Responda APENAS com um objeto JSON válido com as seguintes chaves:
             1. "target_audience": (string) O público-alvo ideal.
-            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
-            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
-            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
-            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
-            6. "central_question": (string) A pergunta central mais intrigante.
-            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
+            2. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            3. "narrative_goal": (string) O objetivo narrativo. Escolha entre 'storytelling' ou 'storyselling'.
+            4. "narrative_structure": (string) A melhor estrutura da lista: [${narrativeStructureOptions}].
+            5. "central_question": (string) A pergunta central mais intrigante.
+            6. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
+            7. "narrative_theme": (string) A "grande ideia" ou tema central da história (Ex: Superação, Injustiça, Inovação).
+            8. "narrative_tone": (string) O tom mais apropriado para a narração. DEVE SER um valor EXATO da lista: [${narrativeToneOptions}].
+            9. "narrative_voice": (string) A personalidade do narrador (Ex: Sábio e experiente, Jovem e cético).
             
             Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 1500);
+                const rawResult = await callGroqAPI(prompt, 2000); // Aumentado para 2000 para a resposta maior
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
                 // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
-                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
+                
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
                     const returnedValue = strategy.video_objective.trim();
@@ -2939,17 +2937,21 @@ ${scriptContent}
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
-                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
                 
-                // Preenche os novos seletores de narrativa
                 if(strategy.narrative_goal) {
-                    elements.narrativeGoal.value = strategy.narrative_goal;
-                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
+                    document.getElementById('narrativeGoal').value = strategy.narrative_goal;
+                    updateNarrativeStructureOptions();
                 }
-                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
+                if(strategy.narrative_structure) document.getElementById('narrativeStructure').value = strategy.narrative_structure;
+
+                // --- PREENCHIMENTO DOS NOVOS CAMPOS ---
+                if(strategy.narrative_theme) document.getElementById('narrativeTheme').value = strategy.narrative_theme;
+                if(strategy.narrative_tone) document.getElementById('narrativeTone').value = strategy.narrative_tone;
+                if(strategy.narrative_voice) document.getElementById('narrativeVoice').value = strategy.narrative_voice;
+                // --- FIM DO PREENCHIMENTO ---
 
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
@@ -2960,7 +2962,6 @@ ${scriptContent}
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
-                // Restaura os valores em caso de erro para o usuário não perder o que digitou
                 elements.videoTheme.value = theme;
                 elements.videoDescription.value = description;
             } finally {
