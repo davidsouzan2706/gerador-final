@@ -845,6 +845,47 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
+        /* ========================================================== */
+        /* ======== ESTILOS PARA O CONSULTOR DE RETENÇÃO ======== */
+        /* ========================================================== */
+        .retention-paragraph {
+            padding: 0.75rem;
+            border-radius: 6px;
+            margin-bottom: 0.5rem;
+            border-left-width: 4px;
+            transition: background-color 0.2s;
+        }
+
+        .retention-paragraph strong {
+            display: block;
+            margin-bottom: 0.25rem;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* --- Cores do Mapa de Calor --- */
+        .retention-green {
+            border-left-color: #10B981; /* success-color */
+            background-color: rgba(16, 185, 129, 0.05);
+        }
+        .dark .retention-green {
+            background-color: rgba(16, 185, 129, 0.1);
+        }
+        .retention-yellow {
+            border-left-color: #FBBF24; /* Amber-400 */
+            background-color: rgba(251, 191, 36, 0.05);
+        }
+        .dark .retention-yellow {
+            background-color: rgba(251, 191, 36, 0.1);
+        }
+        .retention-red {
+            border-left-color: #EF4444; /* Red-500 */
+            background-color: rgba(239, 68, 68, 0.05);
+        }
+        .dark .retention-red {
+            background-color: rgba(239, 68, 68, 0.1);
+        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1131,6 +1172,22 @@
                 <div id="assetsColumn" class="lg:col-span-5 space-y-6">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Recursos</h2>
                     
+                    <!-- ========================================================== -->
+                    <!-- ===== NOVO MÓDULO: CONSULTOR DE RETENÇÃO DE ROTEIRO ==== -->
+                    <!-- ========================================================== -->
+                    <div class="card-background p-4 rounded-lg shadow-md">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Consultor de Retenção</h3>
+                            <button id="analyzeRetentionBtn" class="btn btn-secondary btn-small">Analisar Roteiro</button>
+                        </div>
+                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Analise o roteiro completo em busca de pontos de queda e oportunidades para aumentar o engajamento da audiência.</p>
+                        
+                        <!-- Área de Saída para a Análise de Retenção -->
+                        <div id="retentionAnalysisOutput" class="space-y-3">
+                            <!-- O relatório será injetado aqui -->
+                        </div>
+                    </div>
+                    
                     <!-- Cartão: Descrição e Hashtags (AGORA PRIMEIRO) -->
                     <div class="card-background p-4 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
@@ -1385,6 +1442,11 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (resetBtn) resetBtn.disabled = false; 
             if (floatResetBtn) floatResetBtn.disabled = false;
 
+            // O botão de análise de retenção só é habilitado se o roteiro principal estiver completo
+            const analyzeRetentionBtn = document.getElementById('analyzeRetentionBtn');
+            if (analyzeRetentionBtn) {
+                analyzeRetentionBtn.disabled = !allMainScriptGenerated;
+            }
         };
 
         /**
@@ -1470,7 +1532,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
 
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.5 0 0 1 8 4.466"/></svg>
             </button>`;
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
@@ -2073,6 +2135,70 @@ The final output MUST be only the JSON code, like this example:
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
 
+        /**
+         * Analisa o roteiro completo em busca de pontos de retenção e queda.
+         */
+        const analyzeScriptRetention = async () => {
+            if (!isScriptComplete()) {
+                window.showToast("Gere todas as seções do roteiro principal primeiro para uma análise completa!");
+                return;
+            }
+
+            const button = document.getElementById('analyzeRetentionBtn');
+            const outputContainer = document.getElementById('retentionAnalysisOutput');
+            outputContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`;
+            showLoading(button);
+
+            try {
+                const fullScript = getTranscriptOnly(); // Usamos a função que já existe!
+
+                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube para máxima retenção de audiência. Sua tarefa é analisar o roteiro fornecido e dividi-lo em parágrafos, avaliando cada um.
+
+                **Roteiro para Análise:**
+                ---
+                ${fullScript}
+                ---
+
+                **Instruções:**
+                Para CADA parágrafo do roteiro, você deve:
+                1.  Avaliar seu impacto na retenção.
+                2.  Atribuir um "retentionScore" (uma string: 'green', 'yellow', ou 'red').
+                    - 'green': Gancho forte, altamente engajante, quebra de padrão.
+                    - 'yellow': Conteúdo necessário, mas pode ser um pouco lento ou expositivo.
+                    - 'red': Risco de queda. Monótono, confuso ou perde o fio da meada.
+                3.  Escrever uma "suggestion" curta e acionável para melhorar o parágrafo (especialmente para 'yellow' e 'red').
+                4.  Retornar o "paragraphText" original.
+
+                Responda APENAS com um array JSON. Cada objeto no array deve ter exatamente as chaves: "paragraphText", "retentionScore", e "suggestion".`;
+
+                const rawResult = await callGroqAPI(prompt, 4000);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                const analysis = JSON.parse(cleanedResult);
+
+                outputContainer.innerHTML = ''; 
+
+                analysis.forEach(item => {
+                    const analysisCard = `
+                        <div class="retention-paragraph retention-${item.retentionScore}">
+                            <p class="text-sm">${item.paragraphText}</p>
+                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
+                                <strong class="text-${item.retentionScore === 'red' ? 'red' : (item.retentionScore === 'yellow' ? 'yellow' : 'green')}-500">
+                                    ${item.retentionScore === 'red' ? 'Ponto de Risco' : (item.retentionScore === 'yellow' ? 'Ponto de Atenção' : 'Ponto Forte')}
+                                </strong>
+                                <p class="text-xs text-gray-600 dark:text-gray-400">${item.suggestion}</p>
+                            </div>
+                        </div>
+                    `;
+                    outputContainer.innerHTML += analysisCard;
+                });
+
+            } catch (error) {
+                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar o roteiro: ${error.message}</p>`;
+            } finally {
+                hideLoading(button);
+            }
+        };
+    
         /**
          * Gera e valida ideias de vídeo com base no nicho fornecido.
          */
@@ -2801,7 +2927,8 @@ ${scriptContent}
             if(elements.outlineContent) elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
             if(document.getElementById('titlesThumbnailsContent')) document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             if(document.getElementById('videoDescriptionContent')) document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
-            
+            if(document.getElementById('retentionAnalysisOutput')) document.getElementById('retentionAnalysisOutput').innerHTML = ''; // Clear retention analysis
+
             resetCompletionIcons();
             updateProgressBar();
             
@@ -3293,6 +3420,12 @@ ${scriptContent}
                 elements.generateIdeasBtn.addEventListener('click', generateVideoIdeas);
             }
 
+            // --- Listener para o Consultor de Retenção ---
+            const analyzeRetentionBtn = document.getElementById('analyzeRetentionBtn');
+            if (analyzeRetentionBtn) {
+                analyzeRetentionBtn.addEventListener('click', analyzeScriptRetention);
+            }
+    
             // Define o estado inicial dos botões
             updateButtonStates();
             // Adiciona o listener de rolagem para a barra flutuante
