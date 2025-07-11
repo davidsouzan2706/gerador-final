@@ -2145,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
 
         /**
-         * Analisa o roteiro completo, traduz as sugestões e exibe o resultado.
+         * Analisa o roteiro, traduz as sugestões individualmente e exibe o resultado.
          */
         const analyzeScriptRetention = async () => {
             if (!isScriptComplete()) {
@@ -2162,7 +2162,7 @@ The final output MUST be only the JSON code, like this example:
                 const fullScript = getTranscriptOnly();
                 const selectedLanguage = elements.languageSelect.value;
 
-                // --- PROMPT DE ANÁLISE (SEMPRE EM INGLÊS PARA CONSISTÊNCIA) ---
+                // ETAPA 1: Gerar a análise com sugestões em inglês (confiável)
                 const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts for maximum audience retention. Your task is to analyze the provided script and break it down into paragraphs, evaluating each one.
 
                 **Script for Analysis:**
@@ -2174,7 +2174,7 @@ The final output MUST be only the JSON code, like this example:
                 For EACH paragraph of the script, you must:
                 1.  Evaluate its impact on retention.
                 2.  Assign a "retentionScore" (a string: 'green', 'yellow', or 'red').
-                3.  Write a short, actionable "suggestion" in English to improve the paragraph.
+                3.  Write a short, actionable "suggestion" in clear English to improve the paragraph.
                 4.  Return the original "paragraphText".
 
                 Respond ONLY with a valid JSON array. Each object must have the keys: "paragraphText", "retentionScore", and "suggestion".`;
@@ -2183,27 +2183,24 @@ The final output MUST be only the JSON code, like this example:
                 const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
                 let analysis = JSON.parse(cleanedAnalysis);
 
-                // --- INÍCIO DA ETAPA DE TRADUÇÃO ---
+                // ETAPA 2: Traduzir as sugestões se necessário
                 if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
-                    // Agrupa todas as sugestões em inglês para uma única chamada de tradução
-                    const suggestionsToTranslate = analysis.map(item => item.suggestion);
+                    // Cria um array de "promessas" de tradução, uma para cada sugestão
+                    const translationPromises = analysis.map(item => {
+                        const translationPrompt = `Translate the following English sentence to the language with the code '${selectedLanguage}': "${item.suggestion}"`;
+                        return callGroqAPI(translationPrompt, 200); // Retorna a promessa da chamada da API
+                    });
                     
-                    const translationPrompt = `Translate the following array of JavaScript strings into the language with the code '${selectedLanguage}'. Maintain the JSON array structure.
-
-                    ["${suggestionsToTranslate.join('", "')}"]`;
-
-                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1000);
-                    const cleanedTranslation = cleanGeneratedText(rawTranslationResult, true);
-                    const translatedSuggestions = JSON.parse(cleanedTranslation);
-
-                    // Re-mapeia a análise original com as sugestões traduzidas
-                    analysis = analysis.map((item, index) => ({
-                        ...item,
-                        suggestion: translatedSuggestions[index] || item.suggestion // Fallback para a original
-                    }));
+                    // Espera todas as traduções serem concluídas
+                    const translatedSuggestions = await Promise.all(translationPromises);
+                    
+                    // Atualiza a análise original com as sugestões traduzidas
+                    analysis.forEach((item, index) => {
+                        item.suggestion = removeMetaComments(translatedSuggestions[index]) || item.suggestion;
+                    });
                 }
-                // --- FIM DA ETAPA DE TRADUÇÃO ---
 
+                // ETAPA 3: Renderizar o resultado final
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
