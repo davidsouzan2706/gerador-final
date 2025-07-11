@@ -2100,7 +2100,7 @@ The final output MUST be only the JSON code, like this example:
          * Gera, reproduz e inicia o download do áudio para uma seção específica do roteiro,
          * usando as configurações de voz e estilo definidas pelo usuário.
          */
-        const playSectionAudio = async (sectionId) => {
+        window.playSectionAudio = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
             const button = sectionElement.querySelector('.listen-btn');
             const icon = button.querySelector('svg');
