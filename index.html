@@ -1,4 +1,3 @@
-<!--Groq-->
 <!DOCTYPE html>
 <html lang="pt-br">
 <head>
@@ -846,47 +845,6 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
-        /* ========================================================== */
-        /* ======== ESTILOS PARA O CONSULTOR DE RETENÇÃO ======== */
-        /* ========================================================== */
-        .retention-paragraph {
-            padding: 0.75rem;
-            border-radius: 6px;
-            margin-bottom: 0.5rem;
-            border-left-width: 4px;
-            transition: background-color 0.2s;
-        }
-
-        .retention-paragraph strong {
-            display: block;
-            margin-bottom: 0.25rem;
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        /* --- Cores do Mapa de Calor --- */
-        .retention-green {
-            border-left-color: #10B981; /* success-color */
-            background-color: rgba(16, 185, 129, 0.05);
-        }
-        .dark .retention-green {
-            background-color: rgba(16, 185, 129, 0.1);
-        }
-        .retention-yellow {
-            border-left-color: #FBBF24; /* Amber-400 */
-            background-color: rgba(251, 191, 36, 0.05);
-        }
-        .dark .retention-yellow {
-            background-color: rgba(251, 191, 36, 0.1);
-        }
-        .retention-red {
-            border-left-color: #EF4444; /* Red-500 */
-            background-color: rgba(239, 68, 68, 0.05);
-        }
-        .dark .retention-red {
-            background-color: rgba(239, 68, 68, 0.1);
-        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1173,22 +1131,6 @@
                 <div id="assetsColumn" class="lg:col-span-5 space-y-6">
                     <h2 class="text-2xl font-bold text-gray-800 dark:text-gray-200 border-b-2 border-indigo-200 dark:border-indigo-800 pb-2">Recursos</h2>
                     
-                    <!-- ========================================================== -->
-                    <!-- ===== NOVO MÓDULO: CONSULTOR DE RETENÇÃO DE ROTEIRO ==== -->
-                    <!-- ========================================================== -->
-                    <div class="card-background p-4 rounded-lg shadow-md">
-                        <div class="flex justify-between items-center mb-3">
-                            <h3 class="font-bold text-lg text-gray-800 dark:text-gray-200">Consultor de Retenção</h3>
-                            <button id="analyzeRetentionBtn" class="btn btn-secondary btn-small">Analisar Roteiro</button>
-                        </div>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mb-4">Analise o roteiro completo em busca de pontos de queda e oportunidades para aumentar o engajamento da audiência.</p>
-                        
-                        <!-- Área de Saída para a Análise de Retenção -->
-                        <div id="retentionAnalysisOutput" class="space-y-3">
-                            <!-- O relatório será injetado aqui -->
-                        </div>
-                    </div>
-                    
                     <!-- Cartão: Descrição e Hashtags (AGORA PRIMEIRO) -->
                     <div class="card-background p-4 rounded-lg shadow-md">
                         <div class="flex justify-between items-center mb-3">
@@ -1442,12 +1384,6 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const floatResetBtn = document.getElementById('float_resetScriptBtn');
             if (resetBtn) resetBtn.disabled = false; 
             if (floatResetBtn) floatResetBtn.disabled = false;
-
-            // O botão de análise de retenção só é habilitado se o roteiro principal estiver completo
-            const analyzeRetentionBtn = document.getElementById('analyzeRetentionBtn');
-            if (analyzeRetentionBtn) {
-                analyzeRetentionBtn.disabled = !allMainScriptGenerated;
-            }
         };
 
         /**
@@ -1517,12 +1453,8 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         };
 
         /**
-         * Gera o HTML para uma seção do roteiro em formato de acordeão,
-         * com acordeões aninhados para Prompts e Trilha Sonora.
-         * @param {string} sectionId - O ID da seção (ex: 'intro', 'development').
-         * @param {string} title - O título da seção a ser exibido.
-         * @param {string} content - O conteúdo do roteiro para a seção.
-         * @returns {string} O HTML completo da seção.
+         * Gera o HTML para uma seção do roteiro, com acordeões aninhados
+         * e a nova funcionalidade de Análise de Retenção por seção.
          */
         const generateSectionHtmlContent = (sectionId, title, content) => {
             const mainBodyId = `${sectionId}Body`;
@@ -1532,8 +1464,11 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
 
+            // --- NOVO BOTÃO DE ANÁLISE DE SEÇÃO ---
+            const analyzeBtnHtml = `<button class="btn btn-secondary btn-small" onclick="window.analyzeSectionRetention('${sectionId}Section')">Analisar Seção</button>`;
+
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.5 0 0 1 8 4.466"/></svg>
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
             </button>`;
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
@@ -1571,9 +1506,9 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             return `<div class="accordion-item">
                         <div class="accordion-header" onclick="toggleAccordion('${mainBodyId}', '${mainArrowId}')">
                             <div class="header-content">
-                                 <h3>${title}</h3>
-                                 <span class="text-xs font-normal text-gray-400 dark:text-gray-500">${calculateReadingTime(content)}</span>
-                                 <svg id="${mainArrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
+                                <h3>${title}</h3>
+                                <span class="text-xs font-normal text-gray-400 dark:text-gray-500">${calculateReadingTime(content)}</span>
+                                <svg id="${mainArrowId}" class="accordion-arrow" xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1.646 4.646a.5.5 0 0 1 .708 0L8 10.293l5.646-5.647a.5.5 0 0 1 .708.708l-6 6a.5.5 0 0 1-.708 0l-6-6a.5.5 0 0 1 0-.708z"/></svg>
                             </div>
                             <div class="header-buttons">
                                 ${headerButtonsHtml}
@@ -1581,6 +1516,13 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
                         </div>
                         <div id="${mainBodyId}" class="accordion-body">
                             <div class="generated-content-wrapper" contenteditable="true">${content.startsWith('<div') ? content : `<p class="whitespace-pre-wrap">${content}</p>`}</div>
+                            
+                            <!-- NOVA ÁREA DE ANÁLISE -->
+                            <div class="mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                                ${analyzeBtnHtml}
+                                <div class="section-analysis-output mt-3"></div>
+                            </div>
+
                             ${promptsSectionHtml}
                             ${soundtrackSectionHtml}
                         </div>
@@ -2034,7 +1976,7 @@ The final output MUST be only the JSON code, like this example:
          * @throws {Error} Se a chamada à API falhar.
          */
         const callGroqAPI = async (prompt, maxTokens) => {
-            const proxyUrl = "/.netlify/functions/groq";
+            const proxyUrl = "/.netlify/functions/groq"; // Endpoint do proxy
 
             const payload = {
                 prompt: prompt,
@@ -2049,18 +1991,10 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const response = await fetch(proxyUrl, request);
-
-                // --- INÍCIO DA CORREÇÃO DE ERRO ---
                 if (!response.ok) {
-                    // Detecta especificamente o erro de Rate Limit
-                    if (response.status === 429) {
-                        throw new Error("Limite de requisições atingido. Por favor, aguarde um minuto e tente novamente.");
-                    }
                     const errorData = await response.json().catch(() => ({ error: { message: 'Erro desconhecido do servidor proxy.' } }));
-                    throw new Error(`Erro na API via Proxy: ${errorData.error?.message || `Erro do Servidor (${response.status})`}`);
+                    throw new Error(`Erro na API via Proxy: ${errorData.error?.message || 'Erro do servidor'}`);
                 }
-                // --- FIM DA CORREÇÃO DE ERRO ---
-
                 const result = await response.json();
                 const rawContent = result.choices?.[0]?.message?.content;
                 if (rawContent) { return rawContent; }
@@ -2143,118 +2077,70 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
-
+        
         /**
-         * Analisa o roteiro, traduz as sugestões individualmente e exibe o resultado.
+         * Analisa uma seção específica do roteiro e exibe o feedback.
+         * @param {string} sectionId - O ID do elemento da seção (ex: 'introSection').
          */
-        const analyzeScriptRetention = async () => {
-            if (!isScriptComplete()) {
-                window.showToast("Gere todas as seções do roteiro principal primeiro para uma análise completa!");
+        window.analyzeSectionRetention = async (sectionId) => {
+            const sectionElement = document.getElementById(sectionId);
+            const contentWrapper = sectionElement.querySelector('.generated-content-wrapper');
+            const outputContainer = sectionElement.querySelector('.section-analysis-output');
+            
+            const sectionText = contentWrapper?.textContent.trim();
+            if (!sectionText) {
+                window.showToast("Não há texto para analisar nesta seção.");
                 return;
             }
 
-            const button = document.getElementById('analyzeRetentionBtn');
-            const outputContainer = document.getElementById('retentionAnalysisOutput');
             outputContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`;
-            showLoading(button);
 
             try {
-                const fullScript = getTranscriptOnly();
+                const sectionTitle = sectionElement.querySelector('h3').textContent;
                 const selectedLanguage = elements.languageSelect.value;
+                const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                // ETAPA 1: Gerar a análise com sugestões em inglês (confiável)
-                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts for maximum audience retention. Your task is to analyze the provided script and break it down into paragraphs, evaluating each one.
+                const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube. Analise o seguinte trecho de roteiro, que corresponde à seção "${sectionTitle}".
 
-                **Script for Analysis:**
+                **Trecho para Análise:**
                 ---
-                ${fullScript}
+                ${sectionText}
                 ---
 
-                **Instructions:**
-                For EACH paragraph of the script, you must:
-                1.  Evaluate its impact on retention.
-                2.  Assign a "retentionScore" (a string: 'green', 'yellow', or 'red').
-                3.  Write a short, actionable "suggestion" in clear English to improve the paragraph.
-                4.  Return the original "paragraphText".
+                **Sua Tarefa:**
+                Com base no fato de que esta é a seção de "${sectionTitle}", forneça um feedback conciso e acionável.
+                - Se a seção for a "Introdução", foque em quão forte é o gancho.
+                - Se for o "Desenvolvimento", foque no ritmo e na construção da tensão.
+                - Se for o "Clímax", foque no impacto emocional e na clareza da revelação.
+                - Se for a "Conclusão" ou "CTA", foque em quão satisfatório é o fechamento e quão clara é a chamada para ação.
 
-                Respond ONLY with a valid JSON array. Each object must have the keys: "paragraphText", "retentionScore", and "suggestion".`;
+                **Responda com sua análise diretamente como texto, no idioma: ${languageName}.**`;
 
-                const rawAnalysisResult = await callGroqAPI(analysisPrompt, 4000);
-                const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
-                let analysis = JSON.parse(cleanedAnalysis);
+                const rawResult = await callGroqAPI(prompt, 500);
+                const feedback = removeMetaComments(rawResult);
 
-                // ETAPA 2: Traduzir as sugestões se necessário
-                if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
-                    // Cria um array de "promessas" de tradução, uma para cada sugestão
-                    const translationPromises = analysis.map(item => {
-                        const translationPrompt = `Translate the following English sentence to the language with the code '${selectedLanguage}': "${item.suggestion}"`;
-                        return callGroqAPI(translationPrompt, 200); // Retorna a promessa da chamada da API
-                    });
-                    
-                    // Espera todas as traduções serem concluídas
-                    const translatedSuggestions = await Promise.all(translationPromises);
-                    
-                    // Atualiza a análise original com as sugestões traduzidas
-                    analysis.forEach((item, index) => {
-                        item.suggestion = removeMetaComments(translatedSuggestions[index]) || item.suggestion;
-                    });
-                }
-
-                // ETAPA 3: Renderizar o resultado final
-                outputContainer.innerHTML = ''; 
-
-                analysis.forEach(item => {
-                    const scoreLabels = {
-                        green: "PONTO FORTE",
-                        yellow: "PONTO DE ATENÇÃO",
-                        red: "PONTO DE RISCO"
-                    };
-                    const scoreColors = {
-                        green: "green-500",
-                        yellow: "yellow-400",
-                        red: "red-500"
-                    }
-
-                    const analysisCard = `
-                        <div class="retention-paragraph retention-${item.retentionScore}">
-                            <p class="text-sm">${item.paragraphText}</p>
-                            <div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
-                                <strong class="text-${scoreColors[item.retentionScore] || 'gray-500'}">
-                                    ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
-                                </strong>
-                                <p class="text-xs text-gray-600 dark:text-gray-400">${item.suggestion}</p>
-                            </div>
-                        </div>
-                    `;
-                    outputContainer.innerHTML += analysisCard;
-                });
+                // Exibe o feedback em um card estilizado
+                outputContainer.innerHTML = `
+                    <div class="p-3 bg-indigo-50 dark:bg-gray-700 rounded-lg">
+                        <p class="text-sm font-semibold text-indigo-800 dark:text-indigo-300">Análise do Consultor:</p>
+                        <p class="text-sm mt-1">${feedback}</p>
+                    </div>
+                `;
 
             } catch (error) {
-                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar o roteiro: ${error.message}</p>`;
-            } finally {
-                hideLoading(button);
+                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar a seção: ${error.message}</p>`;
             }
         };
     
         /**
          * Gera e valida ideias de vídeo com base no nicho fornecido.
-         * Limpa o estado do roteiro anterior antes de começar.
          */
         const generateVideoIdeas = async () => {
-            const nicheDescriptionInput = document.getElementById('nicheDescription');
-            const nicheDescription = nicheDescriptionInput.value.trim();
+            const nicheDescription = document.getElementById('nicheDescription').value.trim();
             if (!nicheDescription) {
                 window.showToast("Por favor, descreva o nicho do seu canal.");
                 return;
             }
-
-            // --- INÍCIO DA NOVA LÓGICA DE RESET ---
-            // 1. Zera todo o estado da aplicação (roteiro, painel, etc.)
-            resetApplicationState();
-            
-            // 2. Restaura o texto do nicho que o usuário digitou, pois o reset o apagou.
-            nicheDescriptionInput.value = nicheDescription;
-            // --- FIM DA NOVA LÓGICA DE RESET ---
 
             const button = document.getElementById('generateIdeasBtn');
             const outputContainer = document.getElementById('ideasOutput');
@@ -2281,6 +2167,7 @@ The final output MUST be only the JSON code, like this example:
 
                 outputContainer.innerHTML = ''; 
 
+                // --- LÓGICA DE RENDERIZAÇÃO FINAL MINIMALISTA ---
                 ideas.forEach((idea, index) => {
                     const ideaCard = `
                         <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in flex flex-col justify-between min-h-[140px]">
@@ -2709,6 +2596,7 @@ ${scriptContent}
 
                 let analysisHtml = '<div class="space-y-4">';
                 analysis.forEach(item => {
+                    // --- INÍCIO DA CORREÇÃO NA RENDERIZAÇÃO ---
                     analysisHtml += `
                         <div class="p-3 card-background rounded-md shadow-sm">
                             <p class="font-semibold text-gray-800 dark:text-gray-200">${item.titulo_original}</p>
@@ -2716,6 +2604,7 @@ ${scriptContent}
                             <p class="text-sm mt-1 text-gray-600 dark:text-gray-400"><strong>Sugestão:</strong> ${item.sugestao_melhora}</p>
                         </div>
                     `;
+                    // --- FIM DA CORREÇÃO NA RENDERIZAÇÃO ---
                 });
                 analysisHtml += '</div>';
                 resultContainer.innerHTML = analysisHtml;
@@ -2973,7 +2862,11 @@ ${scriptContent}
             if(elements.outlineContent) elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
             if(document.getElementById('titlesThumbnailsContent')) document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             if(document.getElementById('videoDescriptionContent')) document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
-            if(document.getElementById('retentionAnalysisOutput')) document.getElementById('retentionAnalysisOutput').innerHTML = ''; // Clear retention analysis
+            
+            // Limpa todas as áreas de análise de seção
+            document.querySelectorAll('.section-analysis-output').forEach(output => {
+                output.innerHTML = '';
+            });
 
             resetCompletionIcons();
             updateProgressBar();
@@ -3464,12 +3357,6 @@ ${scriptContent}
             // --- Listener para o Gerador de Ideias ---
             if (elements.generateIdeasBtn) {
                 elements.generateIdeasBtn.addEventListener('click', generateVideoIdeas);
-            }
-
-            // --- Listener para o Consultor de Retenção ---
-            const analyzeRetentionBtn = document.getElementById('analyzeRetentionBtn');
-            if (analyzeRetentionBtn) {
-                analyzeRetentionBtn.addEventListener('click', analyzeScriptRetention);
             }
     
             // Define o estado inicial dos botões
