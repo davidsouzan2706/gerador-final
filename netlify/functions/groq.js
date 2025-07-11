@@ -1,34 +1,31 @@
-// Arquivo: netlify/functions/groq.js - VERSÃO 3 COM RODÍZIO ALEATÓRIO
+// Arquivo: netlify/functions/groq.js - VERSÃO 4: SEM DEPENDÊNCIAS
 
-// Este pacote é necessário para fazer chamadas HTTP.
-const fetch = require('node-fetch');
-
-// Pega as chaves da variável de ambiente e as transforma em um array limpo.
+// A chave da API é lida de forma segura das variáveis de ambiente.
 const apiKeys = (process.env.GROQ_API_KEYS || '').split(',').filter(Boolean);
 
-exports.handler = async (event, context) => {
+// Define a função handler no formato moderno.
+exports.handler = async (event) => {
+    // Permite apenas requisições do tipo POST.
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        // --- INÍCIO DA LÓGICA DE RODÍZIO ALEATÓRIO ---
-        if (apiKeys.length === 0) {
-            console.error("Nenhuma chave de API da Groq foi configurada no ambiente.");
-            return { statusCode: 500, body: 'Erro de configuração do servidor: Chaves de API não encontradas.' };
+        if (!apiKeys || apiKeys.length === 0) {
+            throw new Error("Nenhuma chave de API da Groq foi configurada no ambiente do servidor.");
         }
 
         // Escolhe uma chave de API aleatoriamente da lista.
         const randomIndex = Math.floor(Math.random() * apiKeys.length);
         const groqApiKey = apiKeys[randomIndex];
-        // --- FIM DA LÓGICA DE RODÍZIO ALEATÓRIO ---
 
         const { prompt, maxTokens } = JSON.parse(event.body);
 
         if (!prompt) {
-            return { statusCode: 400, body: 'Missing prompt' };
+            return { statusCode: 400, body: JSON.stringify({ error: 'Missing prompt' }) };
         }
 
+        // Usa o 'fetch' global, que já existe no ambiente Netlify.
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -44,24 +41,25 @@ exports.handler = async (event, context) => {
                 stream: false
             })
         });
+        
+        const data = await response.json();
 
         if (!response.ok) {
-            const errorData = await response.json();
-            console.error('Groq API Error:', errorData);
-            return { statusCode: response.status, body: JSON.stringify(errorData) };
+            console.error("Groq API Error:", data);
+            throw new Error(data.error?.message || 'Falha na API da Groq.');
         }
 
-        const data = await response.json();
         return {
             statusCode: 200,
+            headers: { "Content-Type": "application/json" },
             body: JSON.stringify(data)
         };
 
     } catch (error) {
-        console.error('Proxy Error:', error);
+        console.error("Groq Function Error:", error.toString());
         return {
             statusCode: 500,
-            body: JSON.stringify({ error: 'Internal Server Error' })
+            body: JSON.stringify({ error: error.message })
         };
     }
 };
