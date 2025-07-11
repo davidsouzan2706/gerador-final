@@ -2150,8 +2150,10 @@ The final output MUST be only the JSON code, like this example:
             showLoading(button);
 
             try {
-                const fullScript = getTranscriptOnly(); // Usamos a função que já existe!
+                const fullScript = getTranscriptOnly();
+                const selectedLanguage = elements.languageSelect.value; // Pega o idioma selecionado
 
+                // --- INÍCIO DA CORREÇÃO NO PROMPT ---
                 const prompt = `Você é um "Retention Editor", um especialista em otimizar roteiros de YouTube para máxima retenção de audiência. Sua tarefa é analisar o roteiro fornecido e dividi-lo em parágrafos, avaliando cada um.
 
                 **Roteiro para Análise:**
@@ -2163,13 +2165,14 @@ The final output MUST be only the JSON code, like this example:
                 Para CADA parágrafo do roteiro, você deve:
                 1.  Avaliar seu impacto na retenção.
                 2.  Atribuir um "retentionScore" (uma string: 'green', 'yellow', ou 'red').
-                    - 'green': Gancho forte, altamente engajante, quebra de padrão.
-                    - 'yellow': Conteúdo necessário, mas pode ser um pouco lento ou expositivo.
-                    - 'red': Risco de queda. Monótono, confuso ou perde o fio da meada.
-                3.  Escrever uma "suggestion" curta e acionável para melhorar o parágrafo (especialmente para 'yellow' e 'red').
+                    - 'green': Gancho forte, altamente engajante.
+                    - 'yellow': Conteúdo necessário, mas pode ser um pouco lento.
+                    - 'red': Risco de queda. Monótono ou confuso.
+                3.  Escrever uma "suggestion" curta e acionável para melhorar o parágrafo. **IMPORTANTE: A sugestão DEVE estar no idioma: ${selectedLanguage}.**
                 4.  Retornar o "paragraphText" original.
 
                 Responda APENAS com um array JSON. Cada objeto no array deve ter exatamente as chaves: "paragraphText", "retentionScore", e "suggestion".`;
+                // --- FIM DA CORREÇÃO NO PROMPT ---
 
                 const rawResult = await callGroqAPI(prompt, 4000);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
@@ -2182,8 +2185,8 @@ The final output MUST be only the JSON code, like this example:
                         <div class="retention-paragraph retention-${item.retentionScore}">
                             <p class="text-sm">${item.paragraphText}</p>
                             <div class="mt-3 pt-3 border-t border-dashed border-gray-200 dark:border-gray-700">
-                                <strong class="text-${item.retentionScore === 'red' ? 'red' : (item.retentionScore === 'yellow' ? 'yellow' : 'green')}-500">
-                                    ${item.retentionScore === 'red' ? 'Ponto de Risco' : (item.retentionScore === 'yellow' ? 'Ponto de Atenção' : 'Ponto Forte')}
+                                <strong class="text-${item.retentionScore === 'red' ? 'red-500' : (item.retentionScore === 'yellow' ? 'yellow-400' : 'green-500')}">
+                                    ${item.retentionScore === 'red' ? 'PONTO DE RISCO' : (item.retentionScore === 'yellow' ? 'PONTO DE ATENÇÃO' : 'PONTO FORTE')}
                                 </strong>
                                 <p class="text-xs text-gray-600 dark:text-gray-400">${item.suggestion}</p>
                             </div>
