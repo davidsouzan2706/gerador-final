@@ -1,36 +1,34 @@
-// VERSÃO FINAL CORRIGIDA do groq.js
+// Arquivo: netlify/functions/groq.js - VERSÃO 3 COM RODÍZIO ALEATÓRIO
 
-// Pega as chaves da variável de ambiente do Netlify e as divide em um array
+// Este pacote é necessário para fazer chamadas HTTP.
+const fetch = require('node-fetch');
+
+// Pega as chaves da variável de ambiente e as transforma em um array limpo.
 const apiKeys = (process.env.GROQ_API_KEYS || '').split(',').filter(Boolean);
-let keyIndex = 0;
 
-// Função para fazer o rodízio de chaves
-function getNextApiKey() {
-  if (apiKeys.length === 0) return null;
-  const key = apiKeys[keyIndex];
-  keyIndex = (keyIndex + 1) % apiKeys.length; // Avança para a próxima chave
-  return key;
-}
-
-exports.handler = async function(event, context) {
+exports.handler = async (event, context) => {
     if (event.httpMethod !== 'POST') {
         return { statusCode: 405, body: 'Method Not Allowed' };
     }
 
     try {
-        // Pega a próxima chave da nossa lista segura
-        const groqApiKey = getNextApiKey();
-        if (!groqApiKey) {
-            return { statusCode: 500, body: 'Nenhuma chave de API configurada no servidor.' };
+        // --- INÍCIO DA LÓGICA DE RODÍZIO ALEATÓRIO ---
+        if (apiKeys.length === 0) {
+            console.error("Nenhuma chave de API da Groq foi configurada no ambiente.");
+            return { statusCode: 500, body: 'Erro de configuração do servidor: Chaves de API não encontradas.' };
         }
 
-        // Pega o prompt e maxTokens do corpo da requisição
+        // Escolhe uma chave de API aleatoriamente da lista.
+        const randomIndex = Math.floor(Math.random() * apiKeys.length);
+        const groqApiKey = apiKeys[randomIndex];
+        // --- FIM DA LÓGICA DE RODÍZIO ALEATÓRIO ---
+
         const { prompt, maxTokens } = JSON.parse(event.body);
 
         if (!prompt) {
             return { statusCode: 400, body: 'Missing prompt' };
         }
-        
+
         const response = await fetch('https://api.groq.com/openai/v1/chat/completions', {
             method: 'POST',
             headers: {
@@ -41,7 +39,7 @@ exports.handler = async function(event, context) {
                 messages: [{ role: 'user', content: prompt }],
                 model: 'llama3-70b-8192',
                 temperature: 0.7,
-                max_tokens: maxTokens || 1024, // Mantive o fallback para segurança
+                max_tokens: maxTokens || 1024,
                 top_p: 1,
                 stream: false
             })
