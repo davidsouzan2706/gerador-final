@@ -928,7 +928,7 @@
             </div>
 
             <!-- Área de Saída para as Ideias Geradas -->
-            <div id="ideasOutput" class="mt-8 space-y-4">
+            <div id="ideasOutput" class="mt-8 grid grid-cols-1 md:grid-cols-2 gap-4">
                 <!-- Os cartões de ideia serão injetados aqui -->
             </div>
         </div>
@@ -1025,7 +1025,7 @@
                     <label for="speakingPace">Ritmo de Fala:</label>
                     <select id="speakingPace" class="card-background">
                         <option value="moderate" selected>Moderado</option>
-                        <option value="slow">Lento</m>
+                        <option value="slow">Lento</option>
                         <option value="fast">Rápido</option>
                     </select>
                 </div>
@@ -2124,6 +2124,19 @@ The final output MUST be only the JSON code, like this example:
             });
         };
     
+        /**
+         * Escapa um objeto JSON para ser usado com segurança dentro de um atributo onclick.
+         * @param {object} idea - O objeto da ideia a ser escapado.
+         * @returns {string} Uma string JSON segura para HTML.
+         */
+        const escapeIdeaForOnclick = (idea) => {
+            // Primeiro, converte o objeto para uma string JSON
+            const jsonString = JSON.stringify(idea);
+            // Em seguida, substitui os caracteres que quebram o HTML
+            // Escapa aspas duplas, aspas simples e barras invertidas
+            return jsonString.replace(/"/g, '&quot;').replace(/'/g, '&#39;').replace(/\\/g, '&#92;');
+        };
+
         // ==========================================================
         // ================== FUNÇÕES PRINCIPAIS ====================
         // ==========================================================
@@ -2131,29 +2144,30 @@ The final output MUST be only the JSON code, like this example:
         /**
          * Gera e valida ideias de vídeo com base no nicho fornecido.
          */
-	const generateVideoIdeas = async () => {
-            const nicheDescription = document.getElementById('nicheDescription').value.trim();
+        const generateVideoIdeas = async () => {
+            const nicheDescription = elements.nicheDescription.value.trim();
             if (!nicheDescription) {
                 window.showToast("Por favor, descreva o nicho do seu canal.");
                 return;
             }
 
-            const button = document.getElementById('generateIdeasBtn');
-            const outputContainer = document.getElementById('ideasOutput');
-            outputContainer.innerHTML = `<div class="loading-spinner-small mx-auto my-4"></div>`;
+            const button = elements.generateIdeasBtn;
+            const outputContainer = elements.ideasOutput;
+            outputContainer.innerHTML = `<div class="md:col-span-2 loading-spinner-small mx-auto my-4"></div>`;
             showLoading(button);
 
             try {
-                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Sua tarefa é analisar a descrição de um nicho e gerar 5 ideias de vídeo com alto potencial de engajamento.
+                // --- PROMPT ATUALIZADO PARA 6 IDEIAS ---
+                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Sua tarefa é analisar a descrição de um nicho e gerar 6 ideias de vídeo com alto potencial de engajamento.
 
                 **Nicho/Descrição:** "${nicheDescription}"
 
                 Para cada ideia, você deve fornecer:
-                1.  **title:** Um título "clickbait" mas inteligente, que gere curiosidade.
-                2.  **angle:** O ângulo ou abordagem única que torna este vídeo diferente dos outros sobre o mesmo tema.
+                1.  **title:** Um título "clickbait" mas inteligente (máximo 70 caracteres).
+                2.  **angle:** O ângulo ou abordagem única em uma frase curta (máximo 120 caracteres).
                 3.  **targetAudience:** O público-alvo específico que esta ideia mais atrairia.
-                4.  **viralityScore:** Uma nota de 0 a 10 sobre o potencial de viralidade, baseada na combinação de curiosidade, polêmica, utilidade e apelo emocional.
-                5.  **videoDescription:** Uma descrição curta e otimizada para o YouTube, que servirá de base para o roteiro.
+                4.  **viralityScore:** Uma nota de 0 a 10 sobre o potencial de viralidade.
+                5.  **videoDescription:** Uma descrição curta e otimizada para o YouTube.
 
                 Responda APENAS com um array JSON. Cada objeto no array deve conter exatamente as chaves acima.`;
 
@@ -2161,21 +2175,21 @@ The final output MUST be only the JSON code, like this example:
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const ideas = JSON.parse(cleanedResult);
 
-                outputContainer.innerHTML = ''; // Limpa o loading
+                outputContainer.innerHTML = ''; 
 
-                // --- INÍCIO DA LÓGICA DE RENDERIZAÇÃO MINIMALISTA ---
                 ideas.forEach((idea, index) => {
+                    // --- LÓGICA DE RENDERIZAÇÃO ATUALIZADA ---
                     const ideaCard = `
-                        <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in flex flex-col justify-between min-h-[160px]">
+                        <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in flex flex-col justify-between min-h-[180px]">
                             <div>
-                                <h4 class="font-bold text-lg text-gray-800 dark:text-gray-200 mb-2">${index + 1}. ${idea.title}</h4>
-                                <p class="text-sm text-gray-500 dark:text-gray-400 italic mb-3">"${idea.angle}"</p>
+                                <h4 class="font-bold text-base text-gray-800 dark:text-gray-200">${index + 1}. ${idea.title}</h4>
+                                <p class="text-sm text-gray-500 dark:text-gray-400 italic mt-1">"${idea.angle}"</p>
                             </div>
-                            <div class="flex justify-between items-center text-sm">
+                            <div class="flex justify-between items-center text-sm mt-3">
                                 <span class="font-bold text-indigo-500 bg-indigo-100 dark:bg-indigo-900 dark:text-indigo-300 py-1 px-2 rounded">
                                     Potencial: ${idea.viralityScore} / 10
                                 </span>
-                                <button class="btn btn-primary btn-small py-1 px-3" onclick="window.selectIdea(${JSON.stringify(idea).replace(/"/g, '"')})">
+                                <button class="btn btn-primary btn-small py-1 px-3" onclick="window.selectIdea(${escapeIdeaForOnclick(idea)})">
                                     Usar esta Ideia
                                 </button>
                             </div>
@@ -2183,10 +2197,9 @@ The final output MUST be only the JSON code, like this example:
                     `;
                     outputContainer.innerHTML += ideaCard;
                 });
-                // --- FIM DA LÓGICA DE RENDERIZAÇÃO MINIMALISTA ---
 
             } catch (error) {
-                outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao gerar ideias: ${error.message}</p>`;
+                outputContainer.innerHTML = `<p class="md:col-span-2 text-red-500 text-sm">Falha ao gerar ideias: ${error.message}</p>`;
             } finally {
                 hideLoading(button);
             }
@@ -2927,7 +2940,7 @@ ${scriptContent}
                 sec.innerHTML = '';
             });
             elements.outlineContent.innerHTML = `<div class="asset-card-placeholder">Clique em 'Criar Esboço' para a IA planear a estrutura do roteiro.</div>`;
-            document.getElementById('titlesThumbnailsContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
+            document.getElementById('titlesThumbnailsSection').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver as sugestões</div>';
             document.getElementById('videoDescriptionContent').innerHTML = '<div class="asset-card-placeholder">Clique em \'Gerar\' para ver a descrição</div>';
             
             // Limpa o conteúdo do Centro Multicanal, se ele existir
@@ -2978,7 +2991,7 @@ ${scriptContent}
             projectData.outputs.strategicOutlineContent = elements.outlineContent.innerHTML;
 
             // Salva o conteúdo dos cartões de recursos
-            projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsContent').innerHTML;
+            projectData.outputs.titlesThumbnailsContent = document.getElementById('titlesThumbnailsSection').innerHTML;
             projectData.outputs.videoDescriptionContent = document.getElementById('videoDescriptionContent').innerHTML;
             // Removed storyboardContent export
             
