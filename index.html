@@ -467,6 +467,26 @@
         .dark .text-gray-500 { color: #9ca3af; }
         .dark .input-group label { /* color já definido acima */ }
         /* As regras para .dark .input-group input, select, textarea já estão no bloco definitivo acima */
+        .dark .input-group input:focus,
+        .dark .input-group select:focus,
+        .dark .input-group textarea:focus {
+            border-color: #6366f1 !important; /* indigo-500 */
+            background-color: #4b5563 !important; /* gray-600 */
+            box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.3) !important;
+        }
+        /* --- CORREÇÃO PARA O PLACEHOLDER --- */
+        .dark .input-group input::placeholder,
+        .dark .input-group textarea::placeholder {
+            color: #9ca3af; /* gray-400 */
+        }
+        /* Cor de texto para elementos no modo escuro */
+        .dark h1, .dark h2, .dark h3, .dark h4, .dark label {
+            color: #f3f4f6;
+        }
+        .dark .input-group input, .dark .input-group select, .dark .input-group textarea {
+            color: #f9fafb;
+        }
+
         .dark .bg-indigo-50 { background-color: #374151 !important; }
         .dark .border-indigo-200 { border-color: #4b5563 !important; }
         .dark .text-indigo-800 { color: #a5b4fc !important; }
@@ -854,10 +874,10 @@
             margin-bottom: 0.5rem;
             border-left-width: 4px;
             transition: background-color 0.2s;
-            color: var(--text-medium); /* <-- ADICIONADO ESTA LINHA */
+            color: var(--text-medium); /* Aplica a cor de texto padrão */
         }
         .dark .retention-paragraph {
-            color: #d1d5db; /* <-- ADICIONADO ESTE BLOCO */
+            color: #d1d5db; /* Cor de texto padrão para o modo escuro */
         }
 
         .retention-paragraph strong {
@@ -2125,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção específica, traduz as sugestões e exibe um relatório visual.
+         * Analisa uma seção, traduz as sugestões individualmente e exibe o relatório visual.
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2145,73 +2165,53 @@ The final output MUST be only the JSON code, like this example:
                 const selectedLanguage = elements.languageSelect.value;
                 const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                // --- ETAPA 1: Gerar a análise com sugestões em INGLÊS ---
-                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts. Analyze the following script section, which is the "${sectionTitle}" of the video. Break it down into its core paragraphs or ideas for evaluation.
-
-                **Script Section for Analysis:**
+                // ETAPA 1: Gerar a análise com sugestões em inglês
+                const analysisPrompt = `You are a "Retention Editor" for YouTube scripts. Analyze the following script section ("${sectionTitle}") and break it into its core paragraphs. For EACH paragraph, create a JSON object with:
+                1. "paragraphText": The original, unaltered paragraph.
+                2. "retentionScore": A string ('green', 'yellow', or 'red').
+                3. "suggestion": A short, actionable suggestion in English to improve it.
+                Respond ONLY with a valid JSON array of these objects.
+                
+                Script Section:
                 ---
                 ${sectionText}
-                ---
-
-                For EACH paragraph you identify, create a JSON object with:
-                1. "paragraphText": The original, unaltered text of the paragraph.
-                2. "retentionScore": A string ('green', 'yellow', or 'red') rating its retention impact.
-                3. "suggestion": A short, actionable suggestion in English to improve it.
-
-                Respond ONLY with a valid JSON array of these objects.`;
+                ---`;
 
                 const rawAnalysisResult = await callGroqAPI(analysisPrompt, 2500);
                 const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
                 if (!cleanedAnalysis) throw new Error("A IA retornou uma análise em formato inválido.");
                 let analysis = JSON.parse(cleanedAnalysis);
 
-                // --- ETAPA 2: TRADUZIR as sugestões se o idioma não for inglês ---
+                // ETAPA 2: Traduzir as sugestões se o idioma não for inglês
                 if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
-                    // Agrupa todas as sugestões em inglês para uma única chamada de tradução
-                    const suggestionsToTranslate = analysis.map(item => item.suggestion);
+                    const translationPromises = analysis.map(item => {
+                        const translationPrompt = `Translate the following sentence into ${languageName}: "${item.suggestion}"`;
+                        return callGroqAPI(translationPrompt, 200);
+                    });
                     
-                    const translationPrompt = `Translate the following JSON array of English strings into the language: ${languageName}. Maintain the exact JSON array structure in your response.
-
-                    ${JSON.stringify(suggestionsToTranslate)}`;
-
-                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1500);
-                    const cleanedTranslation = cleanGeneratedText(rawTranslationResult, true);
-                    if (!cleanedTranslation) throw new Error("A IA falhou em traduzir as sugestões.");
-                    const translatedSuggestions = JSON.parse(cleanedTranslation);
-
-                    // Re-mapeia a análise original com as sugestões traduzidas
+                    const translatedSuggestions = await Promise.all(translationPromises);
+                    
                     analysis.forEach((item, index) => {
-                        // Verifica se a tradução correspondente existe antes de atribuir
-                        if (translatedSuggestions && translatedSuggestions[index]) {
-                            item.suggestion = translatedSuggestions[index];
-                        }
+                        item.suggestion = removeMetaComments(translatedSuggestions[index]) || item.suggestion;
                     });
                 }
-                
-                // --- ETAPA 3: Renderizar o resultado final ---
+
+                // ETAPA 3: Renderizar o resultado final
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
-                    const scoreLabels = {
-                        green: "PONTO FORTE",
-                        yellow: "PONTO DE ATENÇÃO",
-                        red: "PONTO DE RISCO"
-                    };
-                    const scoreColors = {
-                        green: "green-500",
-                        yellow: "yellow-400",
-                        red: "red-500"
-                    };
+                    const scoreLabels = { green: "PONTO FORTE", yellow: "PONTO DE ATENÇÃO", red: "PONTO DE RISCO" };
+                    const scoreColors = { green: "green-500", yellow: "yellow-400", red: "red-500" };
                     const bgColorClasses = {
                         green: "bg-green-50 dark:bg-green-900/20 border-green-500",
                         yellow: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400",
                         red: "bg-red-50 dark:bg-red-900/20 border-red-500"
-                    }
+                    };
 
                     const analysisCard = `
-                        <div class="p-4 rounded-lg border-l-4 ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
-                            <p class="text-sm italic mb-3 text-gray-700 dark:text-gray-300">"${item.paragraphText}"</p>
-                            <div class="pt-3 border-t border-dashed border-gray-300 dark:border-gray-600">
+                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                            <p class="text-sm italic mb-3">"${item.paragraphText}"</p>
+                            <div class="pt-2 border-t border-dashed border-gray-300 dark:border-gray-600">
                                 <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
@@ -2243,42 +2243,26 @@ The final output MUST be only the JSON code, like this example:
             showLoading(button);
 
             try {
-                // --- PROMPT FINAL E BLINDADO ---
-                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Analise a descrição de um nicho e gere 6 ideias de vídeo.
+                const prompt = `Você é um Estrategista de Conteúdo Viral para o YouTube. Sua tarefa é analisar a descrição de um nicho e gerar 6 ideias de vídeo com alto potencial de engajamento.
 
                 **Nicho/Descrição:** "${nicheDescription}"
 
-                **REGRAS DE FORMATAÇÃO (ABSOLUTAS):**
-                1.  Sua resposta DEVE ser um array JSON válido.
-                2.  Cada objeto no array DEVE conter **EXATAMENTE e SOMENTE** as seguintes 5 chaves, todas entre aspas duplas: "title", "angle", "targetAudience", "viralityScore", "videoDescription".
-                3.  Não invente ou adicione nenhuma outra chave.
+                Para cada ideia, você deve fornecer:
+                1.  **title:** Um título "clickbait" mas inteligente (máximo 70 caracteres).
+                2.  **angle:** O ângulo ou abordagem única em uma frase curta (máximo 120 caracteres).
+                3.  **targetAudience:** O público-alvo específico que esta ideia mais atrairia.
+                4.  **viralityScore:** Uma nota de 0 a 10 sobre o potencial de viralidade.
+                5.  **videoDescription:** Uma descrição curta e otimizada para o YouTube.
 
-                **REQUISITOS DO CONTEÚDO:**
-                -   "title": Um título "clickbait" mas inteligente (máximo 70 caracteres).
-                -   "angle": O ângulo único em uma frase curta (máximo 120 caracteres).
-                -   "targetAudience": O público-alvo específico.
-                -   "viralityScore": Uma nota numérica de 0 a 10.
-                -   "videoDescription": Uma descrição curta para o YouTube.
-
-                Exemplo de um objeto válido:
-                {
-                    "title": "Exemplo de Título",
-                    "angle": "Um ângulo único e cativante.",
-                    "targetAudience": "Público específico para este tema.",
-                    "viralityScore": 8,
-                    "videoDescription": "Uma descrição otimizada para o vídeo."
-                }`;
+                Responda APENAS com um array JSON. Cada objeto no array deve conter exatamente as chaves acima.`;
 
                 const rawResult = await callGroqAPI(prompt, 4000);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
-                 if (!cleanedResult) {
-                    console.error("Falha na limpeza do JSON.", rawResult);
-                    throw new Error("A IA não retornou um JSON válido.");
-                }
                 const ideas = JSON.parse(cleanedResult);
 
                 outputContainer.innerHTML = ''; 
 
+                // --- LÓGICA DE RENDERIZAÇÃO FINAL MINIMALISTA ---
                 ideas.forEach((idea, index) => {
                     const ideaCard = `
                         <div class="card-background p-4 rounded-lg shadow-md border-l-4 border-indigo-500 animate-fade-in flex flex-col justify-between min-h-[140px]">
