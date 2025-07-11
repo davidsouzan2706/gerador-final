@@ -845,35 +845,6 @@
         .dark .nested-accordion-header h4 {
             color: #9ca3af;
         }
-
-        /* ========================================================== */
-        /* ================ ESTILO DO BOTÃO "OUVIR" ================= */
-        /* ========================================================== */
-        .listen-btn {
-            background-color: transparent;
-            color: var(--text-medium);
-            border: 1px solid var(--border-light);
-            padding: 0.4rem;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-        }
-        .dark .listen-btn {
-            color: #9ca3af;
-            border-color: #4b5563;
-        }
-        .listen-btn:hover {
-            background-color: var(--bg-light);
-        }
-        .dark .listen-btn:hover {
-            background-color: #374151;
-        }
-        .listen-btn svg.animate-spin {
-            animation: spin 1s linear infinite;
-        }
     </style>
 </head>
 <body class="bg-gray-100 dark:bg-gray-900">
@@ -1071,38 +1042,6 @@
                 <label for="narrativeVoice">5. Voz do Narrador (a personalidade):</label>
                 <input type="text" id="narrativeVoice" class="card-background" placeholder="Ex: Sábio e experiente, Jovem e cético, Apaixonado e enérgico...">
             </div>
-            <!-- ========================================================== -->
-            <!-- === NOVO MÓDULO: CONTROLES DE ÁUDIO (VOZ E ESTILO) === -->
-            <!-- ========================================================== -->
-            <div class="input-group md:col-span-1">
-                <label for="audioVoice">6. Voz para Narração:</label>
-                <select id="audioVoice" class="card-background">
-                    <option value="pt-BR-Wavenet-B" selected>Feminina 1 (Português)</option>
-                    <option value="pt-BR-Wavenet-C">Feminina 2 (Português)</option>
-                    <option value="pt-BR-Wavenet-D">Masculina 1 (Português)</option>
-                    <option value="en-US-Wavenet-J">Feminina (Inglês)</option>
-                    <option value="en-US-Wavenet-D">Masculina (Inglês)</option>
-                </select>
-            </div>
-            <div class="input-group md:col-span-1">
-                <div class="flex items-center gap-2">
-                    <label for="audioStyle">7. Estilo da Voz (Temperatura):</label>
-                    <span class="tooltip card-background" data-tooltip="Define o quão 'criativa' ou 'certinha' a voz deve ser.
-
-0.5 (Mais Robótica): Precisa e consistente, mas menos expressiva.
-
-0.7 (Equilibrada): Bom balanço entre naturalidade e consistência. (Padrão)
-
-1.0 (Mais Criativa): Mais expressiva e com variações, mas pode soar menos previsível.">
-                        (?)
-                    </span>
-                </div>
-                <select id="audioStyle" class="card-background">
-                    <option value="0.5">Precisa / Robótica</option>
-                    <option value="0.7" selected>Equilibrada (Padrão)</option>
-                    <option value="1.0">Criativa / Expressiva</option>
-                </select>
-            </div>
             
             <div class="input-group md:col-span-2">
                 <label for="centralQuestion">Pergunta Central (Opcional):</label>
@@ -1248,9 +1187,6 @@
             <button id="fullScreenAlertCloseBtn">Entendi</button>
         </div>
     </div>
-
-    <!-- Player de Áudio Global para Pré-visualização -->
-    <audio id="audioPlayer" style="display: none;"></audio>
     
     <script type="module">
         // ==========================================================
@@ -1533,17 +1469,13 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const soundtrackBodyId = `soundtrackBody-${sectionId}`;
             const soundtrackArrowId = `soundtrackArrow-${sectionId}`;
 
-            const listenBtnHtml = `<button class="listen-btn" onclick="event.stopPropagation(); playSectionAudio('${sectionId}')" title="Ouvir prévia da narração">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path d="M11.596 8.697l-6.363 3.692c-.54.313-1.233-.066-1.233-.697V4.308c0-.63.692-1.01 1.233-.696l6.363 3.692a.802.802 0 0 1 0 1.393z"/></svg>
-            </button>`;
-
             const regenerateBtnHtml = `<button class="regenerate-btn" onclick="event.stopPropagation(); window.regenerateSection('${sectionId}', '${title}', '${sectionId}')" title="Re-gerar esta seção">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.966c.12.1.12.284 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466"/></svg>
             </button>`;
 
             const copyBtnHtml = `<button class="copy-btn" onclick="event.stopPropagation(); copyTextToClipboard(document.getElementById('${mainBodyId}').querySelector('.generated-content-wrapper').textContent); window.showCopyFeedback(this)">Copiar</button>`;
             
-            const headerButtonsHtml = `${listenBtnHtml} ${regenerateBtnHtml} ${copyBtnHtml}`;
+            const headerButtonsHtml = `${regenerateBtnHtml} ${copyBtnHtml}`;
 
             const promptsSectionHtml = `
                 <div class="section-prompts">
@@ -2217,77 +2149,6 @@ The final output MUST be only the JSON code, like this example:
             document.getElementById('mainInputsGrid').scrollIntoView({ behavior: 'smooth', block: 'start' });
             
             window.showToast("Ideia selecionada! Agora defina a estratégia completa.");
-        };
-
-        /**
-         * Gera, reproduz e inicia o download do áudio para uma seção específica do roteiro,
-         * usando as configurações de voz e estilo definidas pelo usuário.
-         */
-        const playSectionAudio = async (sectionId) => {
-            const sectionElement = document.getElementById(sectionId);
-            const button = sectionElement.querySelector('.listen-btn');
-            const icon = button.querySelector('svg');
-            const originalIconHTML = icon.innerHTML;
-            const audioPlayer = document.getElementById('audioPlayer');
-
-            if (!audioPlayer.paused) {
-                audioPlayer.pause();
-                audioPlayer.currentTime = 0;
-            }
-
-            const textToSpeak = sectionElement.querySelector('.generated-content-wrapper')?.textContent;
-            if (!textToSpeak) {
-                window.showToast("Não há texto para ouvir nesta seção.");
-                return;
-            }
-
-            icon.innerHTML = `<path d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2z"/>`;
-            icon.classList.add('animate-spin');
-            button.disabled = true;
-
-            try {
-                // --- LEITURA DOS NOVOS CONTROLES DA INTERFACE ---
-                const voiceName = document.getElementById('audioVoice').value;
-                const audioTemp = parseFloat(document.getElementById('audioStyle').value);
-
-                const response = await fetch('/.netlify/functions/gemini-tts', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ textToSpeak, voiceName, audioTemp })
-                });
-                // --- FIM DA MODIFICAÇÃO ---
-
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.error || 'Falha ao gerar o áudio.');
-                }
-
-                const { audioBase64 } = await response.json();
-                const audioUrl = `data:audio/mpeg;base64,${audioBase64}`;
-                
-                audioPlayer.src = audioUrl;
-                audioPlayer.play();
-
-                const downloadLink = document.createElement('a');
-                downloadLink.href = audioUrl;
-                const sectionTitle = sectionElement.querySelector('h3')?.textContent.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || sectionId;
-                const fileName = `${sectionTitle}_audio.mp3`;
-                downloadLink.download = fileName;
-                
-                document.body.appendChild(downloadLink);
-                downloadLink.click();
-                document.body.removeChild(downloadLink);
-
-                window.showToast(`Reproduzindo e baixando áudio de "${sectionElement.querySelector('h3')?.textContent || 'seção'}"!`);
-
-            } catch (error) {
-                window.showToast(error.message);
-                console.error("Erro na reprodução de áudio:", error);
-            } finally {
-                icon.classList.remove('animate-spin');
-                icon.innerHTML = originalIconHTML;
-                button.disabled = false;
-            }
         };
 
         /**
@@ -3305,7 +3166,6 @@ ${scriptContent}
             elements.progressText = document.getElementById('progressText');
             elements.projectDashboard = document.getElementById('projectDashboard'); 
             elements.outlineContent = document.getElementById('outlineContent'); 
-            elements.audioPlayer = document.getElementById('audioPlayer'); // Referência ao player de áudio
 
             // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
 
@@ -3318,8 +3178,6 @@ ${scriptContent}
             elements.narrativeTheme = document.getElementById('narrativeTheme');
             elements.narrativeTone = document.getElementById('narrativeTone');
             elements.narrativeVoice = document.getElementById('narrativeVoice');
-            elements.audioVoice = document.getElementById('audioVoice');
-            elements.audioStyle = document.getElementById('audioStyle');
             // --- FIM DAS LINHAS A SEREM ADICIONADAS ---
 
             // --- Adiciona referências para os novos elementos do gerador de ideias ---
