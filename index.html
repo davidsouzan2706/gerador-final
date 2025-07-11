@@ -2125,7 +2125,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção específica do roteiro, traduz as sugestões e exibe um relatório visual.
+         * Analisa uma seção específica, traduz as sugestões e exibe um relatório visual.
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2145,19 +2145,18 @@ The final output MUST be only the JSON code, like this example:
                 const selectedLanguage = elements.languageSelect.value;
                 const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                // ETAPA 1: Gerar a análise com sugestões em inglês
-                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts for maximum audience retention. Your task is to analyze the provided script section, which is the "${sectionTitle}" of the video, and break it down into its core paragraphs or ideas for evaluation.
+                // --- ETAPA 1: Gerar a análise com sugestões em INGLÊS ---
+                const analysisPrompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts. Analyze the following script section, which is the "${sectionTitle}" of the video. Break it down into its core paragraphs or ideas for evaluation.
 
                 **Script Section for Analysis:**
                 ---
                 ${sectionText}
                 ---
 
-                **Instructions:**
                 For EACH paragraph you identify, create a JSON object with:
-                1.  **paragraphText**: The original, unaltered text of the paragraph.
-                2.  **retentionScore**: A string ('green', 'yellow', or 'red') rating its retention impact.
-                3.  **suggestion**: A short, actionable suggestion in English to improve it.
+                1. "paragraphText": The original, unaltered text of the paragraph.
+                2. "retentionScore": A string ('green', 'yellow', or 'red') rating its retention impact.
+                3. "suggestion": A short, actionable suggestion in English to improve it.
 
                 Respond ONLY with a valid JSON array of these objects.`;
 
@@ -2166,24 +2165,30 @@ The final output MUST be only the JSON code, like this example:
                 if (!cleanedAnalysis) throw new Error("A IA retornou uma análise em formato inválido.");
                 let analysis = JSON.parse(cleanedAnalysis);
 
-                // ETAPA 2: Traduzir as sugestões se o idioma não for inglês
+                // --- ETAPA 2: TRADUZIR as sugestões se o idioma não for inglês ---
                 if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
+                    // Agrupa todas as sugestões em inglês para uma única chamada de tradução
                     const suggestionsToTranslate = analysis.map(item => item.suggestion);
                     
-                    const translationPrompt = `Translate this JSON array of English strings into the language '${languageName}' (code: ${selectedLanguage}). Keep the exact JSON array structure.
+                    const translationPrompt = `Translate the following JSON array of English strings into the language: ${languageName}. Maintain the exact JSON array structure in your response.
 
                     ${JSON.stringify(suggestionsToTranslate)}`;
 
-                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1000);
+                    const rawTranslationResult = await callGroqAPI(translationPrompt, 1500);
                     const cleanedTranslation = cleanGeneratedText(rawTranslationResult, true);
+                    if (!cleanedTranslation) throw new Error("A IA falhou em traduzir as sugestões.");
                     const translatedSuggestions = JSON.parse(cleanedTranslation);
 
+                    // Re-mapeia a análise original com as sugestões traduzidas
                     analysis.forEach((item, index) => {
-                        item.suggestion = translatedSuggestions[index] || item.suggestion;
+                        // Verifica se a tradução correspondente existe antes de atribuir
+                        if (translatedSuggestions && translatedSuggestions[index]) {
+                            item.suggestion = translatedSuggestions[index];
+                        }
                     });
                 }
-
-                // ETAPA 3: Renderizar o resultado final
+                
+                // --- ETAPA 3: Renderizar o resultado final ---
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
@@ -2203,11 +2208,10 @@ The final output MUST be only the JSON code, like this example:
                         red: "bg-red-50 dark:bg-red-900/20 border-red-500"
                     }
 
-                    // --- HTML DO CARD CORRIGIDO ---
                     const analysisCard = `
-                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                        <div class="p-4 rounded-lg border-l-4 ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
                             <p class="text-sm italic mb-3 text-gray-700 dark:text-gray-300">"${item.paragraphText}"</p>
-                            <div class="pt-2 border-t border-dashed border-gray-300 dark:border-gray-600">
+                            <div class="pt-3 border-t border-dashed border-gray-300 dark:border-gray-600">
                                 <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
