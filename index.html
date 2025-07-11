@@ -2145,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção, traduz as sugestões individualmente e exibe o relatório visual.
+         * Analisa uma seção específica do roteiro e exibe o feedback em inglês.
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2162,41 +2162,28 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const sectionTitle = sectionElement.querySelector('h3').textContent;
-                const selectedLanguage = elements.languageSelect.value;
-                const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                // ETAPA 1: Gerar a análise com sugestões em inglês
-                const analysisPrompt = `You are a "Retention Editor" for YouTube scripts. Analyze the following script section ("${sectionTitle}") and break it into its core paragraphs. For EACH paragraph, create a JSON object with:
-                1. "paragraphText": The original, unaltered paragraph.
-                2. "retentionScore": A string ('green', 'yellow', or 'red').
-                3. "suggestion": A short, actionable suggestion in English to improve it.
-                Respond ONLY with a valid JSON array of these objects.
-                
-                Script Section:
+                // Prompt simplificado, focado 100% na análise em inglês
+                const prompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts. Analyze the following script section, which is the "${sectionTitle}" of the video. Break it down into its core paragraphs or ideas for evaluation.
+
+                **Script Section for Analysis:**
                 ---
                 ${sectionText}
-                ---`;
+                ---
 
-                const rawAnalysisResult = await callGroqAPI(analysisPrompt, 2500);
-                const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
-                if (!cleanedAnalysis) throw new Error("A IA retornou uma análise em formato inválido.");
-                let analysis = JSON.parse(cleanedAnalysis);
+                **Instructions:**
+                For EACH paragraph you identify, create a JSON object with:
+                1. "paragraphText": The original, unaltered text of the paragraph.
+                2. "retentionScore": A string ('green', 'yellow', or 'red') rating its retention impact.
+                3. "suggestion": A short, actionable suggestion in English to improve it.
 
-                // ETAPA 2: Traduzir as sugestões se o idioma não for inglês
-                if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
-                    const translationPromises = analysis.map(item => {
-                        const translationPrompt = `Translate the following sentence into ${languageName}: "${item.suggestion}"`;
-                        return callGroqAPI(translationPrompt, 200);
-                    });
-                    
-                    const translatedSuggestions = await Promise.all(translationPromises);
-                    
-                    analysis.forEach((item, index) => {
-                        item.suggestion = removeMetaComments(translatedSuggestions[index]) || item.suggestion;
-                    });
-                }
+                Respond ONLY with a valid JSON array of these objects.`;
 
-                // ETAPA 3: Renderizar o resultado final
+                const rawResult = await callGroqAPI(prompt, 2500);
+                const cleanedResult = cleanGeneratedText(rawResult, true);
+                if (!cleanedResult) throw new Error("A IA retornou uma análise em formato inválido.");
+                const analysis = JSON.parse(cleanedResult);
+
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
@@ -2209,10 +2196,10 @@ The final output MUST be only the JSON code, like this example:
                     };
 
                     const analysisCard = `
-                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                        <div class="p-4 rounded-lg border-l-4 ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
                             <p class="text-sm italic mb-3">"${item.paragraphText}"</p>
-                            <div class="pt-2 border-t border-dashed border-gray-300 dark:border-gray-600">
-                                <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
+                            <div class="pt-3 border-t border-dashed border-gray-300 dark:border-gray-600">
+                                <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'text-gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
                                 <p class="text-sm mt-1">${item.suggestion}</p>
