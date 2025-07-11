@@ -1019,10 +1019,7 @@
                 <label for="emotionalArc">Arco Emocional Desejado (Opcional):</label>
                 <textarea id="emotionalArc" rows="2" class="card-background" placeholder="Ex: Começar com curiosidade, construir para admiração, e terminar com inspiração."></textarea>
             </div>
-            <div class="input-group md:col-span-2">
-                <label for="viralElements">Elementos Virais/Tendências (Opcional):</label>
-                <textarea id="viralElements" rows="2" class="card-background" placeholder="Insira memes, frases, tendências ou palavras-chave em alta. Ex: 'o hype é real', 'chocado', 'plot twist'"></textarea>
-            </div>
+            <!-- REMOVIDO: Elementos Virais/Tendências (Opcional) -->
             <div class="input-group md:col-span-2">
                 <label for="imageDescriptionEngine">Motor de Descrição de Imagem:</label>
                 <textarea id="imageDescriptionEngine" rows="2" class="card-background" placeholder="Ex: 'alta resolução', 'detalhado', 'fotorrealista', 'cores vibrantes'"></textarea>
@@ -1167,7 +1164,7 @@
         let generatedTitlesAndThumbnails = null;
         let allImagePrompts = {}; 
         let strategicOutline = null;
-        let totalScriptSeconds = 0; // <-- ADICIONE ESTA LINHA
+        let totalScriptSeconds = 0; 
     
         // Bloco de estilo cinematográfico para prompts de imagem
         const CINEMATIC_STYLE_BLOCK = `
@@ -1293,7 +1290,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
                     btn.classList.add('btn-success');
                 }
             });
-            updateProgressBar(); // <-- ADICIONADO AQUI
+            updateProgressBar(); 
         };
 
         /**
@@ -1340,7 +1337,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         const updateButtonStates = () => {
             const allMainScriptGenerated = isScriptComplete();
             // Verifica se há qualquer conteúdo gerado para habilitar PDF e reset
-            const hasAnyContent = document.querySelector('#scriptColumn .accordion-item') != null; // Updated selector for new dashboard
+            const hasAnyContent = document.querySelector('#scriptColumn .accordion-item') != null; 
 
             // Botões que dependem da conclusão do roteiro principal
             ['generateDescriptionBtn', 'generateTitlesAndThumbnailsBtn'].forEach(id => { 
@@ -1350,24 +1347,12 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
                 if (floatBtn) floatBtn.disabled = !allMainScriptGenerated;
             });
             
-            // /* Bloco removido para manter o botão PDF sempre ativo
-            // Botões que dependem de qualquer conteúdo gerado
-            // ['downloadPdfBtn'].forEach(id => {
-            //      const originalBtn = document.getElementById(id);
-            //      const floatBtn = document.getElementById(`float_${id}`);
-            //      if (originalBtn) originalBtn.disabled = !hasAnyContent;
-            //      if (floatBtn) floatBtn.disabled = !hasAnyContent;
-            // });
-            // */
-
             // Botão de reset sempre habilitado (ou desabilitado apenas se não houver nada para resetar)
             const resetBtn = document.getElementById('resetScriptBtn');
             const floatResetBtn = document.getElementById('float_resetScriptBtn');
-            if (resetBtn) resetBtn.disabled = false; // Ajuste conforme a necessidade de reset
+            if (resetBtn) resetBtn.disabled = false; 
             if (floatResetBtn) floatResetBtn.disabled = false;
 
-            // REMOVIDO: Habilitar botões de geração de roteiro se o esboço estiver pronto
-            // A lógica agora está na função handleGenerateSection para exibir um alerta.
         };
 
         /**
@@ -1599,7 +1584,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
         const narrativeTooltips = {
             documentary: "Constrói um argumento com fatos, evidências e uma narração autoritária. Perfeito para vídeos expositivos.",
             heros_journey: "Conta uma história de transformação e superação. Ótimo para narrativas inspiradoras.",
-            pixar_spine: "Estrutura emocional de 8 passos (Era uma vez... todo dia... até que...). Perfeita para arcos de personagem rápidos.",
+            pixar_spine: "Estrutura emocional de 8 passos (Era uma vez... todo dia... até que...). Pergunta para arcos de personagem rápidos.",
             mystery_loop: "Apresenta uma pergunta no início e a responde no final. Excelente para reter a atenção.",
             twist: "Constrói uma expectativa e a quebra com uma revelação surpreendente no final.",
             underdog_victory: "Mostra alguém com limitações que venceu contra tudo e todos. Gera alta conexão emocional.",
@@ -1672,7 +1657,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const videoDescription = elements.videoDescription.value.trim();
             const centralQuestion = elements.centralQuestion.value.trim();
             const emotionalArc = elements.emotionalArc.value.trim();
-            const viralElements = elements.viralElements.value.trim();
+            // REMOVIDO: const viralElements = elements.viralElements.value.trim();
             const imageDescriptionEngine = elements.imageDescriptionEngine.value.trim();
             const imageStyleSelect = elements.imageStyleSelect.value;
             const customImageStyle = elements.customImageStyle.value.trim();
@@ -1708,7 +1693,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             if (videoDescription) { context += `\n\n**Additional Information & Inspiration:**\n- Inspiration/Context: "${videoDescription}"`; }
             if (centralQuestion) { context += `\n- Central Question to guide the entire script: "${centralQuestion}"`; }
             if (emotionalArc) { context += `\n- Desired Emotional Arc: "${emotionalArc}"`; }
-            if (viralElements) { context += `\n- Viral Elements to incorporate: "${viralElements}"`; }
+            // REMOVIDO: if (viralElements) { context += `\n- Viral Elements to incorporate: "${viralElements}"`; }
             
             if (imageStyleSelect === 'cinematic' || imageStyleSelect === 'custom') {
                 context += `\n\n**Visual Style Instructions:**`;
@@ -1734,7 +1719,7 @@ Ultra-realistic, high-resolution photographic image. Captured with natural light
             const baseContext = getBasePromptContext();
             const videoDuration = elements.videoDuration.value;
             const selectedLanguage = elements.languageSelect.value;
-            const narrativeStyle = document.getElementById('narrativeStructure').value; // CORRIGIDO: Lê do novo seletor
+            const narrativeStyle = document.getElementById('narrativeStructure').value; 
 
             let prompt = `${baseContext}
 
@@ -1890,10 +1875,7 @@ Exemplo de formato JSON esperado:
                     prompt += `
                     The Call to Action (CTA) should be clear and concise, encouraging viewers to subscribe, like, comment, or share. It should be compelling and feel like a natural conclusion to the video. For a "${videoDuration}" video, keep this CTA direct and effective, **but ensure it is a complete and well-rounded paragraph.**
                     `;
-                    if (selectedLanguage === 'pt-br' || selectedLanguage === 'pt-pt') {
-                        prompt += `\n**IMPORTANT: The response for this section MUST be in Portuguese.**`;
-                    }
-                    maxTokens = 400; // <<< AUMENTAMOS O LIMITE SIGNIFICATIVAMENTE
+                    maxTokens = 400; 
                     break;
                 case 'titles_thumbnails':
                     prompt = `${baseContext}
@@ -2247,7 +2229,7 @@ ${scriptContent}
          */
         window.suggestSoundtrack = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
-            const scriptContent = sectionElement.querySelector('.generated-content-wrapper').textContent; // Updated selector
+            const scriptContent = sectionElement.querySelector('.generated-content-wrapper').textContent; 
             const soundtrackContainer = sectionElement.querySelector('.soundtrack-container');
             
             if (!scriptContent) {
@@ -2255,7 +2237,7 @@ ${scriptContent}
                 return;
             }
 
-            soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; // Mostra um spinner
+            soundtrackContainer.innerHTML = `<div class="loading-spinner-small"></div>`; 
 
             const prompt = `Você é um especialista em prompts para IAs de geração de música (como Suno/Udio). Sua tarefa é analisar o seguinte trecho de roteiro e criar 3 prompts de texto distintos e detalhados.
 
@@ -2284,7 +2266,6 @@ ${scriptContent}
 
                 soundtrackContainer.innerHTML = ''; // Limpa o spinner
                 if (suggestions && suggestions.length > 0) {
-                    // --- INÍCIO DA MUDANÇA PRINCIPAL ---
                     // Agora envolvemos a lista em um div com as classes corretas para ter um fundo e padding.
                     let suggestionsHtml = '<div class="card-background p-4 rounded-lg shadow-inner">';
                     suggestionsHtml += '<ul class="soundtrack-list">';
@@ -2292,8 +2273,7 @@ ${scriptContent}
                         suggestionsHtml += `<li>${suggestion}</li>`;
                     });
                     suggestionsHtml += '</ul>';
-                    suggestionsHtml += '</div>'; // Fecha o novo div
-                    // --- FIM DA MUDANÇA PRINCIPAL ---
+                    suggestionsHtml += '</div>'; 
 
                     soundtrackContainer.innerHTML = suggestionsHtml;
                 } else {
@@ -2561,9 +2541,6 @@ ${scriptContent}
                 outlineHtml += '</ul>';
                 outlineContentDiv.innerHTML = outlineHtml;
 
-                // REMOVIDO: Habilita os botões de geração de secção
-                // A lógica agora está na função handleGenerateSection para exibir um alerta.
-
                 markButtonAsCompleted(buttons.generateOutlineBtn.id);
 
             } catch (error) {
@@ -2673,7 +2650,7 @@ ${scriptContent}
             updateNarrativeStructureOptions(); // Atualiza as opções de estrutura
             elements.centralQuestion.value = '';
             elements.emotionalArc.value = '';
-            elements.viralElements.value = '';
+            // REMOVIDO: elements.viralElements.value = '';
             elements.imageDescriptionEngine.value = '';
             elements.imageStyleSelect.value = 'cinematic';
             elements.customImageStyle.value = '';
@@ -2756,7 +2733,7 @@ ${scriptContent}
             downloadAnchorNode.setAttribute("download", `${fileName}_projeto.json`);
             document.body.appendChild(downloadAnchorNode);
             downloadAnchorNode.click();
-            downloadAnchorNode.remove();
+            document.body.removeChild(downloadAnchorNode);
             window.showToast("Projeto exportado com sucesso!");
         };
 
@@ -2878,8 +2855,7 @@ ${scriptContent}
         };
 
         /**
-	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo,
-         * incluindo Tema, Tom e Voz.
+	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
          */
         const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
@@ -2890,46 +2866,47 @@ ${scriptContent}
                 return;
             }
             
+            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
             resetApplicationState();
+            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
             elements.videoTheme.value = theme;
             elements.videoDescription.value = description;
-
+            
             const button = buttons.analyzeStrategyBtn;
             showLoading(button);
 
             // Opções válidas para cada campo
+            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            const narrativeToneOptions = Array.from(document.getElementById('narrativeTone').options).map(o => o.value).join(', ');
+            
+            // Agrega todas as opções de estrutura para o prompt
             const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
             const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            // --- PROMPT MESTRE APRIMORADO ---
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia completa.
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
 
             Tema do Vídeo: "${theme}"
             Descrição: "${description}"
 
             Responda APENAS com um objeto JSON válido com as seguintes chaves:
             1. "target_audience": (string) O público-alvo ideal.
-            2. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
-            3. "narrative_goal": (string) O objetivo narrativo. Escolha entre 'storytelling' ou 'storyselling'.
-            4. "narrative_structure": (string) A melhor estrutura da lista: [${narrativeStructureOptions}].
-            5. "central_question": (string) A pergunta central mais intrigante.
-            6. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
-            7. "narrative_theme": (string) A "grande ideia" ou tema central da história (Ex: Superação, Injustiça, Inovação).
-            8. "narrative_tone": (string) O tom mais apropriado para a narração. DEVE SER um valor EXATO da lista: [${narrativeToneOptions}].
-            9. "narrative_voice": (string) A personalidade do narrador (Ex: Sábio e experiente, Jovem e cético).
+            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
+            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
+            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
+            6. "central_question": (string) A pergunta central mais intrigante.
+            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
             
             Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 2000); // Aumentado para 2000 para a resposta maior
+                const rawResult = await callGroqAPI(prompt, 1500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 const strategy = JSON.parse(cleanedResult);
 
                 // Preenche os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
-                
+                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
                     const returnedValue = strategy.video_objective.trim();
@@ -2937,21 +2914,17 @@ ${scriptContent}
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
+                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
                 
+                // Preenche os novos seletores de narrativa
                 if(strategy.narrative_goal) {
-                    document.getElementById('narrativeGoal').value = strategy.narrative_goal;
-                    updateNarrativeStructureOptions();
+                    elements.narrativeGoal.value = strategy.narrative_goal;
+                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
                 }
-                if(strategy.narrative_structure) document.getElementById('narrativeStructure').value = strategy.narrative_structure;
-
-                // --- PREENCHIMENTO DOS NOVOS CAMPOS ---
-                if(strategy.narrative_theme) document.getElementById('narrativeTheme').value = strategy.narrative_theme;
-                if(strategy.narrative_tone) document.getElementById('narrativeTone').value = strategy.narrative_tone;
-                if(strategy.narrative_voice) document.getElementById('narrativeVoice').value = strategy.narrative_voice;
-                // --- FIM DO PREENCHIMENTO ---
+                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
 
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
@@ -2962,6 +2935,7 @@ ${scriptContent}
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
+                // Restaura os valores em caso de erro para o usuário não perder o que digitou
                 elements.videoTheme.value = theme;
                 elements.videoDescription.value = description;
             } finally {
@@ -2975,7 +2949,7 @@ ${scriptContent}
         window.handleFloatingActionBar = () => {
             const mainActions = document.getElementById('mainActions');
             const quickActions = document.getElementById('quickActions');
-            const projectDashboard = document.getElementById('projectDashboard'); // Changed from scriptOutput
+            const projectDashboard = document.getElementById('projectDashboard'); 
             
             if (!projectDashboard) return;
 
@@ -3026,7 +3000,7 @@ ${scriptContent}
         const updateProgressBar = () => {
             // Lista de todas as tarefas que contam para o progresso
             const taskButtonIds = [
-                'generateOutlineBtn', // Added outline button
+                'generateOutlineBtn', 
                 'generateIntroBtn', 'generateDevelopmentBtn', 'climaxBtn', 
                 'conclusionBtn', 'generateCTABtn', 'generateDescriptionBtn', 
                 'generateTitlesAndThumbnailsBtn' 
@@ -3050,7 +3024,7 @@ ${scriptContent}
                 elements.progressText.textContent = `${percentage}%`;
 
                 if (percentage === 100) {
-                    elements.progressBar.textContent = "Projeto Pronto!"; // Atualiza o texto diretamente na barra
+                    elements.progressBar.textContent = "Projeto Pronto!"; 
                     elements.progressBar.style.backgroundColor = 'var(--primary-color)';
                 } else {
                      // Garante que a cor volte ao verde se não for 100%
@@ -3068,8 +3042,8 @@ ${scriptContent}
             // Adiciona as novas referências de elementos
             elements.progressBar = document.getElementById('progressBar');
             elements.progressText = document.getElementById('progressText');
-            elements.projectDashboard = document.getElementById('projectDashboard'); // New reference
-            elements.outlineContent = document.getElementById('outlineContent'); // New reference for outline content
+            elements.projectDashboard = document.getElementById('projectDashboard'); 
+            elements.outlineContent = document.getElementById('outlineContent'); 
 
             // --- INÍCIO DOS LISTENERS DO NOVO MÓDULO DE NARRATIVA ---
 
@@ -3115,7 +3089,7 @@ ${scriptContent}
             });
             
             // Adiciona os listeners de ação aos botões originais
-            if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); // New listener for outline
+            if (buttons.generateOutlineBtn) buttons.generateOutlineBtn.addEventListener('click', generateStrategicOutline); 
             if (buttons.generateIntroBtn) buttons.generateIntroBtn.addEventListener('click', () => handleGenerateSection(buttons.generateIntroBtn, 'intro', 'Introdução', 'intro'));
             if (buttons.generateDevelopmentBtn) buttons.generateDevelopmentBtn.addEventListener('click', () => handleGenerateSection(buttons.generateDevelopmentBtn, 'development', 'Desenvolvimento', 'development'));
             if (buttons.climaxBtn) buttons.climaxBtn.addEventListener('click', () => handleGenerateSection(buttons.climaxBtn, 'climax', 'Clímax', 'climax'));
@@ -3125,13 +3099,12 @@ ${scriptContent}
             if (buttons.generateDescriptionBtn) buttons.generateDescriptionBtn.addEventListener('click', generateVideoDescription);
             // Removed storyboard button listener
             if (buttons.resetScriptBtn) buttons.resetScriptBtn.addEventListener('click', resetApplicationState);
-            if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); // Changed to window.print()
-            if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); // Listener para o botão de exportar
-            // ADICIONE ESTA LINHA
+            if (buttons.downloadPdfBtn) buttons.downloadPdfBtn.addEventListener('click', downloadPdf); 
+            if (buttons.exportProjectBtn) buttons.exportProjectBtn.addEventListener('click', exportProject); 
             if (buttons.copyTranscriptBtn) buttons.copyTranscriptBtn.addEventListener('click', handleCopyAndDownloadTranscript); 
             
             // Outros listeners
-            if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); // CORRIGIDO AQUI
+            if (buttons.fullScreenAlertCloseBtn) buttons.fullScreenAlertCloseBtn.addEventListener('click', hideFullScreenAlert); 
             if (elements.imageStyleSelect) elements.imageStyleSelect.addEventListener('change', toggleCustomImageStyleVisibility);
             
             // NOVO CÓDIGO À PROVA DE BALAS PARA O MODO ESCURO
@@ -3153,7 +3126,7 @@ ${scriptContent}
                     } else {
                         // Se NÃO, esconde o sol, mostra a lua, e salva no localStorage
                         if (moonIcon) moonIcon.classList.remove('hidden');
-                        if (sunIcon) sunIcon.classList.add('hidden'); // This was moonIcon.classList.add('hidden');
+                        if (sunIcon) sunIcon.classList.add('hidden'); 
                         localStorage.setItem('darkMode', 'disabled');
                     }
                 });
