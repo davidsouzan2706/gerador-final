@@ -2145,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção específica do roteiro e exibe o feedback em inglês.
+         * Analisa uma seção específica do roteiro e exibe um relatório visual.
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2162,8 +2162,7 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const sectionTitle = sectionElement.querySelector('h3').textContent;
-
-                // Prompt simplificado, focado 100% na análise em inglês
+                
                 const prompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts. Analyze the following script section, which is the "${sectionTitle}" of the video. Break it down into its core paragraphs or ideas for evaluation.
 
                 **Script Section for Analysis:**
@@ -2182,27 +2181,32 @@ The final output MUST be only the JSON code, like this example:
                 const rawResult = await callGroqAPI(prompt, 2500);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
                 if (!cleanedResult) throw new Error("A IA retornou uma análise em formato inválido.");
-                const analysis = JSON.parse(cleanedResult);
-
+                let analysis = JSON.parse(cleanedResult);
+                
                 outputContainer.innerHTML = ''; 
 
                 analysis.forEach(item => {
                     const scoreLabels = { green: "PONTO FORTE", yellow: "PONTO DE ATENÇÃO", red: "PONTO DE RISCO" };
-                    const scoreColors = { green: "green-500", yellow: "yellow-400", red: "red-500" };
+                    const scoreColors = {
+                        green: "green-500",
+                        yellow: "yellow-400",
+                        red: "red-500"
+                    };
                     const bgColorClasses = {
                         green: "bg-green-50 dark:bg-green-900/20 border-green-500",
                         yellow: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400",
                         red: "bg-red-50 dark:bg-red-900/20 border-red-500"
                     };
 
+                    // --- HTML DO CARD FINAL E CORRIGIDO ---
                     const analysisCard = `
-                        <div class="p-4 rounded-lg border-l-4 ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
-                            <p class="text-sm italic mb-3">"${item.paragraphText}"</p>
+                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                            <p class="text-sm italic mb-3 opacity-70">"${item.paragraphText}"</p>
                             <div class="pt-3 border-t border-dashed border-gray-300 dark:border-gray-600">
-                                <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'text-gray-500'}">
+                                <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
-                                <p class="text-sm mt-1">${item.suggestion}</p>
+                                <p class="text-sm mt-1 font-semibold">${item.suggestion}</p>
                             </div>
                         </div>
                     `;
