@@ -3207,7 +3207,8 @@ ${scriptContent}
         };
 
         /**
-	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo.
+	 * Analisa o tema e a descrição do vídeo para definir a estratégia de conteúdo,
+         * incluindo todos os novos campos de narrativa.
          */
         const analyzeAndSetStrategy = async () => {
             const theme = elements.videoTheme.value.trim();
@@ -3218,47 +3219,47 @@ ${scriptContent}
                 return;
             }
             
-            // Zera o estado do painel de resultados ANTES de gerar uma nova estratégia
             resetApplicationState();
-            // Restaura os valores que o usuário acabou de digitar, pois o reset os apagou
             elements.videoTheme.value = theme;
             elements.videoDescription.value = description;
             
-            const button = buttons.analyzeStrategyBtn;
+            const button = document.getElementById('analyzeStrategyBtn');
             showLoading(button);
 
             // Opções válidas para cada campo
-            const languageStyleOptions = Array.from(elements.languageStyle.options).map(o => o.value).join(', ');
             const videoObjectiveOptions = Array.from(elements.videoObjective.options).map(o => o.value).join(', ');
-            
-            // Agrega todas as opções de estrutura para o prompt
+            const narrativeToneOptions = Array.from(document.getElementById('narrativeTone').options).map(o => o.value).join(', ');
             const allStructures = {...narrativeStructures.storytelling, ...narrativeStructures.storyselling};
             const narrativeStructureOptions = Object.keys(allStructures).join(', ');
 
-            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia.
+            // --- PROMPT MESTRE FINAL E CORRIGIDO ---
+            const prompt = `Você é um Estrategista de Conteúdo de IA para o YouTube. Analise o tema e a descrição e defina a melhor estratégia completa.
 
-            Tema do Vídeo: "${theme}"
-            Descrição: "${description}"
+            **Tema do Vídeo:** "${theme}"
+            **Descrição:** "${description}"
 
-            Responda APENAS com um objeto JSON válido com as seguintes chaves:
-            1. "target_audience": (string) O público-alvo ideal.
-            2. "language_style": (string) O melhor estilo de linguagem da lista: [${languageStyleOptions}].
-            3. "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
-            4. "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
-            5. "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
-            6. "central_question": (string) A pergunta central mais intrigante.
-            7. "emotional_arc": (string) O arco emocional ideal (Ex: Curiosidade -> Tensão -> Inspiração).
+            Responda APENAS com um objeto JSON válido com as seguintes 9 chaves:
+            1.  "target_audience": (string) O público-alvo ideal em uma frase.
+            2.  "video_objective": (string) O objetivo principal. DEVE SER um valor EXATO da lista: [${videoObjectiveOptions}].
+            3.  "narrative_goal": (string) O objetivo narrativo principal. Escolha entre 'storytelling' ou 'storyselling'.
+            4.  "narrative_structure": (string) Baseado no objetivo, a melhor estrutura da lista: [${narrativeStructureOptions}].
+            5.  "narrative_theme": (string) A "grande ideia" ou tema central da história em poucas palavras (Ex: Superação, Injustiça, Inovação).
+            6.  "narrative_tone": (string) O tom mais apropriado para a narração. DEVE SER um valor EXATO da lista: [${narrativeToneOptions}].
+            7.  "narrative_voice": (string) A personalidade do narrador (Ex: Sábio e experiente, Jovem e cético).
+            8.  "central_question": (string) A pergunta central mais intrigante que o vídeo deve responder.
+            9.  "emotional_arc": (string) O arco emocional ideal em uma frase curta (Ex: Curiosidade -> Tensão -> Inspiração).
             
             Seja coeso e eficaz.`;
 
             try {
-                const rawResult = await callGroqAPI(prompt, 1500);
+                const rawResult = await callGroqAPI(prompt, 2000);
                 const cleanedResult = cleanGeneratedText(rawResult, true);
+                if (!cleanedResult) throw new Error("A IA não retornou uma estratégia em formato JSON válido.");
                 const strategy = JSON.parse(cleanedResult);
 
-                // Preenche os campos da interface com a resposta da IA
+                // Preenche todos os campos da interface com a resposta da IA
                 if(strategy.target_audience) elements.targetAudience.value = strategy.target_audience;
-                if(strategy.language_style) elements.languageStyle.value = strategy.language_style;
+                
                 if (strategy.video_objective) {
                     const objectiveSelect = elements.videoObjective;
                     const returnedValue = strategy.video_objective.trim();
@@ -3266,17 +3267,23 @@ ${scriptContent}
                     if (validOptions.includes(returnedValue)) {
                         objectiveSelect.value = returnedValue;
                     } else {
-                        console.warn(`IA retornou um 'video_objective' inválido: '${returnedValue}'. Usando o padrão 'informar'.`);
                         objectiveSelect.value = 'informar'; 
                     }
                 }
                 
-                // Preenche os novos seletores de narrativa
+                // Preenche os seletores de narrativa na ordem correta
                 if(strategy.narrative_goal) {
-                    elements.narrativeGoal.value = strategy.narrative_goal;
-                    updateNarrativeStructureOptions(); // Atualiza o segundo dropdown
+                    document.getElementById('narrativeGoal').value = strategy.narrative_goal;
                 }
-                if(strategy.narrative_structure) elements.narrativeStructure.value = strategy.narrative_structure;
+                updateNarrativeStructureOptions(); // Popula o segundo dropdown
+                if(strategy.narrative_structure) {
+                    document.getElementById('narrativeStructure').value = strategy.narrative_structure;
+                }
+                
+                // Preenche os novos campos de personalidade
+                if(strategy.narrative_theme) document.getElementById('narrativeTheme').value = strategy.narrative_theme;
+                if(strategy.narrative_tone) document.getElementById('narrativeTone').value = strategy.narrative_tone;
+                if(strategy.narrative_voice) document.getElementById('narrativeVoice').value = strategy.narrative_voice;
 
                 if(strategy.central_question) elements.centralQuestion.value = strategy.central_question;
                 if(strategy.emotional_arc) elements.emotionalArc.value = strategy.emotional_arc;
@@ -3287,7 +3294,6 @@ ${scriptContent}
             } catch (error) {
                 window.showToast(`Falha ao definir estratégia: ${error.message}`);
                 console.error("Erro na análise estratégica:", error);
-                // Restaura os valores em caso de erro para o usuário não perder o que digitou
                 elements.videoTheme.value = theme;
                 elements.videoDescription.value = description;
             } finally {
