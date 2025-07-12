@@ -2631,7 +2631,8 @@ ${scriptContent}
 
         /**
          * Copia a transcrição completa para a área de transferência e
-         * inicia o download de um arquivo .docx contendo a mesma transcrição.
+         * inicia o download de um arquivo .rtf (Rich Text Format) contendo a mesma transcrição,
+         * com suporte total a caracteres Unicode (acentos, ç, etc.).
          */
         const handleCopyAndDownloadTranscript = () => {
             const transcriptText = getTranscriptOnly();
@@ -2641,18 +2642,43 @@ ${scriptContent}
                 return;
             }
 
-            // Ação 1: Copiar para a área de transferência
+            // Ação 1: Copiar para a área de transferência (permanece igual)
             copyTextToClipboard(transcriptText);
-            // O showToast já está dentro do copyTextToClipboard, mas podemos adicionar um mais específico.
             window.showToast("Transcrição copiada e download iniciado!");
 
-            // Ação 2: Gerar e baixar o arquivo .docx
-            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.docx';
+            // Ação 2: Gerar e baixar o arquivo .rtf
+            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_transcricao.rtf';
             
-            // Converte o texto plano em HTML simples, preservando as quebras de linha
-            const htmlContent = `<!DOCTYPE html><html><head><meta charset='UTF-8'></head><body>${transcriptText.replace(/\n/g, '<br>')}</body></html>`;
+            // Constrói o cabeçalho do RTF para suportar UTF-8 e define a fonte Carlito
+            let rtfContent = '{\\rtf1\\ansi\\deff0{\\fonttbl{\\f0 Carlito;}}\\uc1\\pard\\sa200\\sl276\\slmult1\\f0\\fs24 ';
+
+            // Converte o texto para a sintaxe de escape Unicode do RTF
+            let rtfBody = '';
+            for (let i = 0; i < transcriptText.length; i++) {
+                const char = transcriptText[i];
+                const charCode = char.charCodeAt(0);
+
+                if (charCode <= 127) {
+                    // Caracteres ASCII normais (escapa os caracteres especiais do RTF)
+                    if (char === '\\' || char === '{' || char === '}') {
+                        rtfBody += `\\${char}`;
+                    } else {
+                        rtfBody += char;
+                    }
+                } else {
+                    // Caracteres especiais (acentuados, etc.)
+                    // Usa a sintaxe \uXXXX para Unicode
+                    rtfBody += `\\u${charCode}`;
+                }
+            }
             
-            const blob = new Blob([htmlContent], { type: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document' });
+            // Substitui as quebras de linha por parágrafos RTF
+            rtfBody = rtfBody.replace(/\n\n/g, '\\par\\pard ');
+            rtfBody = rtfBody.replace(/\n/g, '\\line ');
+            
+            rtfContent += `${rtfBody}}`;
+
+            const blob = new Blob([rtfContent], { type: 'application/rtf' });
             
             const link = document.createElement('a');
             link.href = URL.createObjectURL(blob);
