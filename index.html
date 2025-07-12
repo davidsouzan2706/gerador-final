@@ -2145,7 +2145,7 @@ The final output MUST be only the JSON code, like this example:
         // ==========================================================
         
         /**
-         * Analisa uma seção específica do roteiro e exibe um relatório visual.
+         * Analisa uma seção, traduz as sugestões e exibe um relatório visual com opção de otimização.
          */
         window.analyzeSectionRetention = async (sectionId) => {
             const sectionElement = document.getElementById(sectionId);
@@ -2162,51 +2162,66 @@ The final output MUST be only the JSON code, like this example:
 
             try {
                 const sectionTitle = sectionElement.querySelector('h3').textContent;
-                
-                const prompt = `You are a "Retention Editor", an expert at optimizing YouTube scripts. Analyze the following script section, which is the "${sectionTitle}" of the video. Break it down into its core paragraphs or ideas for evaluation.
+                const selectedLanguage = elements.languageSelect.value;
+                const languageName = elements.languageSelect.options[elements.languageSelect.selectedIndex].text;
 
-                **Script Section for Analysis:**
+                const analysisPrompt = `You are a "Retention Editor" for YouTube scripts. Analyze the following script section ("${sectionTitle}") and break it into its core paragraphs. For EACH paragraph, create a JSON object with:
+                1. "paragraphText": The original, unaltered paragraph.
+                2. "retentionScore": A string ('green', 'yellow', or 'red').
+                3. "suggestion": A short, actionable suggestion in English to improve it.
+                Respond ONLY with a valid JSON array of these objects.
+                
+                Script Section:
                 ---
                 ${sectionText}
-                ---
+                ---`;
 
-                **Instructions:**
-                For EACH paragraph you identify, create a JSON object with:
-                1. "paragraphText": The original, unaltered text of the paragraph.
-                2. "retentionScore": A string ('green', 'yellow', or 'red') rating its retention impact.
-                3. "suggestion": A short, actionable suggestion in English to improve it.
+                const rawAnalysisResult = await callGroqAPI(analysisPrompt, 2500);
+                const cleanedAnalysis = cleanGeneratedText(rawAnalysisResult, true);
+                if (!cleanedAnalysis) throw new Error("A IA retornou uma análise em formato inválido.");
+                let analysis = JSON.parse(cleanedAnalysis);
 
-                Respond ONLY with a valid JSON array of these objects.`;
+                if (selectedLanguage !== 'en' && Array.isArray(analysis)) {
+                    const translationPromises = analysis.map(item => {
+                        const translationPrompt = `Translate the following sentence into ${languageName}: "${item.suggestion}"`;
+                        return callGroqAPI(translationPrompt, 200);
+                    });
+                    
+                    const translatedSuggestions = await Promise.all(translationPromises);
+                    
+                    analysis.forEach((item, index) => {
+                        item.suggestion = removeMetaComments(translatedSuggestions[index]) || item.suggestion;
+                    });
+                }
 
-                const rawResult = await callGroqAPI(prompt, 2500);
-                const cleanedResult = cleanGeneratedText(rawResult, true);
-                if (!cleanedResult) throw new Error("A IA retornou uma análise em formato inválido.");
-                let analysis = JSON.parse(cleanedResult);
-                
                 outputContainer.innerHTML = ''; 
 
-                analysis.forEach(item => {
+                analysis.forEach((item, index) => {
+                    const uniqueId = `${sectionId}-analysis-${index}`; // ID único para cada cartão
+                    
+                    // --- LÓGICA DO NOVO BOTÃO ---
+                    // O botão "Otimizar" só aparece para pontos amarelos ou vermelhos.
+                    const optimizeBtnHtml = (item.retentionScore === 'yellow' || item.retentionScore === 'red')
+                        ? `<button class="btn btn-secondary btn-small mt-2 py-1 px-2" onclick="window.optimizeParagraph('${uniqueId}')">Otimizar com IA</button>`
+                        : '';
+                    
                     const scoreLabels = { green: "PONTO FORTE", yellow: "PONTO DE ATENÇÃO", red: "PONTO DE RISCO" };
-                    const scoreColors = {
-                        green: "green-500",
-                        yellow: "yellow-400",
-                        red: "red-500"
-                    };
+                    const scoreColors = { green: "green-500", yellow: "yellow-400", red: "red-500" };
                     const bgColorClasses = {
                         green: "bg-green-50 dark:bg-green-900/20 border-green-500",
                         yellow: "bg-yellow-50 dark:bg-yellow-900/20 border-yellow-400",
                         red: "bg-red-50 dark:bg-red-900/20 border-red-500"
                     };
 
-                    // --- HTML DO CARD FINAL E CORRIGIDO ---
                     const analysisCard = `
-                        <div class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
-                            <p class="text-sm italic mb-3 opacity-70">"${item.paragraphText}"</p>
-                            <div class="pt-3 border-t border-dashed border-gray-300 dark:border-gray-600">
+                        <div id="${uniqueId}" class="retention-paragraph ${bgColorClasses[item.retentionScore] || 'bg-gray-50 dark:bg-gray-700'}">
+                            <p class="paragraph-text text-sm italic mb-3 opacity-70">"${item.paragraphText}"</p>
+                            <div class="pt-2 border-t border-dashed border-gray-300 dark:border-gray-600">
                                 <strong class="text-xs uppercase tracking-wider text-${scoreColors[item.retentionScore] || 'gray-500'}">
                                     ${scoreLabels[item.retentionScore] || 'ANÁLISE'}
                                 </strong>
-                                <p class="text-sm mt-1 font-semibold">${item.suggestion}</p>
+                                <p class="suggestion-text text-sm mt-1 font-semibold">${item.suggestion}</p>
+                                ${optimizeBtnHtml}
                             </div>
                         </div>
                     `;
@@ -2215,6 +2230,82 @@ The final output MUST be only the JSON code, like this example:
 
             } catch (error) {
                 outputContainer.innerHTML = `<p class="text-red-500 text-sm">Falha ao analisar a seção: ${error.message}</p>`;
+            }
+        };
+    
+        /**
+         * Pega um parágrafo e uma sugestão, e pede para a IA reescrevê-lo.
+         * @param {string} analysisCardId - O ID do cartão de análise que contém os dados.
+         */
+        window.optimizeParagraph = async (analysisCardId) => {
+            const card = document.getElementById(analysisCardId);
+            const button = card.querySelector('button');
+            if (!card || !button) return;
+
+            // Remove as aspas do texto do parágrafo para garantir uma correspondência exata
+            const originalParagraph = card.querySelector('.paragraph-text').textContent.replace(/"/g, '').trim(); 
+            const suggestion = card.querySelector('.suggestion-text').textContent.trim();
+
+            // Mostra o loading no botão
+            button.innerHTML = '<div class="loading-spinner-small" style="margin: 0 auto; border-left-color: var(--primary-color);"></div>';
+            button.disabled = true;
+
+            try {
+                const prompt = `Você é um mestre roteirista. Sua tarefa é reescrever o "Parágrafo Original" para incorporar a "Sugestão de Melhoria". Mantenha a ideia central, mas aplique a sugestão para tornar o texto mais poderoso e engajante.
+
+                **Parágrafo Original:**
+                "${originalParagraph}"
+
+                **Sugestão de Melhoria:**
+                "${suggestion}"
+
+                Responda APENAS com o parágrafo reescrito e aprimorado. Sem prefácios ou comentários.`;
+                
+                const rewrittenParagraph = await callGroqAPI(prompt, 1000);
+                
+                // Agora, precisamos encontrar o texto original no roteiro principal e substituí-lo.
+                // Esta é uma operação delicada.
+                const sectionIdFromCard = analysisCardId.split('-analysis-')[0]; // e.g., "introSection"
+                const sectionElement = document.getElementById(sectionIdFromCard);
+                const contentWrapper = sectionElement.querySelector('.generated-content-wrapper');
+
+                if (contentWrapper) {
+                    const paragraphsInWrapper = contentWrapper.querySelectorAll('p');
+                    let replaced = false;
+                    paragraphsInWrapper.forEach(pTag => {
+                        // Use trim() para comparação para lidar com espaços em branco no início/fim
+                        if (pTag.textContent.trim() === originalParagraph) {
+                            pTag.textContent = removeMetaComments(rewrittenParagraph);
+                            replaced = true;
+
+                            // Atualiza visualmente o card de análise
+                            card.querySelector('.paragraph-text').innerHTML = `<s>"${originalParagraph}"</s><br><strong class="text-green-500">Otimizado:</strong> "${removeMetaComments(rewrittenParagraph)}"`;
+                            card.classList.remove('bg-yellow-50', 'dark:bg-yellow-900/20', 'border-yellow-400', 'bg-red-50', 'dark:bg-red-900/20', 'border-red-500');
+                            card.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-500');
+                            button.remove(); // Remove o botão após o sucesso
+                            
+                            window.showToast("Parágrafo otimizado com sucesso!");
+                            return; // Sai do forEach assim que o parágrafo for substituído
+                        }
+                    });
+
+                    if (!replaced) {
+                        console.warn("Parágrafo original não encontrado no wrapper de conteúdo para substituição.");
+                        window.showToast("Erro: Parágrafo original não encontrado para otimização.");
+                        button.textContent = "Erro"; // Restaura o texto do botão para erro
+                        button.disabled = false; // Reabilita o botão
+                    }
+                } else {
+                    console.error("Content wrapper not found for section:", sectionIdFromCard);
+                    window.showToast("Erro interno: Container de conteúdo não encontrado.");
+                    button.textContent = "Erro"; // Restaura o texto do botão para erro
+                    button.disabled = false; // Reabilita o botão
+                }
+
+            } catch(error) {
+                window.showToast(`Falha ao otimizar: ${error.message}`);
+                button.textContent = "Erro";
+                button.disabled = false; // Reabilita o botão em caso de erro
             }
         };
     
