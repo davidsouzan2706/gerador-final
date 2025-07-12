@@ -2234,19 +2234,17 @@ The final output MUST be only the JSON code, like this example:
         };
     
         /**
-         * Pega um parágrafo e uma sugestão, e pede para a IA reescrevê-lo.
-         * @param {string} analysisCardId - O ID do cartão de análise que contém os dados.
+         * Pega um parágrafo e uma sugestão, pede para a IA reescrevê-lo,
+         * e substitui o texto original no roteiro principal.
          */
         window.optimizeParagraph = async (analysisCardId) => {
             const card = document.getElementById(analysisCardId);
             const button = card.querySelector('button');
             if (!card || !button) return;
 
-            // Remove as aspas do texto do parágrafo para garantir uma correspondência exata
-            const originalParagraph = card.querySelector('.paragraph-text').textContent.replace(/"/g, '').trim(); 
+            const originalParagraph = card.querySelector('.paragraph-text').textContent.replace(/"/g, '').trim();
             const suggestion = card.querySelector('.suggestion-text').textContent.trim();
 
-            // Mostra o loading no botão
             button.innerHTML = '<div class="loading-spinner-small" style="margin: 0 auto; border-left-color: var(--primary-color);"></div>';
             button.disabled = true;
 
@@ -2261,46 +2259,35 @@ The final output MUST be only the JSON code, like this example:
 
                 Responda APENAS com o parágrafo reescrito e aprimorado. Sem prefácios ou comentários.`;
                 
-                const rewrittenParagraph = await callGroqAPI(prompt, 1000);
+                const rewrittenParagraphRaw = await callGroqAPI(prompt, 1000);
+                const rewrittenParagraph = removeMetaComments(rewrittenParagraphRaw);
+
+                // --- INÍCIO DA LÓGICA DE SUBSTITUIÇÃO CORRIGIDA ---
+                let paragraphFoundAndReplaced = false;
+                const allContentWrappers = document.querySelectorAll('.generated-content-wrapper');
                 
-                // Agora, precisamos encontrar o texto original no roteiro principal e substituí-lo.
-                // Esta é uma operação delicada.
-                const sectionIdFromCard = analysisCardId.split('-analysis-')[0]; // e.g., "introSection"
-                const sectionElement = document.getElementById(sectionIdFromCard);
-                const contentWrapper = sectionElement.querySelector('.generated-content-wrapper');
-
-                if (contentWrapper) {
-                    const paragraphsInWrapper = contentWrapper.querySelectorAll('p');
-                    let replaced = false;
-                    paragraphsInWrapper.forEach(pTag => {
-                        // Use trim() para comparação para lidar com espaços em branco no início/fim
-                        if (pTag.textContent.trim() === originalParagraph) {
-                            pTag.textContent = removeMetaComments(rewrittenParagraph);
-                            replaced = true;
-
-                            // Atualiza visualmente o card de análise
-                            card.querySelector('.paragraph-text').innerHTML = `<s>"${originalParagraph}"</s><br><strong class="text-green-500">Otimizado:</strong> "${removeMetaComments(rewrittenParagraph)}"`;
-                            card.classList.remove('bg-yellow-50', 'dark:bg-yellow-900/20', 'border-yellow-400', 'bg-red-50', 'dark:bg-red-900/20', 'border-red-500');
-                            card.classList.add('bg-green-50', 'dark:bg-green-900/20', 'border-green-500');
-                            button.remove(); // Remove o botão após o sucesso
-                            
-                            window.showToast("Parágrafo otimizado com sucesso!");
-                            return; // Sai do forEach assim que o parágrafo for substituído
-                        }
-                    });
-
-                    if (!replaced) {
-                        console.warn("Parágrafo original não encontrado no wrapper de conteúdo para substituição.");
-                        window.showToast("Erro: Parágrafo original não encontrado para otimização.");
-                        button.textContent = "Erro"; // Restaura o texto do botão para erro
-                        button.disabled = false; // Reabilita o botão
+                allContentWrappers.forEach(wrapper => {
+                    // Compara o conteúdo de TEXTO, que é mais confiável que o HTML
+                    if (wrapper.textContent.includes(originalParagraph)) {
+                        // Uma vez encontrado, substitui no HTML para manter a formatação
+                        wrapper.innerHTML = wrapper.innerHTML.replace(originalParagraph, rewrittenParagraph);
+                        paragraphFoundAndReplaced = true;
                     }
+                });
+
+                if (paragraphFoundAndReplaced) {
+                    // Atualiza visualmente o card de análise
+                    card.querySelector('.paragraph-text').innerHTML = `<s class="opacity-50">"${originalParagraph}"</s><br><strong class="text-green-500">Otimizado:</strong> "${rewrittenParagraph}"`;
+                    card.classList.remove('retention-yellow', 'retention-red', 'bg-yellow-50', 'dark:bg-yellow-900/20', 'border-yellow-400', 'bg-red-50', 'dark:bg-red-900/20', 'border-red-500');
+                    card.classList.add('retention-green', 'bg-green-50', 'dark:bg-green-900/20', 'border-green-500');
+                    button.remove();
+                    window.showToast("Parágrafo otimizado com sucesso!");
                 } else {
-                    console.error("Content wrapper not found for section:", sectionIdFromCard);
-                    window.showToast("Erro interno: Container de conteúdo não encontrado.");
-                    button.textContent = "Erro"; // Restaura o texto do botão para erro
-                    button.disabled = false; // Reabilita o botão
+                    // Log de erro se o parágrafo não for encontrado
+                    console.error("Parágrafo original não encontrado para substituição:", originalParagraph);
+                    throw new Error("Não foi possível encontrar o parágrafo original para substituir.");
                 }
+                // --- FIM DA LÓGICA DE SUBSTITUIÇÃO CORRIGIDA ---
 
             } catch(error) {
                 window.showToast(`Falha ao otimizar: ${error.message}`);
