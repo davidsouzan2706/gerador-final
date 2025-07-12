@@ -3077,24 +3077,47 @@ ${scriptContent}
                 memory: {
                     allImagePrompts: allImagePrompts,
                     generatedTitlesAndThumbnails: generatedTitlesAndThumbnails,
-                    strategicOutline: strategicOutline // Exporta o esboço
+                    strategicOutline: strategicOutline 
                 }
             };
 
-            // Salva o estado dos inputs
-            for (const key in elements) {
-                if (elements[key] && typeof elements[key].value !== 'undefined') {
-                    projectData.inputs[key] = elements[key].value;
-                }
-            }
-            // Salva o conteúdo gerado (HTML interno das secções)
-            const scriptSectionIds = ['introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection'];
-            scriptSectionIds.forEach(id => {
-                const sectionElement = document.getElementById(id);
-                if (sectionElement) {
-                    projectData.outputs[id] = sectionElement.innerHTML;
+            // Salva o estado dos inputs (incluindo os novos)
+            const inputIds = [
+                'channelName', 'videoTheme', 'videoDescription', 'targetAudience', 
+                'languageSelect', 'videoObjective', 'videoDuration', 'speakingPace', 
+                'narrativeGoal', 'narrativeStructure', 'narrativeTheme', 'narrativeTone', 
+                'narrativeVoice', 'centralQuestion', 'emotionalArc', 'imageDescriptionEngine', 
+                'imageStyleSelect', 'customImageStyle'
+            ];
+            inputIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    projectData.inputs[id] = element.value;
                 }
             });
+
+            // Salva o conteúdo gerado (HTML interno das secções)
+            const outputIds = [
+                'introSection', 'developmentSection', 'climaxSection', 'conclusionSection', 'ctaSection',
+                'outlineContent', 'titlesThumbnailsContent', 'videoDescriptionContent'
+            ];
+            outputIds.forEach(id => {
+                const element = document.getElementById(id);
+                if (element) {
+                    projectData.outputs[id] = element.innerHTML;
+                }
+            });
+            
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(projectData, null, 2));
+            const downloadAnchorNode = document.createElement('a');
+            downloadAnchorNode.setAttribute("href", dataStr);
+            const fileName = (elements.videoTheme.value.trim().replace(/[^a-zA-Z0-9]/gi, '_').toLowerCase() || 'roteiro') + '_projeto.json';
+            downloadAnchorNode.setAttribute("download", `${fileName}`);
+            document.body.appendChild(downloadAnchorNode);
+            downloadAnchorNode.click();
+            downloadAnchorNode.remove();
+            window.showToast("Projeto exportado com sucesso!");
+        };
 
             // Salva o conteúdo do esboço
             projectData.outputs.strategicOutlineContent = elements.outlineContent.innerHTML;
